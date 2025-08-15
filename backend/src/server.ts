@@ -8,7 +8,8 @@ import path from 'path';
 import process from 'process'
 import config from './config.json';
 import { setData } from './dataStore';
-import { echo } from './echo';
+import { echo, clear } from './other';
+import { registerUser } from './auth'
 // set up app
 const app = express();
 
@@ -19,10 +20,10 @@ app.use(cors());
 // For logging purposes
 app.use(morgan('dev'));
 
-const file = fs.readFileSync(path.join(process.cwd(), 'backend', 'swagger.yaml'), 'utf8')
+const file = fs.readFileSync(path.join(process.cwd(), 'swagger.yaml'), 'utf8')
 // Load data from file on startup
-if (fs.existsSync('../data.json')) {
-  const rawData = fs.readFileSync('data.json', 'utf-8');
+if (fs.existsSync('/data.json')) {
+  const rawData = fs.readFileSync('/data.json', 'utf-8');
   setData(JSON.parse(rawData));
 }
 app.get('/', (req: Request, res: Response) => res.redirect('/docs'));
@@ -58,3 +59,25 @@ app.get('/echo', (req: Request, res: Response) => {
   }
   return res.json(result);
 });
+
+app.delete('/clear', (req: Request, res: Response) => {
+  const result = clear();
+  if ('error' in result) {
+    return res.status(400).json(result);
+  }
+  res.json(result);
+});
+
+app.post('/auth/register', (req: Request, res: Response) => {
+  const {firstName, lastName, email, password} = req.body
+
+  try {
+    const result = registerUser(firstName, lastName, password, email)
+    res.json({userId: result}).status(200)
+  } catch (error) {
+    console.log(error.message)
+    return res.status(400).json({ error: error.message });
+  }
+
+});
+
