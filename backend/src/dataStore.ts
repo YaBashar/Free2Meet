@@ -3,7 +3,8 @@ import fs from "fs"
 
 
 let data: Store = {
-    events: []
+    events: [],
+    users: []
 }
 
 function setData(newData: Store)  {

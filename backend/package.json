@@ -1,0 +1,35 @@
+{
+  "name": "free2meet",
+  "version": "1.0.0",
+  "description": "Plan Events with Freinds",
+  "main": "index.js",
+  "scripts": {
+    "start": "ts-node -T src/server.ts",
+    "test": "jest --detectOpenHandles"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "morgan": "^1.10.1",
+    "swagger-ui-express": "^5.0.1",
+    "sync-curl": "^1.1.0",
+    "sync-request-curl": "^3.3.3",
+    "ts-node": "^10.9.2",
+    "validator": "^13.15.15",
+    "yaml": "^2.8.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/jest": "^30.0.0",
+    "@types/morgan": "^1.9.10",
+    "@types/swagger-ui-express": "^4.1.8",
+    "@types/validator": "^13.15.2",
+    "@types/yaml": "^1.9.7",
+    "jest": "^30.0.5",
+    "ts-jest": "^29.4.1",
+    "typescript": "^5.9.2"
+  }
+}

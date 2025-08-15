@@ -1,6 +1,7 @@
 
 export interface Store {
-    events: Events[]
+    events: Events[],
+    users: Users[]
 }
 
 export interface Events {
@@ -10,4 +11,14 @@ export interface Events {
     data: string,
     startTime: number,
     endTime: number
+}
+
+export interface Users {
+    userId: number,
+    name: string,
+    password: string,
+    email: string,
+    numSuccessfulLogins: number,
+    numfailedSinceLastLogin: number,
+    passwordHistory: string[]
 }
