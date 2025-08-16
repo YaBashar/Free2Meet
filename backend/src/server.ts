@@ -9,7 +9,7 @@ import process from 'process'
 import config from './config.json';
 import { setData } from './dataStore';
 import { echo, clear } from './other';
-import { registerUser } from './auth'
+import { registerUser, userLogin } from './auth'
 // set up app
 const app = express();
 
@@ -79,5 +79,17 @@ app.post('/auth/register', (req: Request, res: Response) => {
     return res.status(400).json({ error: error.message });
   }
 
+});
+
+app.post('/auth/login', (req: Request, res: Response) => {
+	const {email, password}  = req.body;
+
+	try {
+		const result = userLogin(email, password)
+		res.json({token: result}).status(200)
+	} catch (error) {
+		return res.status(400).json({error: error.message})
+		
+	}
 });
 
