@@ -40,15 +40,8 @@ export function checkEmail(store: Store, email: string): void {
 }
 
 export function hashPassword(password: string): string {
-    let hashedPassword
     const saltRounds = 10;
-    bcrypt.genSalt(saltRounds, (err: Error | undefined, salt: string) => {
-        if (err) throw err;
-
-        bcrypt.hash(password, salt, (err : Error | undefined, hash: string) => {
-            if (err) throw err;
-            hashedPassword = hash;
-        });
-    });
-    return hashedPassword
+    const salt = bcrypt.genSaltSync(saltRounds);
+    const hash = bcrypt.hashSync(password, salt);
+    return hash;
 }
