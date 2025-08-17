@@ -14,7 +14,7 @@ export interface Events {
 }
 
 export interface Users {
-    userId: number,
+    userId: string,
     name: string,
     password: string,
     email: string,
