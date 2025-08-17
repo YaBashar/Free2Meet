@@ -9,7 +9,7 @@ import process from 'process'
 import config from './config.json';
 import { setData } from './dataStore';
 import { echo, clear } from './other';
-import { registerUser, userLogin } from './auth'
+import { registerUser, userLogin, requestResetPasswd, setResetPassword } from './auth'
 // set up app
 const app = express();
 
@@ -92,4 +92,27 @@ app.post('/auth/login', (req: Request, res: Response) => {
 		
 	}
 });
+
+app.post('/auth/request-reset', (req: Request, res: Response) => {
+  const {email} = req.body;
+
+  try {
+    const result = requestResetPasswd(email)
+    res.json({resetToken: result}).status(200)
+  } catch (error) {
+    return res.status(400).json({error: error.message})
+  }
+})
+
+app.post('/auth/reset-password', (req: Request, res: Response) => {
+  
+  const {userId, token, newPassword, confirmNewPasswd} = req.body;
+
+  try {
+    const result = setResetPassword(userId, token, newPassword, confirmNewPasswd)
+    res.json({userId: result}).status(200)
+  } catch (error) {
+    return res.status(400).json({error: error.message})
+  }
+})
 

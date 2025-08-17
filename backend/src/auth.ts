@@ -1,6 +1,6 @@
 import { getData, setData } from "./dataStore";
 import { Users } from "./interfaces";
-import { checkEmail, checkPassword, checkName, hashPassword } from "./authHelper";
+import { checkEmail, checkPassword, checkName, hashPassword, checkNewPasswd } from "./authHelper";
 const bcrypt = require('bcrypt')
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
@@ -26,7 +26,7 @@ function registerUser(firstName: string, lastName: string, password: string, ema
     const id = Date.now()
 
     const newUser: Users = {
-        userId: id,
+        userId: id.toString(),
         name: name,
         password: hashedPassword,
         email: email,
@@ -37,7 +37,7 @@ function registerUser(firstName: string, lastName: string, password: string, ema
 
     store.users.push(newUser)
     setData(store)
-    return newUser.userId.toString();
+    return newUser.userId;
 }
 
 
@@ -68,4 +68,64 @@ function userLogin(email: string, password: string): string {
     return token;
 }
 
-export { registerUser, userLogin };
+/** [3] Auth Request Reset-Password
+  * Allows user to get a link or code to then reset password
+**/
+function requestResetPasswd(email:string) {
+    // TODO Later send resetToken to user Email
+    const store = getData();
+    const userIndex = store.users.findIndex((user) => (user.email === email));
+    const currUser = store.users[userIndex];
+
+    if (!currUser) {
+        throw new Error("Email does not exist");
+    }
+
+    const SECRET = process.env.JWT_SECRET;
+    const resetToken = jwt.sign( {userId: currUser.userId, email: currUser.email}, SECRET, {expiresIn: "15m"});
+    return resetToken;
+}
+
+/** [4] Auth Reset-Password
+  * Allows user to reset password
+**/
+function setResetPassword(userId: string, token: string, newPassword: string, confirmNewPasswd: string) {
+    const store = getData();
+    const userIndex = store.users.findIndex((user) => (user.userId === userId));
+    const currUser = store.users[userIndex];
+
+    if (!currUser) {
+        throw new Error("User with userId does not exist");
+    }
+
+    const SECRET = process.env.JWT_SECRET;
+    try {
+        jwt.verify(token, SECRET)
+    } catch (error) {
+        throw new Error(error.message)
+    }
+
+    const previousPasswds = currUser.passwordHistory
+    try {
+        checkNewPasswd(previousPasswds, newPassword, confirmNewPasswd)
+    } catch (error) {
+        throw new Error(error.message)
+    }
+
+    newPassword = hashPassword(newPassword)
+    const user: Users = {
+        userId: currUser.userId,
+        name: currUser.name,
+        password: newPassword,
+        email: currUser.email,
+        numSuccessfulLogins: currUser.numSuccessfulLogins,
+        numfailedSinceLastLogin: currUser.numfailedSinceLastLogin,
+        passwordHistory: [newPassword, ...(previousPasswds || [])] 
+    }
+
+    store.users.push(user)
+    setData(store)
+    return user.userId;
+}
+
+export { registerUser, userLogin, setResetPassword, requestResetPasswd };

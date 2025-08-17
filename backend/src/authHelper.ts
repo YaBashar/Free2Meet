@@ -39,6 +39,24 @@ export function checkEmail(store: Store, email: string): void {
     }
 }
 
+export function checkNewPasswd(previousPasswds: string[], newPassword: string, confirmNewPasswd: string): void {
+    try {
+            checkPassword(newPassword)
+            for (const passwd of previousPasswds) {
+                if (bcrypt.compareSync(newPassword, passwd)) {
+                    throw new Error("Password has been used before, try a new password");
+                }
+            }
+    
+        } catch (error) {
+            throw new Error(error.message)
+        }
+    
+        if (confirmNewPasswd !== newPassword) {
+            throw new Error("Passwords do not match")
+        }
+}
+
 export function hashPassword(password: string): string {
     const saltRounds = 10;
     const salt = bcrypt.genSaltSync(saltRounds);
