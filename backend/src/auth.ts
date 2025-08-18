@@ -1,5 +1,5 @@
 import { getData, setData } from "./dataStore";
-import { Users } from "./interfaces";
+import { UserDetails, Users } from "./interfaces";
 import { checkEmail, checkPassword, checkName, hashPassword, checkNewPasswd } from "./authHelper";
 const bcrypt = require('bcrypt')
 require('dotenv').config();
@@ -32,7 +32,8 @@ function registerUser(firstName: string, lastName: string, password: string, ema
         email: email,
         numSuccessfulLogins: 1,
         numfailedSinceLastLogin: 0,
-        passwordHistory: [hashedPassword]
+        passwordHistory: [hashedPassword],
+        refreshToken: []
     }
 
     store.users.push(newUser)
@@ -45,7 +46,7 @@ function registerUser(firstName: string, lastName: string, password: string, ema
   * Logs in a user 
 **/
 
-function userLogin(email: string, password: string): string {
+function userLogin(email: string, password: string) {
     const store = getData();
     const userIndex = store.users.findIndex((user) => (user.email === email)) ;
     const user = store.users[userIndex];
@@ -64,8 +65,20 @@ function userLogin(email: string, password: string): string {
     user.numfailedSinceLastLogin = 0;
     user.numSuccessfulLogins ++;
 
-    const token = jwt.sign({ userId: user.userId, name: user.name, email: user.email}, SECRET, { expiresIn: '12h'});
-    return token;
+    const accessToken = jwt.sign(
+        { userId: user.userId, name: user.name, email: user.email}, 
+        SECRET, 
+        { expiresIn: '10m'});
+
+    
+    const refreshToken = jwt.sign(
+        { userId: user.userId, name: user.name, email: user.email}, 
+        SECRET, 
+        { expiresIn: '1d'}
+    )
+
+    user.refreshToken = [refreshToken]
+    return {accessToken, refreshToken};
 }
 
 /** [3] Auth Request Reset-Password
@@ -120,7 +133,8 @@ function setResetPassword(userId: string, token: string, newPassword: string, co
         email: currUser.email,
         numSuccessfulLogins: currUser.numSuccessfulLogins,
         numfailedSinceLastLogin: currUser.numfailedSinceLastLogin,
-        passwordHistory: [newPassword, ...(previousPasswds || [])] 
+        passwordHistory: [newPassword, ...(previousPasswds || [])], 
+        refreshToken: currUser.refreshToken
     }
 
     store.users.push(user)
@@ -128,4 +142,4 @@ function setResetPassword(userId: string, token: string, newPassword: string, co
     return user.userId;
 }
 
-export { registerUser, userLogin, setResetPassword, requestResetPasswd };
+export { registerUser, userLogin, setResetPassword, requestResetPasswd};

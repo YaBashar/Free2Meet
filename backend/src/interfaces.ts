@@ -1,7 +1,7 @@
 
 export interface Store {
     events: Events[],
-    users: Users[]
+    users: Users[],
 }
 
 export interface Events {
@@ -20,5 +20,6 @@ export interface Users {
     email: string,
     numSuccessfulLogins: number,
     numfailedSinceLastLogin: number,
-    passwordHistory: string[]
+    passwordHistory: string[],
+    refreshToken: string[]
 }

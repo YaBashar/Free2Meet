@@ -10,6 +10,8 @@ import config from './config.json';
 import { setData } from './dataStore';
 import { echo, clear } from './other';
 import { registerUser, userLogin, requestResetPasswd, setResetPassword } from './auth'
+const jwt = require('jsonwebtoken');
+const SECRET = process.env.JWT_SECRET;
 // set up app
 const app = express();
 
@@ -85,8 +87,13 @@ app.post('/auth/login', (req: Request, res: Response) => {
 	const {email, password}  = req.body;
 
 	try {
-		const result = userLogin(email, password)
-		res.json({token: result}).status(200)
+		const {accessToken, refreshToken} = userLogin(email, password)
+    res.cookie("jwt", refreshToken, {
+      httpOnly: true, 
+      maxAge: 24 * 60 * 60 * 1000
+    });
+
+		res.json({token: accessToken}).status(200)
 	} catch (error) {
 		return res.status(400).json({error: error.message})
 		
