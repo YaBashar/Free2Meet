@@ -1,5 +1,5 @@
 import { getData, setData } from "./dataStore";
-import { Users } from "./interfaces";
+import { Users, UserDetails } from "./interfaces";
 import { checkEmail, checkPassword, checkName, hashPassword, checkNewPasswd } from "./authHelper";
 const bcrypt = require('bcrypt')
 require('dotenv').config();
@@ -169,4 +169,20 @@ function setResetPassword(userId: string, token: string, newPassword: string, co
     return user.userId;
 }
 
-export { registerUser, userLogin, setResetPassword, requestResetPasswd, authRefresh};
+function userDetails(userId: string): UserDetails {
+    const store = getData();
+    const userIndex = store.users.findIndex((user) => (user.userId === userId));
+    const currUser = store.users[userIndex];
+
+    if (!currUser) {
+        throw new Error("User Id Invalid")
+    }
+
+    return  {
+        userId: currUser.userId,
+        name: currUser.name,
+        password: currUser.password, 
+        email: currUser.email
+    }
+}
+export { registerUser, userLogin, setResetPassword, requestResetPasswd, authRefresh, userDetails};

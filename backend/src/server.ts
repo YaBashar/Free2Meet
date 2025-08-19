@@ -10,8 +10,8 @@ import process from 'process'
 import config from './config.json';
 import { setData } from './dataStore';
 import { echo, clear } from './other';
-import { registerUser, userLogin, requestResetPasswd, setResetPassword, authRefresh } from './auth'
-
+import { registerUser, userLogin, requestResetPasswd, setResetPassword, authRefresh, userDetails } from './auth'
+import { verifyJWT } from './middleware';
 // set up app
 const app = express();
 
@@ -23,6 +23,7 @@ app.use(json());
 app.use(cors());
 // For logging purposes
 app.use(morgan('dev'));
+
 
 const file = fs.readFileSync(path.join(process.cwd(), 'swagger.yaml'), 'utf8')
 // Load data from file on startup
@@ -140,5 +141,17 @@ app.post('/auth/reset-password', (req: Request, res: Response) => {
   } catch (error) {
     return res.status(400).json({error: error.message})
   }
+})
+
+app.get('/auth/user-details', verifyJWT, (req: Request, res: Response) => {
+  const userId = (req as any).userId
+
+  try {
+   const result = userDetails(userId)
+   res.json({user: result}).status(200) 
+  } catch (error) {
+    res.status(400).json({error: error.message})
+  }
+
 })
 

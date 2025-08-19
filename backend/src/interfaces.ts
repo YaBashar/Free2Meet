@@ -23,3 +23,10 @@ export interface Users {
     passwordHistory: string[],
     refreshToken: string[]
 }
+
+export interface UserDetails {
+    userId: string,
+    name: string,
+    password: string,
+    email: string,
+}
