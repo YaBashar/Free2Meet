@@ -1,6 +1,7 @@
 import express, { json, Request, Response } from 'express';
 import morgan from 'morgan';
 import cors from 'cors';
+import cookieParser from "cookie-parser";
 import YAML from 'yaml'
 import sui from 'swagger-ui-express';
 import fs from 'fs';
@@ -9,11 +10,12 @@ import process from 'process'
 import config from './config.json';
 import { setData } from './dataStore';
 import { echo, clear } from './other';
-import { registerUser, userLogin, requestResetPasswd, setResetPassword } from './auth'
-const jwt = require('jsonwebtoken');
-const SECRET = process.env.JWT_SECRET;
+import { registerUser, userLogin, requestResetPasswd, setResetPassword, authRefresh } from './auth'
+
 // set up app
 const app = express();
+
+app.use(cookieParser());
 
 // Use middleware that allows us to access JSON body of requests
 app.use(json());
@@ -98,6 +100,23 @@ app.post('/auth/login', (req: Request, res: Response) => {
 		return res.status(400).json({error: error.message})
 		
 	}
+});
+
+app.post('/auth/refresh', (req: Request, res: Response) => {
+  const cookies = req.cookies;
+  if (!cookies?.jwt) return res.status(401).json({error: "Unauthorised"});
+
+  console.log(cookies.jwt)
+  const refreshToken = cookies.jwt;
+  console.log(refreshToken)
+
+  try {
+    const result = authRefresh(refreshToken)
+    res.json({token: result}).status(200)
+  } catch (error) {
+    return res.status(400).json({error: error.message})
+  }
+
 });
 
 app.post('/auth/request-reset', (req: Request, res: Response) => {

@@ -1,10 +1,11 @@
 import { getData, setData } from "./dataStore";
-import { UserDetails, Users } from "./interfaces";
+import { Users } from "./interfaces";
 import { checkEmail, checkPassword, checkName, hashPassword, checkNewPasswd } from "./authHelper";
 const bcrypt = require('bcrypt')
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const SECRET = process.env.JWT_SECRET;
+const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 
 /** [1] AuthRegister
   * Registers a user with an email, password, and name
@@ -48,7 +49,7 @@ function registerUser(firstName: string, lastName: string, password: string, ema
 
 function userLogin(email: string, password: string) {
     const store = getData();
-    const userIndex = store.users.findIndex((user) => (user.email === email)) ;
+    const userIndex = store.users.findIndex((user) => (user.email === email));
     const user = store.users[userIndex];
     const isPassword = bcrypt.compareSync(password, user.password);
 
@@ -73,7 +74,7 @@ function userLogin(email: string, password: string) {
     
     const refreshToken = jwt.sign(
         { userId: user.userId, name: user.name, email: user.email}, 
-        SECRET, 
+        REFRESH_SECRET, 
         { expiresIn: '1d'}
     )
 
@@ -81,7 +82,33 @@ function userLogin(email: string, password: string) {
     return {accessToken, refreshToken};
 }
 
-/** [3] Auth Request Reset-Password
+/** [3] Auth Refresh
+  * Allows user to stay loggedIn
+**/
+function authRefresh(refreshToken: string) {
+    const store = getData();
+    const userIndex = store.users.findIndex((user) => (user.refreshToken.includes(refreshToken)));
+    const user = store.users[userIndex];
+
+    if (!user) {
+        throw new Error("Invalid Refresh token for user")
+    }
+
+    try {
+        jwt.verify(refreshToken, REFRESH_SECRET)  
+    } catch (error) {
+       throw new Error(error.message) 
+    }
+
+    const accessToken = jwt.sign(
+        { userId: user.userId, name: user.name, email: user.email}, 
+        SECRET, 
+        { expiresIn: '10m'}); 
+
+    return accessToken
+}
+
+/** [4] Auth Request Reset-Password
   * Allows user to get a link or code to then reset password
 **/
 function requestResetPasswd(email:string) {
@@ -99,7 +126,7 @@ function requestResetPasswd(email:string) {
     return resetToken;
 }
 
-/** [4] Auth Reset-Password
+/** [5] Auth Reset-Password
   * Allows user to reset password
 **/
 function setResetPassword(userId: string, token: string, newPassword: string, confirmNewPasswd: string) {
@@ -142,4 +169,4 @@ function setResetPassword(userId: string, token: string, newPassword: string, co
     return user.userId;
 }
 
-export { registerUser, userLogin, setResetPassword, requestResetPasswd};
+export { registerUser, userLogin, setResetPassword, requestResetPasswd, authRefresh};
