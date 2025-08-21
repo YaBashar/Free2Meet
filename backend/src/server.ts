@@ -10,7 +10,7 @@ import process from 'process'
 import config from './config.json';
 import { setData } from './dataStore';
 import { echo, clear } from './other';
-import { registerUser, userLogin, requestResetPasswd, setResetPassword, authRefresh, userDetails } from './auth'
+import { registerUser, userLogin, requestResetPasswd, setResetPassword, authRefresh, userDetails, userLogout} from './auth'
 import { verifyJWT } from './middleware';
 // set up app
 const app = express();
@@ -107,9 +107,7 @@ app.post('/auth/refresh', (req: Request, res: Response) => {
   const cookies = req.cookies;
   if (!cookies?.jwt) return res.status(401).json({error: "Unauthorised"});
 
-  console.log(cookies.jwt)
   const refreshToken = cookies.jwt;
-  console.log(refreshToken)
 
   try {
     const result = authRefresh(refreshToken)
@@ -155,3 +153,18 @@ app.get('/auth/user-details', verifyJWT, (req: Request, res: Response) => {
 
 })
 
+app.post('/auth/logout', verifyJWT, (req: Request, res: Response) => {
+  const userId = (req as any).userId 
+
+  const cookies = req.cookies;
+  if (!cookies?.jwt) return res.status(401).json({error: "Cookie does not contain refresh token"});
+  const refreshToken = cookies.jwt;
+
+  try {
+    const result = userLogout(refreshToken, userId);
+    res.json(result).status(200)
+  } catch (error) {
+    res.status(400).json({error : error.message})
+  }
+
+})

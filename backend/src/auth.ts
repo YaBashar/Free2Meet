@@ -1,6 +1,7 @@
 import { getData, setData } from "./dataStore";
 import { Users, UserDetails } from "./interfaces";
 import { checkEmail, checkPassword, checkName, hashPassword, checkNewPasswd } from "./authHelper";
+import { token } from "morgan";
 const bcrypt = require('bcrypt')
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
@@ -185,4 +186,21 @@ function userDetails(userId: string): UserDetails {
         email: currUser.email
     }
 }
-export { registerUser, userLogin, setResetPassword, requestResetPasswd, authRefresh, userDetails};
+
+function userLogout(refreshToken: string, userId: string) {
+    const store = getData()
+    const userIndex = store.users.findIndex((user) => (user.userId === userId));
+    const user = store.users[userIndex];
+
+    let tokens = user.refreshToken;
+    const tokenIndex = tokens.findIndex((token) => (token === refreshToken));
+    const token = tokens[tokenIndex]
+    if (!token) {
+        throw new Error ("Refresh Token does not exist for user")
+    }
+
+    tokens = tokens.splice(1, tokenIndex)
+    return {}
+}
+
+export { registerUser, userLogin, setResetPassword, requestResetPasswd, authRefresh, userDetails, userLogout};
