@@ -10,7 +10,7 @@ import process from 'process'
 import config from './config.json';
 import { setData } from './dataStore';
 import { echo, clear } from './other';
-import { registerUser, userLogin, requestResetPasswd, setResetPassword, authRefresh, userDetails, userLogout} from './auth'
+import { registerUser, userLogin, requestResetPasswd, setResetPassword, authRefresh, userDetails, userLogout, userChangePasswords} from './auth'
 import { verifyJWT } from './middleware';
 // set up app
 const app = express();
@@ -168,3 +168,17 @@ app.post('/auth/logout', verifyJWT, (req: Request, res: Response) => {
   }
 
 })
+
+app.post('/auth/change-password', verifyJWT, (req: Request, res: Response) => {
+  const userId = (req as any).userId 
+  const { currentPassword, newPassword, confirmNewPasswd } = req.body;
+
+  try {
+    const result = userChangePasswords(userId, currentPassword, newPassword, confirmNewPasswd);
+    console.log(result)
+    res.json({userId: result}).status(200) 
+  } catch (error) {
+    console.log(error.message)
+    res.status(400).json({error : error.message})
+  }
+});

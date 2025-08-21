@@ -187,6 +187,44 @@ function userDetails(userId: string): UserDetails {
     }
 }
 
+// Allows loggedIn User to change their password
+function userChangePasswords(userId: string, currentPassword: string, newPassword: string, confirmNewPasswd: string) {
+    const store = getData();
+    const userIndex = store.users.findIndex((user) => (user.userId === userId));
+    const currUser = store.users[userIndex];
+
+    if (!currUser) {
+        throw new Error("User with userId does not exist");
+    }
+
+    if (!bcrypt.compareSync(currentPassword, currUser.password)) {
+        throw new Error("Incorrect current password");
+    }
+
+    const previousPasswds = currUser.passwordHistory
+    try {
+        checkNewPasswd(previousPasswds, newPassword, confirmNewPasswd)
+    } catch (error) {
+        throw new Error(error.message)
+    }
+
+    newPassword = hashPassword(newPassword)
+    const user: Users = {
+        userId: currUser.userId,
+        name: currUser.name,
+        password: newPassword,
+        email: currUser.email,
+        numSuccessfulLogins: currUser.numSuccessfulLogins,
+        numfailedSinceLastLogin: currUser.numfailedSinceLastLogin,
+        passwordHistory: [newPassword, ...(previousPasswds || [])], 
+        refreshToken: currUser.refreshToken
+    }
+
+    store.users.push(user)
+    setData(store)
+    return user.userId;
+}
+
 function userLogout(refreshToken: string, userId: string) {
     const store = getData()
     const userIndex = store.users.findIndex((user) => (user.userId === userId));
@@ -203,4 +241,4 @@ function userLogout(refreshToken: string, userId: string) {
     return {}
 }
 
-export { registerUser, userLogin, setResetPassword, requestResetPasswd, authRefresh, userDetails, userLogout};
+export { registerUser, userLogin, setResetPassword, requestResetPasswd, authRefresh, userDetails, userLogout, userChangePasswords};
