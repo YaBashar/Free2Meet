@@ -1,12 +1,8 @@
 import request from "sync-request-curl";
 import {port, url} from '../config.json'
-import { string } from "yaml/dist/schema/common/string";
-
 
 const SERVER_URL = `${url}:${port}`
 const TIMEOUT_MS = 5 * 1000;
-
-
 
 beforeEach(() => {
     request('DELETE', SERVER_URL + '/clear', {timeout: TIMEOUT_MS});
@@ -16,7 +12,6 @@ beforeEach(() => {
 afterEach(() => {
     request('DELETE', SERVER_URL + '/clear', {timeout: TIMEOUT_MS});
 })
-
 
 describe('Error Cases', () => {
     test('Email address does not exist', () => {
@@ -39,7 +34,6 @@ describe('Error Cases', () => {
 
 
 describe('Success Cases', () => {
-
     test("Logged In Successfully", () =>{
         const res = requestAuthLogin("example@gmail.com", "Abcdefg123$")
         const data = JSON.parse(res.body.toString());

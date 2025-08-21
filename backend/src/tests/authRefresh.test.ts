@@ -18,9 +18,8 @@ describe("Success Cases", () => {
         requestAuthRegister("Mubashir", "Hussain", "Abcdefg123$", "example@gmail.com")
         const res1 = requestAuthLogin("example@gmail.com", "Abcdefg123$");
         const cookie = res1.headers['set-cookie']
-        refreshToken = cookie.toString().split("=")[1]
 
-        const res2 = requestRefreshToken(refreshToken)
+        const res2 = requestRefreshToken(cookie)
         const data = JSON.parse(res2.body.toString())
         expect(data).toStrictEqual({token: expect.any(String)})
         expect(res2.statusCode).toStrictEqual(200)
@@ -30,7 +29,8 @@ describe("Success Cases", () => {
 describe("Error Cases", () => {
 
     test("Invalid Token", () => {
-        const res = requestRefreshToken("Invalid Token")
+        const invalidCookie = "jwt=wrongRefreshToken";
+        const res = requestRefreshToken([invalidCookie])
         const data = JSON.parse(res.body.toString())
         expect(data).toStrictEqual({error: expect.any(String)})
         expect(res.statusCode).toStrictEqual(400)
@@ -38,10 +38,10 @@ describe("Error Cases", () => {
     
 });
 
-const requestRefreshToken = (token: string) => {
+const requestRefreshToken = (cookie: string[]) => {
     return(request('POST', SERVER_URL + '/auth/refresh', {
         headers: {
-            Cookie: `jwt=${token}`
+            Cookie: cookie
         }
     }))
 }
