@@ -1,19 +1,18 @@
-import { Store } from "./interfaces"
-import fs from "fs"
-
+import { Store } from './interfaces';
+import fs from 'fs';
 
 let data: Store = {
-    events: []
-}
+  events: []
+};
 
-function setData(newData: Store)  {
-const dataString = JSON.stringify(data, null, 2);
+function setData(newData: Store) {
+  const dataString = JSON.stringify(data, null, 2);
   fs.writeFileSync('data.json', dataString);
   data = newData;
 }
 
 function getData() : Store {
-    return data;
+  return data;
 }
 
-export { setData, getData }
+export { setData, getData };

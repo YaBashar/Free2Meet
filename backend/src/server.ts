@@ -1,11 +1,11 @@
 import express, { json, Request, Response } from 'express';
 import morgan from 'morgan';
 import cors from 'cors';
-import YAML from 'yaml'
+import YAML from 'yaml';
 import sui from 'swagger-ui-express';
 import fs from 'fs';
 import path from 'path';
-import process from 'process'
+import process from 'process';
 import config from './config.json';
 import { setData } from './dataStore';
 import { echo } from './echo';
@@ -19,9 +19,9 @@ app.use(cors());
 // For logging purposes
 app.use(morgan('dev'));
 
-const file = fs.readFileSync(path.join(process.cwd(), 'backend', 'swagger.yaml'), 'utf8')
+const file = fs.readFileSync(path.join(process.cwd(), 'swagger.yaml'), 'utf8');
 // Load data from file on startup
-if (fs.existsSync('../data.json')) {
+if (fs.existsSync('/data.json')) {
   const rawData = fs.readFileSync('data.json', 'utf-8');
   setData(JSON.parse(rawData));
 }
@@ -29,15 +29,15 @@ app.get('/', (req: Request, res: Response) => res.redirect('/docs'));
 app.use('/docs', sui.serve, sui.setup(YAML.parse(file),
   { swaggerOptions: { docExpansion: config.expandDocs ? 'full' : 'list' } }));
 
-const PORT: number = parseInt(process.env.PORT || config.port)
-const HOST: string = (process.env.IP || '127.0.0.1')
+const PORT: number = parseInt(process.env.PORT || config.port);
+const HOST: string = (process.env.IP || '127.0.0.1');
 
 // ====================================================================
 // ====================================================================
 
 const server = app.listen(PORT, HOST, () => {
-    console.log(`Server running on ${PORT}`)
-})
+  console.log(`Server running on ${PORT}`);
+});
 
 // For coverage, handle Ctrl+C gracefully
 process.on('SIGINT', () => {

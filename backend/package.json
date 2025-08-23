@@ -1,0 +1,36 @@
+{
+  "name": "free2meet",
+  "version": "1.0.0",
+  "description": "Plan Events with Freinds",
+  "main": "index.js",
+  "scripts": {
+    "start": "ts-node -T src/server.ts",
+    "test": "jest",
+    "lint": "eslint 'src/**/*.{js,ts}'",
+    "lint-fix": "eslint --fix 'src/**/*.{ts,js}'"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "jest": "^30.0.5",
+    "morgan": "^1.10.1",
+    "swagger-ui-express": "^5.0.1",
+    "ts-node": "^10.9.2",
+    "typescript-eslint": "^8.40.0",
+    "yaml": "^2.8.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/eslint": "^9.6.1",
+    "@types/jest": "^30.0.0",
+    "@types/morgan": "^1.9.10",
+    "@types/swagger-ui-express": "^4.1.8",
+    "@types/yaml": "^1.9.7",
+    "@typescript-eslint/eslint-plugin": "^8.40.0",
+    "@typescript-eslint/parser": "^8.40.0",
+    "eslint": "^9.34.0",
+    "typescript": "^5.9.2"
+  }
+}
