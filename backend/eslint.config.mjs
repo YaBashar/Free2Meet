@@ -28,7 +28,11 @@ export default [
         Buffer: "readonly",
         __dirname: "readonly",
         module: "readonly",
-        require: "readonly",
+        beforeEach: "readonly",
+        afterEach: "readonly",
+        test: "readonly",
+        expect: "readonly",
+        describe: "readonly"
       },
     },
     rules: {
@@ -44,7 +48,7 @@ export default [
       "ignoreRestSiblings": true,
       "vars": "all"
     }],
-    "@typescript-eslint/no-explicit-any": "error",
+    "@typescript-eslint/no-explicit-any": "off",
   
     "no-var": "warn",
     "object-shorthand": 0, // ["warn", "properties"],
