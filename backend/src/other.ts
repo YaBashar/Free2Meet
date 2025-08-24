@@ -1,4 +1,5 @@
-import { setData, getData } from "./dataStore";
+import { setData, getData } from './dataStore';
+import fs from 'fs';
 
 type ErrorMsg = {
   error: string;
@@ -13,11 +14,9 @@ export function echo(value: string): { value: string } | ErrorMsg {
   };
 }
 
-
 export function clear (): Record<string, never> {
   const store = getData();
 
-  const fs = require('fs');
   fs.truncate('./data.json', 0, function() {});
 
   store.users = [];

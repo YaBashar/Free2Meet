@@ -6,7 +6,7 @@ export interface Store {
 
 export interface Events {
     id: number,
-    title: string, 
+    title: string,
     description: string,
     data: string,
     startTime: number,

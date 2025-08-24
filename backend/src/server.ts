@@ -1,16 +1,16 @@
 import express, { json, Request, Response } from 'express';
 import morgan from 'morgan';
 import cors from 'cors';
-import cookieParser from "cookie-parser";
-import YAML from 'yaml'
+import cookieParser from 'cookie-parser';
+import YAML from 'yaml';
 import sui from 'swagger-ui-express';
 import fs from 'fs';
 import path from 'path';
-import process from 'process'
+import process from 'process';
 import config from './config.json';
 import { setData } from './dataStore';
 import { echo, clear } from './other';
-import { registerUser, userLogin, requestResetPasswd, setResetPassword, authRefresh, userDetails, userLogout, userChangePasswords} from './auth'
+import { registerUser, userLogin, requestResetPasswd, setResetPassword, authRefresh, userDetails, userLogout, userChangePasswords } from './auth';
 import { verifyJWT } from './middleware';
 // set up app
 const app = express();
@@ -24,8 +24,7 @@ app.use(cors());
 // For logging purposes
 app.use(morgan('dev'));
 
-
-const file = fs.readFileSync(path.join(process.cwd(), 'swagger.yaml'), 'utf8')
+const file = fs.readFileSync(path.join(process.cwd(), 'swagger.yaml'), 'utf8');
 // Load data from file on startup
 if (fs.existsSync('/data.json')) {
   const rawData = fs.readFileSync('/data.json', 'utf-8');
@@ -35,15 +34,15 @@ app.get('/', (req: Request, res: Response) => res.redirect('/docs'));
 app.use('/docs', sui.serve, sui.setup(YAML.parse(file),
   { swaggerOptions: { docExpansion: config.expandDocs ? 'full' : 'list' } }));
 
-const PORT: number = parseInt(process.env.PORT || config.port)
-const HOST: string = (process.env.IP || '127.0.0.1')
+const PORT: number = parseInt(process.env.PORT || config.port);
+const HOST: string = (process.env.IP || '127.0.0.1');
 
 // ====================================================================
 // ====================================================================
 
 const server = app.listen(PORT, HOST, () => {
-    console.log(`Server running on ${PORT}`)
-})
+  console.log(`Server running on ${PORT}`);
+});
 
 // For coverage, handle Ctrl+C gracefully
 process.on('SIGINT', () => {
@@ -74,111 +73,105 @@ app.delete('/clear', (req: Request, res: Response) => {
 });
 
 app.post('/auth/register', (req: Request, res: Response) => {
-  const {firstName, lastName, email, password} = req.body
+  const { firstName, lastName, email, password } = req.body;
 
   try {
-    const result = registerUser(firstName, lastName, password, email)
-    res.json({userId: result}).status(200)
+    const result = registerUser(firstName, lastName, password, email);
+    res.json({ userId: result }).status(200);
   } catch (error) {
-    console.log(error.message)
+    console.log(error.message);
     return res.status(400).json({ error: error.message });
   }
-
 });
 
 app.post('/auth/login', (req: Request, res: Response) => {
-	const {email, password}  = req.body;
+  const { email, password } = req.body;
 
-	try {
-		const {accessToken, refreshToken} = userLogin(email, password)
-    res.cookie("jwt", refreshToken, {
-      httpOnly: true, 
+  try {
+    const { accessToken, refreshToken } = userLogin(email, password);
+    res.cookie('jwt', refreshToken, {
+      httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000
     });
 
-		res.json({token: accessToken}).status(200)
-	} catch (error) {
-		return res.status(400).json({error: error.message})
-		
-	}
+    res.json({ token: accessToken }).status(200);
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
+  }
 });
 
 app.post('/auth/refresh', (req: Request, res: Response) => {
   const cookies = req.cookies;
-  if (!cookies?.jwt) return res.status(401).json({error: "Unauthorised"});
+  if (!cookies?.jwt) return res.status(401).json({ error: 'Unauthorised' });
 
   const refreshToken = cookies.jwt;
 
   try {
-    const result = authRefresh(refreshToken)
-    res.json({token: result}).status(200)
+    const result = authRefresh(refreshToken);
+    res.json({ token: result }).status(200);
   } catch (error) {
-    return res.status(400).json({error: error.message})
+    return res.status(400).json({ error: error.message });
   }
-
 });
 
 app.post('/auth/request-reset', (req: Request, res: Response) => {
-  const {email} = req.body;
+  const { email } = req.body;
 
   try {
-    const result = requestResetPasswd(email)
-    res.json({resetToken: result}).status(200)
+    const result = requestResetPasswd(email);
+    res.json({ resetToken: result }).status(200);
   } catch (error) {
-    return res.status(400).json({error: error.message})
+    return res.status(400).json({ error: error.message });
   }
-})
+});
 
 app.post('/auth/reset-password', (req: Request, res: Response) => {
-  
-  const {userId, token, newPassword, confirmNewPasswd} = req.body;
+  const { userId, token, newPassword, confirmNewPasswd } = req.body;
 
   try {
-    const result = setResetPassword(userId, token, newPassword, confirmNewPasswd)
-    res.json({userId: result}).status(200)
+    const result = setResetPassword(userId, token, newPassword, confirmNewPasswd);
+    res.json({ userId: result }).status(200);
   } catch (error) {
-    return res.status(400).json({error: error.message})
+    return res.status(400).json({ error: error.message });
   }
-})
+});
 
 app.get('/auth/user-details', verifyJWT, (req: Request, res: Response) => {
-  const userId = (req as any).userId
+  const userId = (req as any).userId;
 
   try {
-   const result = userDetails(userId)
-   res.json({user: result}).status(200) 
+    const result = userDetails(userId);
+    res.json({ user: result }).status(200);
   } catch (error) {
-    res.status(400).json({error: error.message})
+    res.status(400).json({ error: error.message });
   }
-
-})
+});
 
 app.post('/auth/logout', verifyJWT, (req: Request, res: Response) => {
-  const userId = (req as any).userId 
+  const userId = (req as any).userId;
 
   const cookies = req.cookies;
-  if (!cookies?.jwt) return res.status(401).json({error: "Cookie does not contain refresh token"});
+  if (!cookies?.jwt) return res.status(401).json({ error: 'Cookie does not contain refresh token' });
   const refreshToken = cookies.jwt;
 
   try {
     const result = userLogout(refreshToken, userId);
-    res.json(result).status(200)
+    res.json(result).status(200);
   } catch (error) {
-    res.status(400).json({error : error.message})
+    res.status(400).json({ error: error.message });
   }
-
-})
+});
 
 app.post('/auth/change-password', verifyJWT, (req: Request, res: Response) => {
-  const userId = (req as any).userId 
+  const userId = (req as any).userId;
   const { currentPassword, newPassword, confirmNewPasswd } = req.body;
 
   try {
     const result = userChangePasswords(userId, currentPassword, newPassword, confirmNewPasswd);
-    console.log(result)
-    res.json({userId: result}).status(200) 
+    console.log(result);
+    res.json({ userId: result }).status(200);
   } catch (error) {
-    console.log(error.message)
-    res.status(400).json({error : error.message})
+    console.log(error.message);
+    res.status(400).json({ error: error.message });
   }
 });
