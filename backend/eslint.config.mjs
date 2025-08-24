@@ -38,7 +38,6 @@ export default [
       "patterns": ["*.test.ts"]
     }],
     "@typescript-eslint/no-var-requires": 0,
-    "no-unused-vars": "off",
     "@typescript-eslint/no-unused-vars": ["error", {
       "args": "none",
       "caughtErrors": "none",
