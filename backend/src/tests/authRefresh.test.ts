@@ -14,7 +14,6 @@ afterEach(() => {
 
 describe("Success Cases", () => {
     test("Success", () => {
-        let refreshToken: string;
         requestAuthRegister("Mubashir", "Hussain", "Abcdefg123$", "example@gmail.com")
         const res1 = requestAuthLogin("example@gmail.com", "Abcdefg123$");
         const cookie = res1.headers['set-cookie']

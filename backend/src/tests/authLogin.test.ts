@@ -40,6 +40,24 @@ describe('Success Cases', () => {
         expect(data).toStrictEqual({token: expect.any(String)})
         expect(res.statusCode).toStrictEqual(200)
     });
+
+    test("Correct User LoggedIn", () =>{
+        const res = requestAuthLogin("example@gmail.com", "Abcdefg123$")
+        const data = JSON.parse(res.body.toString());
+        const token = data.token;
+
+        const res1 = requestAuthUserDetails(token)
+        const data1 = JSON.parse(res1.body.toString())
+
+        expect(data1).toStrictEqual({
+            user: {
+                userId: expect.any(String),
+                name: 'Mubashir Hussain',
+                email: 'example@gmail.com',
+            }
+        });
+        
+    });
 })
 
 
@@ -53,4 +71,10 @@ const requestAuthLogin = (email: string, password: string) => {
     return (request('POST', SERVER_URL + '/auth/login', {
         json: {email, password}, timeout: TIMEOUT_MS
     }));
+}
+
+const requestAuthUserDetails = (token: string) => {
+    return (request('GET', SERVER_URL + '/auth/user-details', 
+       {headers: {'Authorization': `Bearer ${token}`} }
+    ));
 }

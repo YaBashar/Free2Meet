@@ -27,6 +27,5 @@ export interface Users {
 export interface UserDetails {
     userId: string,
     name: string,
-    password: string,
     email: string,
 }

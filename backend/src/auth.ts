@@ -32,7 +32,7 @@ function registerUser(firstName: string, lastName: string, password: string, ema
         name: name,
         password: hashedPassword,
         email: email,
-        numSuccessfulLogins: 1,
+        numSuccessfulLogins: 0,
         numfailedSinceLastLogin: 0,
         passwordHistory: [hashedPassword],
         refreshToken: []
@@ -182,7 +182,6 @@ function userDetails(userId: string): UserDetails {
     return  {
         userId: currUser.userId,
         name: currUser.name,
-        password: currUser.password, 
         email: currUser.email
     }
 }

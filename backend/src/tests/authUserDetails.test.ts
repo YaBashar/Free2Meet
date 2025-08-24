@@ -41,7 +41,6 @@ describe("Success Case", () => {
             user: {
                 userId: expect.any(String),
                 name: expect.any(String),
-                password: expect.any(String),
                 email: expect.any(String)
             }
         })
