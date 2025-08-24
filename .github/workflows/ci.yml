@@ -4,10 +4,7 @@ on:
   pull_request:
     branches:
       - main   # Run on PRs into main
-  push:
-    branches:
-      - main   # Optional: run when code is pushed directly to main
-
+ 
 jobs:
   test:
     runs-on: ubuntu-latest
