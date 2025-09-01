@@ -60,4 +60,23 @@ function createEvent(userId: string, title: string, description: string, locatio
   return newEvent.id;
 }
 
-export { createEvent };
+function deleteEvent(userId: string, eventId: string): object {
+  const store = getData();
+  const userIndex = store.users.findIndex(user => (user.userId === userId));
+  const user = store.users[userIndex];
+
+  if (!user) {
+    throw new Error('Invalid User Id');
+  }
+
+  const eventIndex = user.organisedEvents.findIndex(event => (event.id === eventId));
+  const event = user.organisedEvents[eventIndex];
+  if (!event) {
+    throw new Error('Invalid Event Id');
+  }
+
+  user.organisedEvents.splice(eventIndex, 1);
+  return {};
+}
+
+export { createEvent, deleteEvent };
