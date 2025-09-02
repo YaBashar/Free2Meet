@@ -49,7 +49,7 @@ function createEvent(userId: string, title: string, description: string, locatio
     date: date,
     startTime: startTime,
     endTime: endTime,
-    organiser: userId,
+    organiser: user.name,
     attendees: [],
     notAttending: []
   };
@@ -58,6 +58,35 @@ function createEvent(userId: string, title: string, description: string, locatio
   user.organisedEvents.push(newEvent);
   setData(store);
   return newEvent.id;
+}
+
+function eventDetails(userId: string, eventId: string): Events {
+  const store = getData();
+  const userIndex = store.users.findIndex(user => (user.userId === userId));
+  const user = store.users[userIndex];
+
+  if (!user) {
+    throw new Error('Invalid User Id');
+  }
+
+  const eventIndex = user.organisedEvents.findIndex(event => (event.id === eventId));
+  const event = user.organisedEvents[eventIndex];
+  if (!event) {
+    throw new Error('Invalid Event Id');
+  }
+
+  return {
+    id: event.id,
+    title: event.title,
+    description: event.description,
+    location: event.location,
+    date: event.date,
+    startTime: event.startTime,
+    endTime: event.endTime,
+    organiser: event.organiser,
+    attendees: event.attendees,
+    notAttending: event.notAttending
+  };
 }
 
 function deleteEvent(userId: string, eventId: string): object {
@@ -79,4 +108,4 @@ function deleteEvent(userId: string, eventId: string): object {
   return {};
 }
 
-export { createEvent, deleteEvent };
+export { createEvent, deleteEvent, eventDetails };
