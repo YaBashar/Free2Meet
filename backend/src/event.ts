@@ -1,4 +1,5 @@
 import { getData, setData } from './dataStore';
+import crypto from 'crypto';
 import { Events } from './interfaces';
 
 // TODO Future
@@ -108,4 +109,23 @@ function deleteEvent(userId: string, eventId: string): object {
   return {};
 }
 
-export { createEvent, deleteEvent, eventDetails };
+function inviteLink(userId: string, eventId: string): string {
+  const store = getData();
+  const userIndex = store.users.findIndex(user => (user.userId === userId));
+  const user = store.users[userIndex];
+
+  if (!user) {
+    throw new Error('Invalid User Id');
+  }
+
+  const eventIndex = user.organisedEvents.findIndex(event => (event.id === eventId));
+  const event = user.organisedEvents[eventIndex];
+  if (!event) {
+    throw new Error('Invalid Event Id');
+  }
+
+  const invite = crypto.randomBytes(32).toString('hex');
+  return invite;
+}
+
+export { createEvent, deleteEvent, eventDetails, inviteLink };

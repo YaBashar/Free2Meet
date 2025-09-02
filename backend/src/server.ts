@@ -11,7 +11,7 @@ import config from './config.json';
 import { setData } from './dataStore';
 import { echo, clear } from './other';
 import { registerUser, userLogin, requestResetPasswd, setResetPassword, authRefresh, userDetails, userLogout, userChangePasswords } from './auth';
-import { createEvent, deleteEvent, eventDetails } from './event';
+import { createEvent, deleteEvent, eventDetails, inviteLink } from './event';
 import { verifyJWT } from './middleware';
 // set up app
 const app = express();
@@ -184,6 +184,18 @@ app.post('/events/new-event', verifyJWT, (req: Request, res: Response) => {
   try {
     const result = createEvent(userId, title, description, location, date, startTime, endTime);
     res.json({ eventId: result });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.post('/events/invite/:eventId', verifyJWT, (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+  const eventId = req.params.eventId as string;
+
+  try {
+    const result = inviteLink(userId, eventId);
+    res.json({ link: result }).status(200);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
