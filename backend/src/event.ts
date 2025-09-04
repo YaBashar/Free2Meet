@@ -1,0 +1,149 @@
+import { getData, setData } from './dataStore';
+import crypto from 'crypto';
+import { Events } from './interfaces';
+import { checkEventConstraints } from './eventHelper';
+
+// TODO Future
+// Use Date Object Instead of String
+// Handling Multiple Dates and Timings ie 1 week range.
+
+function createEvent(userId: string, title: string, description: string, location: string, date: string, startTime: number, endTime: number): string {
+  const store = getData();
+  const userIndex = store.users.findIndex(user => (user.userId === userId));
+  const user = store.users[userIndex];
+
+  if (!user) {
+    throw new Error('Invalid User Id');
+  }
+
+  const clash = user.organisedEvents.some(event =>
+    event.location === location &&
+    event.date === date &&
+    !(endTime <= event.startTime || startTime >= event.endTime)
+  );
+
+  if (clash) {
+    throw new Error('Event already exists');
+  }
+
+  try {
+    checkEventConstraints(title, description, startTime, endTime);
+  } catch (error) {
+    throw new Error(error.message);
+  }
+
+  const eventId = Date.now().toString();
+  const newEvent: Events = {
+    id: eventId,
+    title: title,
+    description: description,
+    location: location,
+    date: date,
+    startTime: startTime,
+    endTime: endTime,
+    organiser: user.name,
+    attendees: [],
+    notAttending: []
+  };
+
+  store.events.push(newEvent);
+  user.organisedEvents.push(newEvent);
+  setData(store);
+  return newEvent.id;
+}
+
+function eventDetails(userId: string, eventId: string): Events {
+  const store = getData();
+  const userIndex = store.users.findIndex(user => (user.userId === userId));
+  const user = store.users[userIndex];
+
+  if (!user) {
+    throw new Error('Invalid User Id');
+  }
+
+  const eventIndex = user.organisedEvents.findIndex(event => (event.id === eventId));
+  const event = user.organisedEvents[eventIndex];
+  if (!event) {
+    throw new Error('Invalid Event Id');
+  }
+
+  return {
+    id: event.id,
+    title: event.title,
+    description: event.description,
+    location: event.location,
+    date: event.date,
+    startTime: event.startTime,
+    endTime: event.endTime,
+    organiser: event.organiser,
+    attendees: event.attendees,
+    notAttending: event.notAttending
+  };
+}
+
+function deleteEvent(userId: string, eventId: string): object {
+  const store = getData();
+  const userIndex = store.users.findIndex(user => (user.userId === userId));
+  const user = store.users[userIndex];
+
+  if (!user) {
+    throw new Error('Invalid User Id');
+  }
+
+  const eventIndex = user.organisedEvents.findIndex(event => (event.id === eventId));
+  const event = user.organisedEvents[eventIndex];
+  if (!event) {
+    throw new Error('Invalid Event Id');
+  }
+
+  user.organisedEvents.splice(eventIndex, 1);
+  return {};
+}
+
+function inviteLink(userId: string, eventId: string): string {
+  const store = getData();
+  const userIndex = store.users.findIndex(user => (user.userId === userId));
+  const user = store.users[userIndex];
+
+  if (!user) {
+    throw new Error('Invalid User Id');
+  }
+
+  const eventIndex = user.organisedEvents.findIndex(event => (event.id === eventId));
+  const event = user.organisedEvents[eventIndex];
+  if (!event) {
+    throw new Error('Invalid Event Id');
+  }
+
+  const invite = crypto.randomBytes(32).toString('hex');
+  return invite;
+}
+
+function updateEvent(userId: string, eventId: string, title: string, description: string, location: string, date: string, startTime: number, endTime: number) {
+  const store = getData();
+  const userIndex = store.users.findIndex(user => (user.userId === userId));
+  const user = store.users[userIndex];
+
+  if (!user) {
+    throw new Error('Invalid User Id');
+  }
+
+  const eventIndex = user.organisedEvents.findIndex(event => (event.id === eventId));
+  const event = user.organisedEvents[eventIndex];
+  if (!event) {
+    throw new Error('Invalid Event Id');
+  }
+
+  try {
+    checkEventConstraints(title, description, startTime, endTime);
+  } catch (error) {
+    throw new Error(error.message);
+  }
+
+  const updateFields = { title, description, location, date, startTime, endTime };
+  user.organisedEvents[eventIndex] = { ...event, ...updateFields };
+  setData(store);
+  return {};
+}
+
+export { createEvent, deleteEvent, eventDetails, inviteLink, updateEvent };

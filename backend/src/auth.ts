@@ -35,7 +35,8 @@ function registerUser(firstName: string, lastName: string, password: string, ema
     numSuccessfulLogins: 0,
     numfailedSinceLastLogin: 0,
     passwordHistory: [hashedPassword],
-    refreshToken: []
+    refreshToken: [],
+    organisedEvents: []
   };
 
   store.users.push(newUser);
@@ -160,7 +161,8 @@ function setResetPassword(userId: string, token: string, newPassword: string, co
     numSuccessfulLogins: currUser.numSuccessfulLogins,
     numfailedSinceLastLogin: currUser.numfailedSinceLastLogin,
     passwordHistory: [newPassword, ...(previousPasswds || [])],
-    refreshToken: currUser.refreshToken
+    refreshToken: currUser.refreshToken,
+    organisedEvents: currUser.organisedEvents
   };
 
   store.users.push(user);
@@ -214,7 +216,8 @@ function userChangePasswords(userId: string, currentPassword: string, newPasswor
     numSuccessfulLogins: currUser.numSuccessfulLogins,
     numfailedSinceLastLogin: currUser.numfailedSinceLastLogin,
     passwordHistory: [newPassword, ...(previousPasswds || [])],
-    refreshToken: currUser.refreshToken
+    refreshToken: currUser.refreshToken,
+    organisedEvents: currUser.organisedEvents
   };
 
   store.users.push(user);

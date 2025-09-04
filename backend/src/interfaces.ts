@@ -5,12 +5,25 @@ export interface Store {
 }
 
 export interface Events {
-    id: number,
+    id: string,
     title: string,
     description: string,
-    data: string,
+    location: string,
+    date: string,
     startTime: number,
-    endTime: number
+    endTime: number,
+    organiser: string,
+    attendees: string[],
+    notAttending: string[]
+}
+
+export interface UpdateEvents {
+    title: string,
+    description: string,
+    location: string,
+    date: string,
+    startTime: number,
+    endTime: number,
 }
 
 export interface Users {
@@ -21,7 +34,8 @@ export interface Users {
     numSuccessfulLogins: number,
     numfailedSinceLastLogin: number,
     passwordHistory: string[],
-    refreshToken: string[]
+    refreshToken: string[],
+    organisedEvents: Events[],
 }
 
 export interface UserDetails {

@@ -11,7 +11,9 @@ import config from './config.json';
 import { setData } from './dataStore';
 import { echo, clear } from './other';
 import { registerUser, userLogin, requestResetPasswd, setResetPassword, authRefresh, userDetails, userLogout, userChangePasswords } from './auth';
+import { createEvent, deleteEvent, eventDetails, inviteLink, updateEvent } from './event';
 import { verifyJWT } from './middleware';
+import { UpdateEvents } from './interfaces';
 // set up app
 const app = express();
 
@@ -172,6 +174,69 @@ app.post('/auth/change-password', verifyJWT, (req: Request, res: Response) => {
     res.json({ userId: result }).status(200);
   } catch (error) {
     console.log(error.message);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.post('/events/new-event', verifyJWT, (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+  const { title, description, location, date, startTime, endTime } = req.body;
+
+  try {
+    const result = createEvent(userId, title, description, location, date, startTime, endTime);
+    res.json({ eventId: result });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.post('/events/invite/:eventId', verifyJWT, (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+  const eventId = req.params.eventId as string;
+
+  try {
+    const result = inviteLink(userId, eventId);
+    res.json({ link: result }).status(200);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.put('/events/update-event/:eventId', verifyJWT, (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+  const eventId = req.params.eventId as string;
+  const updatedEventFields: UpdateEvents = req.body;
+  const { title, description, location, date, startTime, endTime } = updatedEventFields;
+
+  try {
+    const result = updateEvent(userId, eventId, title, description, location, date, startTime, endTime);
+    res.json(result).status(200);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.get('/events/event-details/:eventId', verifyJWT, (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+  const eventId = req.params.eventId as string;
+
+  try {
+    const result = eventDetails(userId, eventId);
+    res.json({ event: result }).status(200);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.delete('/events/delete-event/:eventId', verifyJWT, (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+  const eventId = req.params.eventId as string;
+
+  try {
+    const result = deleteEvent(userId, eventId);
+    console.log(result);
+    res.json(result).status(200);
+  } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
