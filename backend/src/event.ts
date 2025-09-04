@@ -1,6 +1,7 @@
 import { getData, setData } from './dataStore';
 import crypto from 'crypto';
 import { Events } from './interfaces';
+import { checkEventConstraints } from './eventHelper';
 
 // TODO Future
 // Use Date Object Instead of String
@@ -25,20 +26,10 @@ function createEvent(userId: string, title: string, description: string, locatio
     throw new Error('Event already exists');
   }
 
-  if (title.length <= 3) {
-    throw new Error('Event Title too short');
-  } else if (title.length > 30) {
-    throw new Error('Event Title too long');
-  }
-
-  if (description.length <= 3) {
-    throw new Error('Event Description too short');
-  } else if (description.length > 30) {
-    throw new Error('Event Description too long');
-  }
-
-  if (endTime <= startTime) {
-    throw new Error('Invalid Event Timing');
+  try {
+    checkEventConstraints(title, description, startTime, endTime);
+  } catch (error) {
+    throw new Error(error.message);
   }
 
   const eventId = Date.now().toString();
@@ -128,9 +119,6 @@ function inviteLink(userId: string, eventId: string): string {
   return invite;
 }
 
-// TODO
-// Only update event fields from organiser pov
-// title, description, location, date, startTime, endTime
 function updateEvent(userId: string, eventId: string, title: string, description: string, location: string, date: string, startTime: number, endTime: number) {
   const store = getData();
   const userIndex = store.users.findIndex(user => (user.userId === userId));
@@ -146,25 +134,14 @@ function updateEvent(userId: string, eventId: string, title: string, description
     throw new Error('Invalid Event Id');
   }
 
-  if (title.length <= 3) {
-    throw new Error('Event Title too short');
-  } else if (title.length > 30) {
-    throw new Error('Event Title too long');
-  }
-
-  if (description.length <= 3) {
-    throw new Error('Event Description too short');
-  } else if (description.length > 30) {
-    throw new Error('Event Description too long');
-  }
-
-  if (endTime <= startTime) {
-    throw new Error('Invalid Event Timing');
+  try {
+    checkEventConstraints(title, description, startTime, endTime);
+  } catch (error) {
+    throw new Error(error.message);
   }
 
   const updateFields = { title, description, location, date, startTime, endTime };
   user.organisedEvents[eventIndex] = { ...event, ...updateFields };
-  console.log(user.organisedEvents[eventIndex]);
   setData(store);
   return {};
 }

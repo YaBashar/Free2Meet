@@ -79,6 +79,29 @@ describe('Success Cases', () => {
     expect(data.eventId).toStrictEqual(expect.any(String));
     expect(res.statusCode).toStrictEqual(200);
   });
+
+  test('New Event Exists', () => {
+    const res1 = requestNewEvent(token, 'New Event', 'New Description', 'House', '31/08/2025', 10, 14);
+    const data1 = JSON.parse(res1.body.toString());
+    const eventId = data1.eventId;
+
+    const res2 = requestEventDetails(token, eventId);
+    const data2 = JSON.parse(res2.body.toString());
+    expect(data2.event).toStrictEqual({
+      id: eventId,
+      title: 'New Event',
+      description: 'New Description',
+      location: 'House',
+      date: '31/08/2025',
+      startTime: 10,
+      endTime: 14,
+      organiser: 'Mubashir Hussain',
+      attendees: [],
+      notAttending: []
+    });
+
+    expect(res2.statusCode).toStrictEqual(200);
+  });
 });
 
 const requestAuthRegister = (firstName: string, lastName: string, password: string, email: string) => {
@@ -97,6 +120,13 @@ const requestNewEvent = (token: string, title: string, description: string, loca
   return (request('POST', SERVER_URL + '/events/new-event', {
     headers: { Authorization: `Bearer ${token}` },
     json: { title, description, location, date, startTime, endTime },
+    timeout: TIMEOUT_MS
+  }));
+};
+
+const requestEventDetails = (token: string, eventId: string) => {
+  return (request('GET', SERVER_URL + `/events/event-details/${eventId}`, {
+    headers: { Authorization: `Bearer ${token}` },
     timeout: TIMEOUT_MS
   }));
 };

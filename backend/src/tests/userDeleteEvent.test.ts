@@ -39,11 +39,19 @@ describe('Error Cases', () => {
 });
 
 describe('Success Cases', () => {
-  test('Success', () => {
+  test('Successful Return Type', () => {
     const res = requestDeleteEvent(token, eventId);
     const data = JSON.parse(res.body.toString());
     expect(data).toStrictEqual({});
     expect(res.statusCode).toStrictEqual(200);
+  });
+
+  test('Confirming Event does not exist', () => {
+    requestDeleteEvent(token, eventId);
+    const res = requestEventDetails(token, eventId);
+    const data = JSON.parse(res.body.toString());
+    expect(data).toStrictEqual({ error: expect.any(String) });
+    expect(res.statusCode).toStrictEqual(400);
   });
 });
 
@@ -69,6 +77,13 @@ const requestNewEvent = (token: string, title: string, description: string, loca
 
 const requestDeleteEvent = (token: string, eventId: string) => {
   return (request('DELETE', SERVER_URL + `/events/delete-event/${eventId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    timeout: TIMEOUT_MS
+  }));
+};
+
+const requestEventDetails = (token: string, eventId: string) => {
+  return (request('GET', SERVER_URL + `/events/event-details/${eventId}`, {
     headers: { Authorization: `Bearer ${token}` },
     timeout: TIMEOUT_MS
   }));

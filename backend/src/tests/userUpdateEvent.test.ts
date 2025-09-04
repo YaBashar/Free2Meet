@@ -55,8 +55,7 @@ describe('Success', () => {
     const data = JSON.parse(res.body.toString());
     expect(data).toStrictEqual({});
     expect(res.statusCode).toStrictEqual(200);
-  })
-
+  });
 
   test('Successfully Updated', () => {
     requestEventUpdate(token, eventId, updatedFields);
@@ -113,4 +112,3 @@ const requestEventDetails = (token: string, eventId: string) => {
     timeout: TIMEOUT_MS
   }));
 };
-
