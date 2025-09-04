@@ -3,24 +3,28 @@ name: CI Tests
 on:
   pull_request:
     branches:
-      - main   
- 
+      - main
+
 jobs:
   test:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [20.13]
+    container:
+      image: node:20
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
-      - name: Set up Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 20
+
+      - name: Write config.json from secret
+        working-directory: ./backend
+        run: echo "$CONFIG_JSON" > config.json
+        env:
+          CONFIG_JSON: ${{ secrets.CONFIG_JSON }}
 
       - name: Install dependencies
         working-directory: ./backend
@@ -28,7 +32,4 @@ jobs:
 
       - name: Run tests
         working-directory: ./backend
-        env:
-          PORT: "3228"
-          URL: "http://127.0.0.1"
         run: npm test
