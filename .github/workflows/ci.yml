@@ -28,4 +28,7 @@ jobs:
 
       - name: Run tests
         working-directory: ./backend
+        env:
+          PORT: "3228"
+          URL: "http://127.0.0.1"
         run: npm test
