@@ -28,4 +28,7 @@ jobs:
 
       - name: Run tests
         working-directory: ./backend
-        run: npm test
+        run: |
+          npm start & 
+          sleep 5 
+          npm test
