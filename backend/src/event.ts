@@ -128,4 +128,45 @@ function inviteLink(userId: string, eventId: string): string {
   return invite;
 }
 
-export { createEvent, deleteEvent, eventDetails, inviteLink };
+// TODO
+// Only update event fields from organiser pov
+// title, description, location, date, startTime, endTime
+function updateEvent(userId: string, eventId: string, title: string, description: string, location: string, date: string, startTime: number, endTime: number) {
+  const store = getData();
+  const userIndex = store.users.findIndex(user => (user.userId === userId));
+  const user = store.users[userIndex];
+
+  if (!user) {
+    throw new Error('Invalid User Id');
+  }
+
+  const eventIndex = user.organisedEvents.findIndex(event => (event.id === eventId));
+  const event = user.organisedEvents[eventIndex];
+  if (!event) {
+    throw new Error('Invalid Event Id');
+  }
+
+  if (title.length <= 3) {
+    throw new Error('Event Title too short');
+  } else if (title.length > 30) {
+    throw new Error('Event Title too long');
+  }
+
+  if (description.length <= 3) {
+    throw new Error('Event Description too short');
+  } else if (description.length > 30) {
+    throw new Error('Event Description too long');
+  }
+
+  if (endTime <= startTime) {
+    throw new Error('Invalid Event Timing');
+  }
+
+  const updateFields = { title, description, location, date, startTime, endTime };
+  user.organisedEvents[eventIndex] = { ...event, ...updateFields };
+  console.log(user.organisedEvents[eventIndex]);
+  setData(store);
+  return {};
+}
+
+export { createEvent, deleteEvent, eventDetails, inviteLink, updateEvent };
