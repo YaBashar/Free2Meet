@@ -36,6 +36,7 @@ export interface Users {
     passwordHistory: string[],
     refreshToken: string[],
     organisedEvents: Events[],
+    attendingEvents: Events[]
 }
 
 export interface UserDetails {
