@@ -29,26 +29,12 @@ jobs:
       - name: Run tests
         working-directory: ./backend
         run: |
-          # 1. Create a temporary log file for the server output
-          SERVER_LOG=$(mktemp)
+          npm start &
+          SERVER_PID=$!
+          timeout 10s bash -c 'until curl -s http://localhost:3228 > /dev/null; do sleep 1; done'
 
-          # 2. Start the server in the background and redirect its output to the log file
-          npm start > $SERVER_LOG 2>&1 &
+          # Run the tests
+          npm test
 
-          # 3. Wait for the server to be ready by searching the log file.
-          #    If "Server started on port" isn't found within 10 seconds, print the log and fail.
-          #    The 'while' loop with 'grep' is a cross-platform alternative to GitLab's more specific `grep -q <(tail -f ...)`
-          timeout 10s bash -c 'while [[ ! -s "$SERVER_LOG" ]] || ! grep -q "Server started on port" "$SERVER_LOG"; do sleep 1; done' || { cat "$SERVER_LOG"; exit 1; }
-
-          # 4. Run the tests with a timeout of 180 seconds.
-          #    If the tests fail, print the server log and exit with an error.
-          timeout 180s npm test || { cat "$SERVER_LOG"; exit 1; }
-
-          # 5. Get the PID of the background server process and terminate it
-          kill $(jobs -p)
-
-          # 6. Wait for a couple of seconds to ensure the process has fully exited
-          sleep 2
-
-          # 7. Print the full server log for debugging purposes
-          cat "$SERVER_LOG"
+          # Kill the server process
+          kill $SERVER_PID
