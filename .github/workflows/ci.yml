@@ -21,7 +21,7 @@ jobs:
           node-version: 20
 
       - name: Write config.json from secret
-        working-directory: ./backend
+        working-directory: ./backend/src
         run: echo "$CONFIG_JSON" > config.json
         env:
           CONFIG_JSON: ${{ secrets.CONFIG_JSON }}
