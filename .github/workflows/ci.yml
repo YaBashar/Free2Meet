@@ -28,6 +28,10 @@ jobs:
 
       - name: Run tests
         working-directory: ./backend
+        env: 
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+          INVITATION_SECRET: ${{ secrets.JWT_INVITATION_SECRET }}
         run: |
           npm start &
           SERVER_PID=$!
