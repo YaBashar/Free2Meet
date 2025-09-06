@@ -17,6 +17,11 @@ export interface Events {
     notAttending: string[]
 }
 
+export interface EventInvite {
+    eventId: string,
+    link: string
+}
+
 export interface UpdateEvents {
     title: string,
     description: string,
