@@ -1,8 +1,9 @@
 import { getData, setData } from './dataStore';
-import { Users, UserDetails } from './interfaces';
+import { Users, UserDetails, ResetToken } from './interfaces';
 import { checkEmail, checkPassword, checkName, hashPassword, checkNewPasswd } from './authHelper';
 
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import 'dotenv/config';
 import jwt from 'jsonwebtoken';
 const SECRET = process.env.JWT_SECRET;
@@ -36,6 +37,10 @@ function registerUser(firstName: string, lastName: string, password: string, ema
     numfailedSinceLastLogin: 0,
     passwordHistory: [hashedPassword],
     refreshToken: [],
+    resetToken: {
+      token: undefined,
+      expiresAt: -1
+    },
     organisedEvents: [],
     attendingEvents: []
   };
@@ -98,6 +103,9 @@ function authRefresh(refreshToken: string) {
   try {
     jwt.verify(refreshToken, REFRESH_SECRET);
   } catch (error) {
+    // Delete Expired Refresh Token from User
+    const refreshTokenIndex = user.refreshToken.findIndex((rfToken) => rfToken === refreshToken);
+    user.refreshToken.splice(refreshTokenIndex, 1);
     throw new Error(error.message);
   }
 
@@ -113,7 +121,6 @@ function authRefresh(refreshToken: string) {
   * Allows user to get a link or code to then reset password
 **/
 function requestResetPasswd(email:string) {
-  // TODO Later send resetToken to user Email
   const store = getData();
   const userIndex = store.users.findIndex((user) => (user.email === email));
   const currUser = store.users[userIndex];
@@ -122,15 +129,19 @@ function requestResetPasswd(email:string) {
     throw new Error('Email does not exist');
   }
 
-  const SECRET = process.env.JWT_SECRET;
-  const resetToken = jwt.sign({ userId: currUser.userId, email: currUser.email }, SECRET, { expiresIn: '15m' });
-  return resetToken;
+  const resetToken: ResetToken = {
+    token: crypto.randomBytes(32).toString('hex'),
+    expiresAt: Date.now() + 10 * 1000 * 60
+  };
+
+  currUser.resetToken = resetToken;
+  return resetToken.token;
 }
 
 /** [5] Auth Reset-Password
   * Allows user to reset password
 **/
-function setResetPassword(userId: string, token: string, newPassword: string, confirmNewPasswd: string) {
+function setResetPassword(userId: string, rsToken: string, newPassword: string, confirmNewPasswd: string) {
   const store = getData();
   const userIndex = store.users.findIndex((user) => (user.userId === userId));
   const currUser = store.users[userIndex];
@@ -139,11 +150,13 @@ function setResetPassword(userId: string, token: string, newPassword: string, co
     throw new Error('User with userId does not exist');
   }
 
-  const SECRET = process.env.JWT_SECRET;
-  try {
-    jwt.verify(token, SECRET);
-  } catch (error) {
-    throw new Error(error.message);
+  const resetToken = currUser.resetToken;
+  if (resetToken.token !== rsToken) {
+    throw new Error('Invalid Reset Token');
+  }
+
+  if (resetToken.expiresAt < Date.now()) {
+    throw new Error('Reset token expired');
   }
 
   const previousPasswds = currUser.passwordHistory;
@@ -154,17 +167,17 @@ function setResetPassword(userId: string, token: string, newPassword: string, co
   }
 
   newPassword = hashPassword(newPassword);
+
+  // invalidate resetToken after setting new password
+  currUser.resetToken = {
+    token: undefined,
+    expiresAt: Date.now()
+  };
+
   const user: Users = {
-    userId: currUser.userId,
-    name: currUser.name,
+    ...currUser,
     password: newPassword,
-    email: currUser.email,
-    numSuccessfulLogins: currUser.numSuccessfulLogins,
-    numfailedSinceLastLogin: currUser.numfailedSinceLastLogin,
     passwordHistory: [newPassword, ...(previousPasswds || [])],
-    refreshToken: currUser.refreshToken,
-    organisedEvents: currUser.organisedEvents,
-    attendingEvents: currUser.attendingEvents
   };
 
   store.users.push(user);
@@ -211,16 +224,9 @@ function userChangePasswords(userId: string, currentPassword: string, newPasswor
 
   newPassword = hashPassword(newPassword);
   const user: Users = {
-    userId: currUser.userId,
-    name: currUser.name,
+    ...(currUser),
     password: newPassword,
-    email: currUser.email,
-    numSuccessfulLogins: currUser.numSuccessfulLogins,
-    numfailedSinceLastLogin: currUser.numfailedSinceLastLogin,
     passwordHistory: [newPassword, ...(previousPasswds || [])],
-    refreshToken: currUser.refreshToken,
-    organisedEvents: currUser.organisedEvents,
-    attendingEvents: currUser.attendingEvents
   };
 
   store.users.push(user);
