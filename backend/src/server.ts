@@ -164,7 +164,7 @@ app.post('/auth/logout', verifyJWT, (req: Request, res: Response) => {
   }
 });
 
-app.post('/auth/change-password', verifyJWT, (req: Request, res: Response) => {
+app.put('/auth/change-password', verifyJWT, (req: Request, res: Response) => {
   const userId = (req as any).userId;
   const { currentPassword, newPassword, confirmNewPasswd } = req.body;
 

@@ -35,7 +35,14 @@ export interface Users {
     numfailedSinceLastLogin: number,
     passwordHistory: string[],
     refreshToken: string[],
+    resetToken: ResetToken,
     organisedEvents: Events[],
+    attendingEvents: Events[]
+}
+
+export interface ResetToken {
+    token: string,
+    expiresAt: number
 }
 
 export interface UserDetails {

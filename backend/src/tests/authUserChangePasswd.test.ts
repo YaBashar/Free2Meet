@@ -25,7 +25,7 @@ const requestAuthLogin = (email: string, password: string) => {
 };
 
 const requestUserChangePassword = (token: string, currentPassword:string, newPassword: string, confirmNewPasswd: string) => {
-  return (request('POST', SERVER_URL + '/auth/change-password', {
+  return (request('PUT', SERVER_URL + '/auth/change-password', {
     headers: { Authorization: `Bearer ${token}` },
     json: { currentPassword, newPassword, confirmNewPasswd },
     timeout: TIMEOUT_MS
