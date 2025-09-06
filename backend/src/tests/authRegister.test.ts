@@ -18,6 +18,18 @@ const requestAuthRegister = (firstName: string, lastName: string, password: stri
   }));
 };
 
+const requestAuthUserDetails = (token: string) => {
+  return (request('GET', SERVER_URL + '/auth/user-details',
+    { headers: { Authorization: `Bearer ${token}` } }
+  ));
+};
+
+const requestAuthLogin = (email: string, password: string) => {
+  return (request('POST', SERVER_URL + '/auth/login', {
+    json: { email, password }, timeout: TIMEOUT_MS
+  }));
+};
+
 describe('Error Cases', () => {
   describe('Test Email', () => {
     test('email address is already used by another user', () => {
@@ -120,13 +132,31 @@ describe('Error Cases', () => {
 });
 
 describe('Success Cases', () => {
-  // Register User
-  // Validate User was added to db with get User Details
   test('Register User', () => {
     const result = requestAuthRegister('Mubashir', 'Hussain', 'SecurePassword123*', 'Mubashirmh04@gmail.com');
     const data = JSON.parse(result.body.toString());
 
     expect(data.userId).toStrictEqual(expect.any(String));
     expect(result.statusCode).toStrictEqual(200);
+  });
+
+  test('Correct User Registered', () => {
+    const res1 = requestAuthRegister('Mubashir', 'Hussain', 'SecurePassword123*', 'Mubashirmh04@gmail.com');
+    const data1 = JSON.parse(res1.body.toString());
+    const userId = data1.userId;
+
+    const res2 = requestAuthLogin('Mubashirmh04@gmail.com', 'SecurePassword123*');
+    const data2 = JSON.parse(res2.body.toString());
+    const token = data2.token;
+
+    const res3 = requestAuthUserDetails(token);
+    const data3 = JSON.parse(res3.body.toString());
+    expect(data3).toStrictEqual({
+      user: {
+        userId: userId,
+        name: 'Mubashir Hussain',
+        email: 'Mubashirmh04@gmail.com'
+      }
+    });
   });
 });
