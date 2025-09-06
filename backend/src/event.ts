@@ -1,6 +1,6 @@
 import { getData, setData } from './dataStore';
 import crypto from 'crypto';
-import { Events } from './interfaces';
+import { EventInvite, Events } from './interfaces';
 import { checkEventConstraints } from './eventHelper';
 
 // TODO Future
@@ -115,8 +115,13 @@ function inviteLink(userId: string, eventId: string): string {
     throw new Error('Invalid Event Id');
   }
 
-  const invite = crypto.randomBytes(32).toString('hex');
-  return invite;
+  // Atm invites are public, might need another endpoint for private invites
+  const invite: EventInvite = {
+    eventId: event.id,
+    link: crypto.randomBytes(32).toString('hex')
+  };
+
+  return invite.link;
 }
 
 function updateEvent(userId: string, eventId: string, title: string, description: string, location: string, date: string, startTime: number, endTime: number) {
