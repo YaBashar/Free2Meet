@@ -36,7 +36,7 @@ afterEach(() => {
 
 describe('Error Cases', () => {
   test('Invalid Token', () => {
-    const res = requestAcceptEvent('invalid', link);
+    const res = requestAttendeeRespond('invalid', link, 'accept');
     const data = JSON.parse(res.body.toString());
 
     expect(data).toStrictEqual({ error: expect.any(String) });
@@ -44,7 +44,7 @@ describe('Error Cases', () => {
   });
 
   test('Invalid Event Link', () => {
-    const res = requestAcceptEvent(attendeeToken, 'invalid');
+    const res = requestAttendeeRespond(attendeeToken, 'invalid', 'accept');
     const data = JSON.parse(res.body.toString());
 
     expect(data).toStrictEqual({ error: expect.any(String) });
@@ -53,7 +53,7 @@ describe('Error Cases', () => {
 
   test('Event does not exist for invite link', () => {
     requestDeleteEvent(organiserToken, eventId);
-    const res = requestAcceptEvent(attendeeToken, link);
+    const res = requestAttendeeRespond(attendeeToken, link, 'accept');
     const data = JSON.parse(res.body.toString());
 
     expect(data).toStrictEqual({ error: expect.any(String) });
@@ -63,15 +63,15 @@ describe('Error Cases', () => {
 
 describe('Success', () => {
   test('Correct Return Type', () => {
-    const res = requestAcceptEvent(attendeeToken, link);
+    const res = requestAttendeeRespond(attendeeToken, link, 'accept');
     const data = JSON.parse(res.body.toString());
 
     expect(data).toStrictEqual({});
     expect(res.statusCode).toStrictEqual(200);
   });
 
-  test('Attendee added to Event', () => {
-    requestAcceptEvent(attendeeToken, link);
+  test('Attendee accepted and added to Event', () => {
+    requestAttendeeRespond(attendeeToken, link, 'accept');
     const res = requestEventDetails(organiserToken, eventId);
     const data = JSON.parse(res.body.toString());
     expect(data.event).toStrictEqual({
@@ -85,6 +85,24 @@ describe('Success', () => {
       organiser: 'Mubashir Hussain',
       attendees: ['Jonathan Lee'],
       notAttending: []
+    });
+  });
+
+  test('Attendee rejected and added to Event', () => {
+    requestAttendeeRespond(attendeeToken, link, 'reject');
+    const res = requestEventDetails(organiserToken, eventId);
+    const data = JSON.parse(res.body.toString());
+    expect(data.event).toStrictEqual({
+      id: eventId,
+      title: 'New Event',
+      description: 'New Description',
+      location: 'House',
+      date: '31/08/2025',
+      startTime: 10,
+      endTime: 14,
+      organiser: 'Mubashir Hussain',
+      attendees: [],
+      notAttending: ['Jonathan Lee']
     });
   });
 });
@@ -116,10 +134,10 @@ const requestNewEvent = (token: string, title: string, description: string, loca
   }));
 };
 
-const requestAcceptEvent = (token: string, inviteLink: string) => {
+const requestAttendeeRespond = (token: string, inviteLink: string, action: string) => {
   return (request('POST', SERVER_URL + '/attendees/accept', {
     headers: { authorization: `Bearer ${token}` },
-    json: { inviteLink: inviteLink }
+    json: { inviteLink, action }
   }));
 };
 
