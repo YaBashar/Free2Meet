@@ -39,3 +39,37 @@ function attendeeRespond(userId: string, inviteLink: string, action: string): ob
   setData(store);
   return {};
 }
+
+// Select, Edit, Delete Attendee Availabilities.
+function attendeeSelectAvailability(userId: string, eventId: string, startTime: number, endTime: number) {
+  const store = getData();
+
+  const userIndex = store.users.findIndex((user) => user.userId === userId);
+  const user = store.users[userIndex];
+  if (!user) {
+    throw new Error('Invalid User ID');
+  }
+
+  const eventIndex = store.events.findIndex((event) => event.id === eventId);
+  const event = store.events[eventIndex];
+  if (!event) {
+    throw new Error('Invalid Event ID');
+  }
+
+  if (endTime <= startTime) {
+    throw new Error('Invalid Availability Block');
+  }
+
+  const attendee = store.attendees.find((attendee) => attendee.eventId === eventId && attendee.userId === userId);
+  if (!attendee) {
+    throw new Error('Attendee with userId is not part of this Event');
+  }
+
+  attendee.startAvailable = startTime;
+  attendee.endAvailable = endTime;
+
+  setData(store);
+  return {};
+}
+
+export { attendeeRespond, attendeeSelectAvailability };
