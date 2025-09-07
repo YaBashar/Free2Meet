@@ -2,7 +2,8 @@
 export interface Store {
     events: Events[],
     users: Users[],
-    invites: EventInvite[]
+    invites: EventInvite[],
+    attendees: Attendee[]
 }
 
 export interface Events {
@@ -16,6 +17,14 @@ export interface Events {
     organiser: string,
     attendees: string[],
     notAttending: string[]
+}
+
+export interface Attendee {
+    userId: string,
+    eventId: string,
+    name: string,
+    startAvailable: number,
+    endAvailable: number
 }
 
 export interface EventInvite {

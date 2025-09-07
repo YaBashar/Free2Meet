@@ -24,6 +24,14 @@ function attendeeRespond(userId: string, inviteLink: string, action: string): ob
   if (action === 'accept') {
     user.attendingEvents.push(event);
     event.attendees.push(user.name);
+
+    store.attendees.push({
+      userId: user.userId,
+      eventId: event.id,
+      name: user.name,
+      startAvailable: -1,
+      endAvailable: -1
+    });
   } else if (action === 'reject') {
     event.notAttending.push(user.name);
   }
@@ -31,5 +39,3 @@ function attendeeRespond(userId: string, inviteLink: string, action: string): ob
   setData(store);
   return {};
 }
-
-export { attendeeRespond };

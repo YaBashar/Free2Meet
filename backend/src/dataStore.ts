@@ -4,7 +4,8 @@ import fs from 'fs';
 let data: Store = {
   events: [],
   users: [],
-  invites: []
+  invites: [],
+  attendees: []
 };
 
 function setData(newData: Store) {
