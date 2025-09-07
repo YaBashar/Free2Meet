@@ -2,6 +2,7 @@
 export interface Store {
     events: Events[],
     users: Users[],
+    invites: EventInvite[]
 }
 
 export interface Events {
