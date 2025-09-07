@@ -17,4 +17,4 @@ function checkEventConstraints(title: string, description: string, startTime: nu
   }
 }
 
-export { checkEventConstraints }
+export { checkEventConstraints };

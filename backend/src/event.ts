@@ -90,13 +90,18 @@ function deleteEvent(userId: string, eventId: string): object {
     throw new Error('Invalid User Id');
   }
 
-  const eventIndex = user.organisedEvents.findIndex(event => (event.id === eventId));
-  const event = user.organisedEvents[eventIndex];
+  const userEventIndex = user.organisedEvents.findIndex(event => (event.id === eventId));
+  const event = user.organisedEvents[userEventIndex];
   if (!event) {
     throw new Error('Invalid Event Id');
   }
 
-  user.organisedEvents.splice(eventIndex, 1);
+  const eventIndex = store.events.findIndex((event) => event.id === eventId);
+
+  user.organisedEvents.splice(userEventIndex, 1);
+  store.events.splice(eventIndex, 1);
+  setData(store);
+
   return {};
 }
 
@@ -121,6 +126,8 @@ function inviteLink(userId: string, eventId: string): string {
     link: crypto.randomBytes(32).toString('hex')
   };
 
+  store.invites.push(invite);
+  setData(store);
   return invite.link;
 }
 
