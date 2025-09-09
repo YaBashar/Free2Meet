@@ -1,4 +1,5 @@
 import { getData, setData } from './dataStore';
+import { Events } from './interfaces';
 
 function attendeeRespond(userId: string, inviteLink: string, action: string): object {
   const store = getData();
@@ -40,7 +41,6 @@ function attendeeRespond(userId: string, inviteLink: string, action: string): ob
   return {};
 }
 
-// Select, Edit, Delete Attendee Availabilities.
 function attendeeSelectAvailability(userId: string, eventId: string, startTime: number, endTime: number) {
   const store = getData();
 
@@ -72,4 +72,33 @@ function attendeeSelectAvailability(userId: string, eventId: string, startTime: 
   return {};
 }
 
-export { attendeeRespond, attendeeSelectAvailability };
+function attendeeLeaveEvent(userId: string, eventId: string) {
+  const store = getData();
+
+  const userIndex = store.users.findIndex((user) => user.userId === userId);
+  const user = store.users[userIndex];
+  if (!user) {
+    throw new Error('Invalid User ID');
+  }
+
+  const eventIndex = store.events.findIndex((event) => event.id === eventId);
+  const event = store.events[eventIndex];
+  if (!event) {
+    throw new Error('Invalid Event ID');
+  }
+
+  const attendeeIndex = store.attendees.findIndex((attendee) => attendee.eventId === eventId && attendee.userId === userId);
+  const attendee = store.attendees[attendeeIndex];
+  if (!attendee) {
+    throw new Error('Attendee already left');
+  }
+
+  user.attendingEvents = user.attendingEvents.filter((e: Events) => e.id !== eventId);
+  event.attendees = event.attendees.filter((name: string) => name !== user.name);
+  store.attendees.splice(attendeeIndex, 1);
+  event.notAttending.push(user.name);
+
+  return {};
+}
+
+export { attendeeRespond, attendeeSelectAvailability, attendeeLeaveEvent };

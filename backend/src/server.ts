@@ -14,7 +14,7 @@ import { registerUser, userLogin, requestResetPasswd, setResetPassword, authRefr
 import { createEvent, deleteEvent, eventDetails, inviteLink, updateEvent } from './event';
 import { verifyJWT } from './middleware';
 import { UpdateEvents } from './interfaces';
-import { attendeeRespond, attendeeSelectAvailability } from './attendees';
+import { attendeeLeaveEvent, attendeeRespond, attendeeSelectAvailability } from './attendees';
 // set up app
 const app = express();
 
@@ -261,6 +261,18 @@ app.put('/attendees/availability/:eventId', verifyJWT, (req: Request, res: Respo
 
   try {
     const result = attendeeSelectAvailability(userId, eventId, startAvailable, endAvailable);
+    res.json(result).status(200);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.delete('/attendees/leave/:eventId', verifyJWT, (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+  const eventId = req.params.eventId as string;
+
+  try {
+    const result = attendeeLeaveEvent(userId, eventId);
     res.json(result).status(200);
   } catch (error) {
     res.status(400).json({ error: error.message });
