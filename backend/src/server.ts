@@ -14,6 +14,7 @@ import { registerUser, userLogin, requestResetPasswd, setResetPassword, authRefr
 import { createEvent, deleteEvent, eventDetails, inviteLink, updateEvent } from './event';
 import { verifyJWT } from './middleware';
 import { UpdateEvents } from './interfaces';
+import { attendeeLeaveEvent, attendeeRespond, attendeeSelectAvailability } from './attendees';
 // set up app
 const app = express();
 
@@ -235,6 +236,43 @@ app.delete('/events/delete-event/:eventId', verifyJWT, (req: Request, res: Respo
   try {
     const result = deleteEvent(userId, eventId);
     console.log(result);
+    res.json(result).status(200);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.post('/attendees/accept', verifyJWT, (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+  const { inviteLink, action } = req.body;
+
+  try {
+    const result = attendeeRespond(userId, inviteLink, action);
+    res.json(result).status(200);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.put('/attendees/availability/:eventId', verifyJWT, (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+  const eventId = req.params.eventId as string;
+  const { startAvailable, endAvailable } = req.body;
+
+  try {
+    const result = attendeeSelectAvailability(userId, eventId, startAvailable, endAvailable);
+    res.json(result).status(200);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.delete('/attendees/leave/:eventId', verifyJWT, (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+  const eventId = req.params.eventId as string;
+
+  try {
+    const result = attendeeLeaveEvent(userId, eventId);
     res.json(result).status(200);
   } catch (error) {
     res.status(400).json({ error: error.message });
