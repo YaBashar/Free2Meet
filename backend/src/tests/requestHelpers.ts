@@ -104,3 +104,26 @@ export const requestEventInvite = (token: string, eventId: string) => {
     timeout: TIMEOUT_MS
   }));
 };
+
+// Attendee
+
+export const requestAttendeeRespond = (token: string, inviteLink: string, action: string) => {
+  return (request('POST', SERVER_URL + '/attendees/accept', {
+    headers: { Authorization: `Bearer ${token}` },
+    json: { inviteLink, action }
+  }));
+};
+
+export const requestAttendeeLeave = (token: string, eventId: string) => {
+  return (request('DELETE', SERVER_URL + `/attendees/leave/${eventId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    timeout: TIMEOUT_MS
+  }));
+};
+
+export const requestAttendeeSelectAvail = (token: string, eventId: string, startAvailable: number, endAvailable: number) => {
+  return (request('PUT', SERVER_URL + `/attendees/availability/${eventId}`, {
+    headers: { authorization: `Bearer ${token}` },
+    json: { startAvailable, endAvailable }
+  }));
+};
