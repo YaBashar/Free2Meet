@@ -1,12 +1,11 @@
 import request from 'sync-request-curl';
-import { port, url } from '../config.json';
-
+import { port, url } from '../../config.json';
 const SERVER_URL = `${url}:${port}`;
 const TIMEOUT_MS = 5 * 1000;
 
 let organiserToken: string;
 let attendeeToken: string;
-let link: string;
+let link : string;
 let eventId: string;
 
 beforeEach(() => {
@@ -36,36 +35,25 @@ afterEach(() => {
 });
 
 describe('Error Cases', () => {
-  test('Invalid User ID', () => {
-    requestAttendeeRespond(attendeeToken, link, 'accept');
-    const res = requestAttendeeSelectAvail('invalid', eventId, 10, 12);
+  test('Invalid Token', () => {
+    const res = requestAttendeeRespond('invalid', link, 'accept');
     const data = JSON.parse(res.body.toString());
 
     expect(data).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(401);
   });
 
-  test('Invalid Event ID', () => {
-    requestAttendeeRespond(attendeeToken, link, 'accept');
-    const res = requestAttendeeSelectAvail(attendeeToken, 'invalid', 10, 12);
+  test('Invalid Event Link', () => {
+    const res = requestAttendeeRespond(attendeeToken, 'invalid', 'accept');
     const data = JSON.parse(res.body.toString());
 
     expect(data).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(400);
   });
 
-  test('Invalid Availability', () => {
-    requestAttendeeRespond(attendeeToken, link, 'accept');
-    const res = requestAttendeeSelectAvail(attendeeToken, eventId, 10, 10);
-    const data = JSON.parse(res.body.toString());
-
-    expect(data).toStrictEqual({ error: expect.any(String) });
-    expect(res.statusCode).toStrictEqual(400);
-  });
-
-  test('Attendee not part of Event', () => {
-    requestAttendeeRespond(attendeeToken, link, 'reject');
-    const res = requestAttendeeSelectAvail(attendeeToken, eventId, 10, 12);
+  test('Event does not exist for invite link', () => {
+    requestDeleteEvent(organiserToken, eventId);
+    const res = requestAttendeeRespond(attendeeToken, link, 'accept');
     const data = JSON.parse(res.body.toString());
 
     expect(data).toStrictEqual({ error: expect.any(String) });
@@ -74,13 +62,48 @@ describe('Error Cases', () => {
 });
 
 describe('Success', () => {
-  test('Success', () => {
-    requestAttendeeRespond(attendeeToken, link, 'accept');
-    const res = requestAttendeeSelectAvail(attendeeToken, eventId, 10, 12);
+  test('Correct Return Type', () => {
+    const res = requestAttendeeRespond(attendeeToken, link, 'accept');
     const data = JSON.parse(res.body.toString());
 
     expect(data).toStrictEqual({});
     expect(res.statusCode).toStrictEqual(200);
+  });
+
+  test('Attendee accepted and added to Event', () => {
+    requestAttendeeRespond(attendeeToken, link, 'accept');
+    const res = requestEventDetails(organiserToken, eventId);
+    const data = JSON.parse(res.body.toString());
+    expect(data.event).toStrictEqual({
+      id: eventId,
+      title: 'New Event',
+      description: 'New Description',
+      location: 'House',
+      date: '31/08/2025',
+      startTime: 10,
+      endTime: 14,
+      organiser: 'Mubashir Hussain',
+      attendees: ['Jonathan Lee'],
+      notAttending: []
+    });
+  });
+
+  test('Attendee rejected and added to Event', () => {
+    requestAttendeeRespond(attendeeToken, link, 'reject');
+    const res = requestEventDetails(organiserToken, eventId);
+    const data = JSON.parse(res.body.toString());
+    expect(data.event).toStrictEqual({
+      id: eventId,
+      title: 'New Event',
+      description: 'New Description',
+      location: 'House',
+      date: '31/08/2025',
+      startTime: 10,
+      endTime: 14,
+      organiser: 'Mubashir Hussain',
+      attendees: [],
+      notAttending: ['Jonathan Lee']
+    });
   });
 });
 
@@ -118,9 +141,16 @@ const requestAttendeeRespond = (token: string, inviteLink: string, action: strin
   }));
 };
 
-const requestAttendeeSelectAvail = (token: string, eventId: string, startAvailable: number, endAvailable: number) => {
-  return (request('PUT', SERVER_URL + `/attendees/availability/${eventId}`, {
-    headers: { authorization: `Bearer ${token}` },
-    json: { startAvailable, endAvailable }
+const requestEventDetails = (token: string, eventId: string) => {
+  return (request('GET', SERVER_URL + `/events/event-details/${eventId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    timeout: TIMEOUT_MS
+  }));
+};
+
+const requestDeleteEvent = (token: string, eventId: string) => {
+  return (request('DELETE', SERVER_URL + `/events/delete-event/${eventId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    timeout: TIMEOUT_MS
   }));
 };

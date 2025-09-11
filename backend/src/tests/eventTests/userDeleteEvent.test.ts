@@ -1,13 +1,11 @@
 import request from 'sync-request-curl';
-import { port, url } from '../config.json';
-import { UpdateEvents } from '../interfaces';
+import { port, url } from '../../config.json';
 
 const SERVER_URL = `${url}:${port}`;
 const TIMEOUT_MS = 5 * 1000;
 
 let token: string;
 let eventId: string;
-let updatedFields: UpdateEvents;
 beforeEach(() => {
   request('DELETE', SERVER_URL + '/clear', { timeout: TIMEOUT_MS });
   requestAuthRegister('Mubashir', 'Hussain', 'Abcdefg123$', 'example@gmail.com');
@@ -18,15 +16,6 @@ beforeEach(() => {
   const res1 = requestNewEvent(token, 'New Event', 'New Description', 'House', '31/08/2025', 10, 14);
   const data1 = JSON.parse(res1.body.toString());
   eventId = data1.eventId;
-
-  updatedFields = {
-    title: 'Different Event',
-    description: 'Different Description',
-    location: 'Different House',
-    date: '31/08/2025',
-    startTime: 10,
-    endTime: 14
-  };
 });
 
 afterEach(() => {
@@ -35,46 +24,34 @@ afterEach(() => {
 
 describe('Error Cases', () => {
   test('Invalid UserId Token', () => {
-    const res = requestEventUpdate('InvalidToken', eventId, updatedFields);
+    const res = requestDeleteEvent('InvalidToken', eventId);
     const data = JSON.parse(res.body.toString());
     expect(data).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(401);
   });
 
   test('Invalid EventID', () => {
-    const res = requestEventUpdate(token, 'InvalidEventId', updatedFields);
+    const res = requestDeleteEvent(token, 'InvalidEventId');
     const data = JSON.parse(res.body.toString());
     expect(data).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(400);
   });
 });
 
-describe('Success', () => {
-  test('Successful Return type', () => {
-    const res = requestEventUpdate(token, eventId, updatedFields);
+describe('Success Cases', () => {
+  test('Successful Return Type', () => {
+    const res = requestDeleteEvent(token, eventId);
     const data = JSON.parse(res.body.toString());
     expect(data).toStrictEqual({});
     expect(res.statusCode).toStrictEqual(200);
   });
 
-  test('Successfully Updated', () => {
-    requestEventUpdate(token, eventId, updatedFields);
+  test('Confirming Event does not exist', () => {
+    requestDeleteEvent(token, eventId);
     const res = requestEventDetails(token, eventId);
     const data = JSON.parse(res.body.toString());
-    expect(data.event).toStrictEqual({
-      id: eventId,
-      title: 'Different Event',
-      description: 'Different Description',
-      location: 'Different House',
-      date: '31/08/2025',
-      startTime: 10,
-      endTime: 14,
-      organiser: 'Mubashir Hussain',
-      attendees: [],
-      notAttending: []
-    });
-
-    expect(res.statusCode).toStrictEqual(200);
+    expect(data).toStrictEqual({ error: expect.any(String) });
+    expect(res.statusCode).toStrictEqual(400);
   });
 });
 
@@ -98,10 +75,9 @@ const requestNewEvent = (token: string, title: string, description: string, loca
   }));
 };
 
-const requestEventUpdate = (token: string, eventId: string, updatedFields: UpdateEvents) => {
-  return (request('PUT', SERVER_URL + `/events/update-event/${eventId}`, {
+const requestDeleteEvent = (token: string, eventId: string) => {
+  return (request('DELETE', SERVER_URL + `/events/delete-event/${eventId}`, {
     headers: { Authorization: `Bearer ${token}` },
-    json: updatedFields,
     timeout: TIMEOUT_MS
   }));
 };

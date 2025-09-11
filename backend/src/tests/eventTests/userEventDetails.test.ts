@@ -1,5 +1,5 @@
 import request from 'sync-request-curl';
-import { port, url } from '../config.json';
+import { port, url } from '../../config.json';
 
 const SERVER_URL = `${url}:${port}`;
 const TIMEOUT_MS = 5 * 1000;
@@ -24,34 +24,38 @@ afterEach(() => {
 
 describe('Error Cases', () => {
   test('Invalid UserId Token', () => {
-    const res = requestDeleteEvent('InvalidToken', eventId);
+    const res = requestEventDetails('InvalidToken', eventId);
     const data = JSON.parse(res.body.toString());
     expect(data).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(401);
   });
 
   test('Invalid EventID', () => {
-    const res = requestDeleteEvent(token, 'InvalidEventId');
+    const res = requestEventDetails(token, 'InvalidEventId');
     const data = JSON.parse(res.body.toString());
     expect(data).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(400);
   });
 });
 
-describe('Success Cases', () => {
-  test('Successful Return Type', () => {
-    const res = requestDeleteEvent(token, eventId);
-    const data = JSON.parse(res.body.toString());
-    expect(data).toStrictEqual({});
-    expect(res.statusCode).toStrictEqual(200);
-  });
-
-  test('Confirming Event does not exist', () => {
-    requestDeleteEvent(token, eventId);
+describe('Success', () => {
+  test('Success', () => {
     const res = requestEventDetails(token, eventId);
     const data = JSON.parse(res.body.toString());
-    expect(data).toStrictEqual({ error: expect.any(String) });
-    expect(res.statusCode).toStrictEqual(400);
+    expect(data.event).toStrictEqual({
+      id: eventId,
+      title: 'New Event',
+      description: 'New Description',
+      location: 'House',
+      date: '31/08/2025',
+      startTime: 10,
+      endTime: 14,
+      organiser: 'Mubashir Hussain',
+      attendees: [],
+      notAttending: []
+    });
+
+    expect(res.statusCode).toStrictEqual(200);
   });
 });
 
@@ -71,13 +75,6 @@ const requestNewEvent = (token: string, title: string, description: string, loca
   return (request('POST', SERVER_URL + '/events/new-event', {
     headers: { Authorization: `Bearer ${token}` },
     json: { title, description, location, date, startTime, endTime },
-    timeout: TIMEOUT_MS
-  }));
-};
-
-const requestDeleteEvent = (token: string, eventId: string) => {
-  return (request('DELETE', SERVER_URL + `/events/delete-event/${eventId}`, {
-    headers: { Authorization: `Bearer ${token}` },
     timeout: TIMEOUT_MS
   }));
 };
