@@ -1,16 +1,12 @@
-import request from 'sync-request-curl';
-import { port, url } from '../../config.json';
-
-const SERVER_URL = `${url}:${port}`;
-const TIMEOUT_MS = 5 * 1000;
+import { requestAuthLogin, requestAuthRegister, requestAuthUserDetails, requestDelete } from '../requestHelpers';
 
 beforeEach(() => {
-  request('DELETE', SERVER_URL + '/clear', { timeout: TIMEOUT_MS });
+  requestDelete();
   requestAuthRegister('Mubashir', 'Hussain', 'Abcdefg123$', 'example@gmail.com');
 });
 
 afterEach(() => {
-  request('DELETE', SERVER_URL + '/clear', { timeout: TIMEOUT_MS });
+  requestDelete();
 });
 
 describe('Error Cases', () => {
@@ -56,21 +52,3 @@ describe('Success Cases', () => {
     });
   });
 });
-
-const requestAuthRegister = (firstName: string, lastName: string, password: string, email: string) => {
-  return (request('POST', SERVER_URL + '/auth/register', {
-    json: { firstName, lastName, password, email }, timeout: TIMEOUT_MS
-  }));
-};
-
-const requestAuthLogin = (email: string, password: string) => {
-  return (request('POST', SERVER_URL + '/auth/login', {
-    json: { email, password }, timeout: TIMEOUT_MS
-  }));
-};
-
-const requestAuthUserDetails = (token: string) => {
-  return (request('GET', SERVER_URL + '/auth/user-details',
-    { headers: { Authorization: `Bearer ${token}` } }
-  ));
-};
