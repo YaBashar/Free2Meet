@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { createEvent, deleteEvent, eventDetails, inviteLink, updateEvent } from '../service/event..service';
+import { createEvent, deleteEvent, eventDetails, inviteLink, updateEvent } from '../service/event.service';
 import { UpdateEvents } from '../models/interfaces';
 
 export const eventControllerCreate = (req: Request, res: Response) => {

@@ -1,4 +1,4 @@
-import { UpdateEvents } from '../../interfaces';
+import { UpdateEvents } from '../../models/interfaces';
 import { requestAuthLogin, requestAuthRegister, requestDelete, requestEventDetails, requestEventUpdate, requestNewEvent } from '../requestHelpers';
 
 let token: string;

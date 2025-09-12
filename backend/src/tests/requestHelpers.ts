@@ -1,7 +1,7 @@
 
 import request from 'sync-request-curl';
 import { port, url } from '../config.json';
-import { UpdateEvents } from '../interfaces';
+import { UpdateEvents } from '../models/interfaces';
 
 const SERVER_URL = `${url}:${port}`;
 const TIMEOUT_MS = 5 * 1000;
@@ -77,21 +77,21 @@ export const requestNewEvent = (token: string, title: string, description: strin
 };
 
 export const requestDeleteEvent = (token: string, eventId: string) => {
-  return (request('DELETE', SERVER_URL + `/events/delete-event/${eventId}`, {
+  return (request('DELETE', SERVER_URL + `/events/${eventId}`, {
     headers: { Authorization: `Bearer ${token}` },
     timeout: TIMEOUT_MS
   }));
 };
 
 export const requestEventDetails = (token: string, eventId: string) => {
-  return (request('GET', SERVER_URL + `/events/event-details/${eventId}`, {
+  return (request('GET', SERVER_URL + `/events/${eventId}`, {
     headers: { Authorization: `Bearer ${token}` },
     timeout: TIMEOUT_MS
   }));
 };
 
 export const requestEventUpdate = (token: string, eventId: string, updatedFields: UpdateEvents) => {
-  return (request('PUT', SERVER_URL + `/events/update-event/${eventId}`, {
+  return (request('PUT', SERVER_URL + `/events/${eventId}`, {
     headers: { Authorization: `Bearer ${token}` },
     json: updatedFields,
     timeout: TIMEOUT_MS
@@ -99,7 +99,7 @@ export const requestEventUpdate = (token: string, eventId: string, updatedFields
 };
 
 export const requestEventInvite = (token: string, eventId: string) => {
-  return (request('POST', SERVER_URL + `/events/invite/${eventId}`, {
+  return (request('POST', SERVER_URL + `/events/${eventId}/invite`, {
     headers: { Authorization: `Bearer ${token}` },
     timeout: TIMEOUT_MS
   }));
