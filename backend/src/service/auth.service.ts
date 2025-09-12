@@ -1,6 +1,6 @@
-import { getData, setData } from './dataStore';
-import { Users, UserDetails, ResetToken } from './interfaces';
-import { checkEmail, checkPassword, checkName, hashPassword, checkNewPasswd } from './authHelper';
+import { getData, setData } from '../models/dataStore';
+import { Users, UserDetails, ResetToken } from '../models/interfaces';
+import { checkEmail, checkPassword, checkName, hashPassword, checkNewPasswd } from '../utils/authHelper';
 
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';

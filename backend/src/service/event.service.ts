@@ -1,7 +1,7 @@
-import { getData, setData } from './dataStore';
+import { getData, setData } from '../models/dataStore';
 import crypto from 'crypto';
-import { EventInvite, Events } from './interfaces';
-import { checkEventConstraints } from './eventHelper';
+import { EventInvite, Events } from '../models/interfaces';
+import { checkEventConstraints } from '../utils/eventHelper';
 
 // TODO Future
 // Use Date Object Instead of String

@@ -1,5 +1,5 @@
-import { getData, setData } from './dataStore';
-import { Events } from './interfaces';
+import { getData, setData } from '../models/dataStore';
+import { Events } from '../models/interfaces';
 
 function attendeeRespond(userId: string, inviteLink: string, action: string): object {
   const store = getData();
