@@ -8,13 +8,13 @@ import fs from 'fs';
 import path from 'path';
 import process from 'process';
 import config from './config.json';
-import { setData } from './dataStore';
-import { echo, clear } from './other';
-import { registerUser, userLogin, requestResetPasswd, setResetPassword, authRefresh, userDetails, userLogout, userChangePasswords } from './auth';
-import { createEvent, deleteEvent, eventDetails, inviteLink, updateEvent } from './event';
+import { setData } from './models/dataStore';
 import { verifyJWT } from './middleware';
-import { UpdateEvents } from './interfaces';
-import { attendeeLeaveEvent, attendeeRespond, attendeeSelectAvailability } from './attendees';
+
+import { getClear, getEcho } from './controllers/other.controller';
+import { authControllerLogin, authControllerLogout, authControllerRefresh, authControllerRegister, authControllerRequestReset, authControllerResetPasswd, authControllerUserChangePasswd, authControllerUserDetails } from './controllers/auth.controller';
+import { eventControllerCreate, eventControllerDelete, eventControllerDetails, eventControllerInvite, eventControllerUpdate } from './controllers/event.controller';
+import { attendeeControllerAvailable, attendeeControllerLeave, attendeeControllerRespond } from './controllers/attendee.controller';
 // set up app
 const app = express();
 
@@ -55,226 +55,28 @@ process.on('SIGINT', () => {
   });
 });
 
-// ====================================================================
-// ====================================================================
+app.get('/echo', getEcho);
+app.delete('/clear', getClear);
 
-// Example Get Request
-app.get('/echo', (req: Request, res: Response) => {
-  const result = echo(req.query.echo as string);
-  if ('error' in result) {
-    res.status(400);
-  }
-  return res.json(result);
-});
+app.post('/auth/register', authControllerRegister);
+app.post('/auth/login', authControllerLogin);
+app.post('/auth/refresh', authControllerRefresh);
+app.post('/auth/request-reset', authControllerRequestReset);
+app.post('/auth/reset-password', authControllerResetPasswd);
 
-app.delete('/clear', (req: Request, res: Response) => {
-  const result = clear();
-  if ('error' in result) {
-    return res.status(400).json(result);
-  }
-  res.json(result);
-});
+// Send UserId in url
+app.get('/auth/user-details', verifyJWT, authControllerUserDetails);
+app.post('/auth/logout', verifyJWT, authControllerLogout);
+app.put('/auth/change-password', verifyJWT, authControllerUserChangePasswd);
 
-app.post('/auth/register', (req: Request, res: Response) => {
-  const { firstName, lastName, email, password } = req.body;
+// Events
+app.post('/events/new-event', verifyJWT, eventControllerCreate);
+app.post('/events/:eventId/invite', verifyJWT, eventControllerInvite);
+app.put('/events/:eventId', verifyJWT, eventControllerUpdate);
+app.get('/events/:eventId', verifyJWT, eventControllerDetails);
+app.delete('/events/:eventId', verifyJWT, eventControllerDelete);
 
-  try {
-    const result = registerUser(firstName, lastName, password, email);
-    res.json({ userId: result }).status(200);
-  } catch (error) {
-    console.log(error.message);
-    return res.status(400).json({ error: error.message });
-  }
-});
-
-app.post('/auth/login', (req: Request, res: Response) => {
-  const { email, password } = req.body;
-
-  try {
-    const { accessToken, refreshToken } = userLogin(email, password);
-    res.cookie('jwt', refreshToken, {
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000
-    });
-
-    res.json({ token: accessToken }).status(200);
-  } catch (error) {
-    return res.status(400).json({ error: error.message });
-  }
-});
-
-app.post('/auth/refresh', (req: Request, res: Response) => {
-  const cookies = req.cookies;
-  if (!cookies?.jwt) return res.status(401).json({ error: 'Unauthorised' });
-
-  const refreshToken = cookies.jwt;
-
-  try {
-    const result = authRefresh(refreshToken);
-    res.json({ token: result }).status(200);
-  } catch (error) {
-    return res.status(400).json({ error: error.message });
-  }
-});
-
-app.post('/auth/request-reset', (req: Request, res: Response) => {
-  const { email } = req.body;
-
-  try {
-    const result = requestResetPasswd(email);
-    res.json({ resetToken: result }).status(200);
-  } catch (error) {
-    return res.status(400).json({ error: error.message });
-  }
-});
-
-app.post('/auth/reset-password', (req: Request, res: Response) => {
-  const { userId, token, newPassword, confirmNewPasswd } = req.body;
-
-  try {
-    const result = setResetPassword(userId, token, newPassword, confirmNewPasswd);
-    res.json({ userId: result }).status(200);
-  } catch (error) {
-    return res.status(400).json({ error: error.message });
-  }
-});
-
-app.get('/auth/user-details', verifyJWT, (req: Request, res: Response) => {
-  const userId = (req as any).userId;
-
-  try {
-    const result = userDetails(userId);
-    res.json({ user: result }).status(200);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-app.post('/auth/logout', verifyJWT, (req: Request, res: Response) => {
-  const userId = (req as any).userId;
-
-  const cookies = req.cookies;
-  if (!cookies?.jwt) return res.status(401).json({ error: 'Cookie does not contain refresh token' });
-  const refreshToken = cookies.jwt;
-
-  try {
-    const result = userLogout(refreshToken, userId);
-    res.json(result).status(200);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-app.put('/auth/change-password', verifyJWT, (req: Request, res: Response) => {
-  const userId = (req as any).userId;
-  const { currentPassword, newPassword, confirmNewPasswd } = req.body;
-
-  try {
-    const result = userChangePasswords(userId, currentPassword, newPassword, confirmNewPasswd);
-    console.log(result);
-    res.json({ userId: result }).status(200);
-  } catch (error) {
-    console.log(error.message);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-app.post('/events/new-event', verifyJWT, (req: Request, res: Response) => {
-  const userId = (req as any).userId;
-  const { title, description, location, date, startTime, endTime } = req.body;
-
-  try {
-    const result = createEvent(userId, title, description, location, date, startTime, endTime);
-    res.json({ eventId: result });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-app.post('/events/invite/:eventId', verifyJWT, (req: Request, res: Response) => {
-  const userId = (req as any).userId;
-  const eventId = req.params.eventId as string;
-
-  try {
-    const result = inviteLink(userId, eventId);
-    res.json({ link: result }).status(200);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-app.put('/events/update-event/:eventId', verifyJWT, (req: Request, res: Response) => {
-  const userId = (req as any).userId;
-  const eventId = req.params.eventId as string;
-  const updatedEventFields: UpdateEvents = req.body;
-  const { title, description, location, date, startTime, endTime } = updatedEventFields;
-
-  try {
-    const result = updateEvent(userId, eventId, title, description, location, date, startTime, endTime);
-    res.json(result).status(200);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-app.get('/events/event-details/:eventId', verifyJWT, (req: Request, res: Response) => {
-  const userId = (req as any).userId;
-  const eventId = req.params.eventId as string;
-
-  try {
-    const result = eventDetails(userId, eventId);
-    res.json({ event: result }).status(200);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-app.delete('/events/delete-event/:eventId', verifyJWT, (req: Request, res: Response) => {
-  const userId = (req as any).userId;
-  const eventId = req.params.eventId as string;
-
-  try {
-    const result = deleteEvent(userId, eventId);
-    console.log(result);
-    res.json(result).status(200);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-app.post('/attendees/accept', verifyJWT, (req: Request, res: Response) => {
-  const userId = (req as any).userId;
-  const { inviteLink, action } = req.body;
-
-  try {
-    const result = attendeeRespond(userId, inviteLink, action);
-    res.json(result).status(200);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-app.put('/attendees/availability/:eventId', verifyJWT, (req: Request, res: Response) => {
-  const userId = (req as any).userId;
-  const eventId = req.params.eventId as string;
-  const { startAvailable, endAvailable } = req.body;
-
-  try {
-    const result = attendeeSelectAvailability(userId, eventId, startAvailable, endAvailable);
-    res.json(result).status(200);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-app.delete('/attendees/leave/:eventId', verifyJWT, (req: Request, res: Response) => {
-  const userId = (req as any).userId;
-  const eventId = req.params.eventId as string;
-
-  try {
-    const result = attendeeLeaveEvent(userId, eventId);
-    res.json(result).status(200);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
+// Attendees
+app.post('/attendees/respond', verifyJWT, attendeeControllerRespond);
+app.put('/attendees/availability/:eventId', verifyJWT, attendeeControllerAvailable);
+app.delete('/attendees/leave/:eventId', verifyJWT, attendeeControllerLeave);
