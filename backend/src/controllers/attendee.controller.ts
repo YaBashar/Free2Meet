@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { attendeeLeaveEvent, attendeeRespond, attendeeSelectAvailability } from '../service/attendee.service';
 
-export const attendeeControllerRespond = (req: Request, res: Response) => {
+export const respond = (req: Request, res: Response) => {
   const userId = (req as any).userId;
   const { inviteLink, action } = req.body;
 
@@ -13,7 +13,7 @@ export const attendeeControllerRespond = (req: Request, res: Response) => {
   }
 };
 
-export const attendeeControllerAvailable = (req: Request, res: Response) => {
+export const availability = (req: Request, res: Response) => {
   const userId = (req as any).userId;
   const eventId = req.params.eventId as string;
   const { startAvailable, endAvailable } = req.body;
@@ -26,7 +26,7 @@ export const attendeeControllerAvailable = (req: Request, res: Response) => {
   }
 };
 
-export const attendeeControllerLeave = (req: Request, res: Response) => {
+export const leave = (req: Request, res: Response) => {
   const userId = (req as any).userId;
   const eventId = req.params.eventId as string;
 

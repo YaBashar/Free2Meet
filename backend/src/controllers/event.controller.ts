@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { createEvent, deleteEvent, eventDetails, inviteLink, updateEvent } from '../service/event.service';
 import { UpdateEvents } from '../models/interfaces';
 
-export const eventControllerCreate = (req: Request, res: Response) => {
+export const create = (req: Request, res: Response) => {
   const userId = (req as any).userId;
   const { title, description, location, date, startTime, endTime } = req.body;
 
@@ -14,7 +14,7 @@ export const eventControllerCreate = (req: Request, res: Response) => {
   }
 };
 
-export const eventControllerInvite = (req: Request, res: Response) => {
+export const invite = (req: Request, res: Response) => {
   const userId = (req as any).userId;
   const eventId = req.params.eventId as string;
 
@@ -26,7 +26,7 @@ export const eventControllerInvite = (req: Request, res: Response) => {
   }
 };
 
-export const eventControllerUpdate = (req: Request, res: Response) => {
+export const update = (req: Request, res: Response) => {
   const userId = (req as any).userId;
   const eventId = req.params.eventId as string;
   const updatedEventFields: UpdateEvents = req.body;
@@ -40,7 +40,7 @@ export const eventControllerUpdate = (req: Request, res: Response) => {
   }
 };
 
-export const eventControllerDetails = (req: Request, res: Response) => {
+export const info = (req: Request, res: Response) => {
   const userId = (req as any).userId;
   const eventId = req.params.eventId as string;
 
@@ -52,7 +52,7 @@ export const eventControllerDetails = (req: Request, res: Response) => {
   }
 };
 
-export const eventControllerDelete = (req: Request, res: Response) => {
+export const remove = (req: Request, res: Response) => {
   const userId = (req as any).userId;
   const eventId = req.params.eventId as string;
 

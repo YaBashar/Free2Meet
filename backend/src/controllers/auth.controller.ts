@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { registerUser, userLogin, authRefresh, requestResetPasswd, setResetPassword, userDetails, userLogout, userChangePasswords } from '../service/auth.service';
 
-export const authControllerRegister = (req: Request, res: Response) => {
+export const register = (req: Request, res: Response) => {
   const { firstName, lastName, email, password } = req.body;
 
   try {
@@ -13,7 +13,7 @@ export const authControllerRegister = (req: Request, res: Response) => {
   }
 };
 
-export const authControllerLogin = (req: Request, res: Response) => {
+export const login = (req: Request, res: Response) => {
   const { email, password } = req.body;
 
   try {
@@ -29,7 +29,7 @@ export const authControllerLogin = (req: Request, res: Response) => {
   }
 };
 
-export const authControllerRefresh = (req: Request, res: Response) => {
+export const refresh = (req: Request, res: Response) => {
   const cookies = req.cookies;
   if (!cookies?.jwt) return res.status(401).json({ error: 'Unauthorised' });
 
@@ -43,7 +43,7 @@ export const authControllerRefresh = (req: Request, res: Response) => {
   }
 };
 
-export const authControllerRequestReset = (req: Request, res: Response) => {
+export const requestReset = (req: Request, res: Response) => {
   const { email } = req.body;
 
   try {
@@ -54,7 +54,7 @@ export const authControllerRequestReset = (req: Request, res: Response) => {
   }
 };
 
-export const authControllerResetPasswd = (req: Request, res: Response) => {
+export const resetPassword = (req: Request, res: Response) => {
   const { userId, token, newPassword, confirmNewPasswd } = req.body;
 
   try {
@@ -65,7 +65,7 @@ export const authControllerResetPasswd = (req: Request, res: Response) => {
   }
 };
 
-export const authControllerUserDetails = (req: Request, res: Response) => {
+export const userInfo = (req: Request, res: Response) => {
   const userId = (req as any).userId;
 
   try {
@@ -76,7 +76,7 @@ export const authControllerUserDetails = (req: Request, res: Response) => {
   }
 };
 
-export const authControllerLogout = (req: Request, res: Response) => {
+export const logout = (req: Request, res: Response) => {
   const userId = (req as any).userId;
 
   const cookies = req.cookies;
@@ -91,7 +91,7 @@ export const authControllerLogout = (req: Request, res: Response) => {
   }
 };
 
-export const authControllerUserChangePasswd = (req: Request, res: Response) => {
+export const changePassword = (req: Request, res: Response) => {
   const userId = (req as any).userId;
   const { currentPassword, newPassword, confirmNewPasswd } = req.body;
 
