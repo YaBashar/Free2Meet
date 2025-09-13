@@ -108,7 +108,7 @@ export const requestEventInvite = (token: string, eventId: string) => {
 // Attendee
 
 export const requestAttendeeRespond = (token: string, inviteLink: string, action: string) => {
-  return (request('POST', SERVER_URL + '/attendees/accept', {
+  return (request('POST', SERVER_URL + '/attendees/respond', {
     headers: { Authorization: `Bearer ${token}` },
     json: { inviteLink, action }
   }));
