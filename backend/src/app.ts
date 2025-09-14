@@ -9,12 +9,11 @@ import path from 'path';
 import process from 'process';
 import config from './config.json';
 import { setData } from './models/dataStore';
-import { verifyJWT } from './middleware';
 
 import { getClear, getEcho } from './controllers/other.controller';
-import * as authController from './controllers/auth.controller';
-import * as eventController from './controllers/event.controller';
-import * as attendeeController from './controllers/attendee.controller';
+import { authRouter } from './routes/auth';
+import { eventRouter } from './routes/event';
+import { attendeeRouter } from './routes/attendee';
 // set up app
 export const app = express();
 
@@ -40,24 +39,6 @@ app.use('/docs', sui.serve, sui.setup(YAML.parse(file),
 app.get('/echo', getEcho);
 app.delete('/clear', getClear);
 
-// Auth
-app.post('/auth/register', authController.register);
-app.post('/auth/login', authController.login);
-app.post('/auth/refresh', authController.refresh);
-app.post('/auth/request-reset', authController.requestReset);
-app.post('/auth/reset-password', authController.resetPassword);
-app.get('/auth/user-details', verifyJWT, authController.userInfo);
-app.post('/auth/logout', verifyJWT, authController.logout);
-app.put('/auth/change-password', verifyJWT, authController.changePassword);
-
-// Events
-app.post('/events/new-event', verifyJWT, eventController.create);
-app.post('/events/:eventId/invite', verifyJWT, eventController.invite);
-app.put('/events/:eventId', verifyJWT, eventController.update);
-app.get('/events/:eventId', verifyJWT, eventController.info);
-app.delete('/events/:eventId', verifyJWT, eventController.remove);
-
-// Attendees
-app.post('/attendees/respond', verifyJWT, attendeeController.respond);
-app.put('/attendees/availability/:eventId', verifyJWT, attendeeController.availability);
-app.delete('/attendees/leave/:eventId', verifyJWT, attendeeController.leave);
+app.use('/auth', authRouter);
+app.use('/events', eventRouter);
+app.use('/attendees', attendeeRouter);
