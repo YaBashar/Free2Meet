@@ -1,31 +1,9 @@
-import request from 'sync-request-curl';
-import { port, url } from '../config.json';
-
-const SERVER_URL = `${url}:${port}`;
-const TIMEOUT_MS = 5 * 1000;
-
-const requestAuthRegister = (firstName: string, lastName: string, password: string, email: string) => {
-  return (request('POST', SERVER_URL + '/auth/register', {
-    json: { firstName, lastName, password, email }, timeout: TIMEOUT_MS
-  }));
-};
-
-const requestResetPasswd = (email:string) => {
-  return (request('POST', SERVER_URL + '/auth/request-reset', {
-    json: { email }, timeout: TIMEOUT_MS
-  }));
-};
-
-const requestSetNewPasswd = (userId: string, token: string, newPassword: string, confirmNewPasswd: string) => {
-  return (request('POST', SERVER_URL + '/auth/reset-password', {
-    json: { userId, token, newPassword, confirmNewPasswd }
-  }));
-};
+import { requestAuthRegister, requestDelete, requestResetPasswd, requestSetNewPasswd } from '../requestHelpers';
 
 let testUserId: string;
 let resetToken: string;
 beforeEach(() => {
-  request('DELETE', SERVER_URL + '/clear', { timeout: TIMEOUT_MS });
+  requestDelete();
 
   const res = requestAuthRegister('Mubashir', 'Hussain', 'Abcdefg123$', 'example@gmail.com');
   const data = JSON.parse(res.body.toString());
@@ -37,7 +15,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  request('DELETE', SERVER_URL + '/clear', { timeout: TIMEOUT_MS });
+  requestDelete();
 });
 
 describe('Success Cases', () => {

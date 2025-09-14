@@ -1,4 +1,4 @@
-import { setData, getData } from './dataStore';
+import { setData, getData } from '../models/dataStore';
 import fs from 'fs';
 
 type ErrorMsg = {

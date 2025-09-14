@@ -1,4 +1,4 @@
-import { Store } from './interfaces';
+import { Store } from '../models/interfaces';
 import validator from 'validator';
 import bcrypt from 'bcrypt';
 
