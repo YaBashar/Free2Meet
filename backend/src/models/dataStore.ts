@@ -10,7 +10,7 @@ let data: Store = {
 
 function setData(newData: Store) {
   const dataString = JSON.stringify(data, null, 2);
-  fs.writeFileSync('data.json', dataString);
+  fs.writeFileSync('../../data.json', dataString);
   data = newData;
 }
 

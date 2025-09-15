@@ -21,6 +21,8 @@ export function clear (): Record<string, never> {
 
   store.users = [];
   store.events = [];
+  store.attendees = [];
+  store.invites = [];
   setData(store);
   return {};
 }
