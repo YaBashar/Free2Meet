@@ -1,6 +1,6 @@
-import { Store } from '../models/interfaces';
 import validator from 'validator';
 import bcrypt from 'bcrypt';
+import { UserModel } from '../models/userModel';
 
 export function checkName(name: string): void {
   if (name.length < 2 || name.length > 20) {
@@ -26,22 +26,22 @@ export function checkPassword(password: string): void {
   }
 }
 
-export function checkEmail(store: Store, email: string): void {
+export async function checkEmail(email: string): Promise<void> {
   if (!validator.isEmail(email)) {
     throw new Error('invalid email');
   }
 
-  const existingEmail = store.users.find((user) => user.email === email);
+  const existingEmail = await UserModel.findOne({ email: email });
   if (existingEmail) {
     throw new Error('Account already exists with email');
   }
 }
 
-export function checkNewPasswd(previousPasswds: string[], newPassword: string, confirmNewPasswd: string): void {
+export async function checkNewPasswd(previousPasswds: string[], newPassword: string, confirmNewPasswd: string): Promise<void> {
   try {
     checkPassword(newPassword);
     for (const passwd of previousPasswds) {
-      if (bcrypt.compareSync(newPassword, passwd)) {
+      if (await bcrypt.compare(newPassword, passwd)) {
         throw new Error('Password has been used before, try a new password');
       }
     }
@@ -54,9 +54,9 @@ export function checkNewPasswd(previousPasswds: string[], newPassword: string, c
   }
 }
 
-export function hashPassword(password: string): string {
+export async function hashPassword(password: string): Promise<string> {
   const saltRounds = 10;
-  const salt = bcrypt.genSaltSync(saltRounds);
-  const hash = bcrypt.hashSync(password, salt);
+  const salt = await bcrypt.genSalt(saltRounds);
+  const hash = await bcrypt.hash(password, salt);
   return hash;
 }
