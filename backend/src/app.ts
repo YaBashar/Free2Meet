@@ -10,7 +10,7 @@ import process from 'process';
 import config from './config.json';
 import { setData } from './models/dataStore';
 
-import { getClear, getEcho } from './controllers/other.controller';
+import { getClear } from './controllers/clear.controller';
 import { authRouter } from './routes/auth';
 import { eventRouter } from './routes/event';
 import { attendeeRouter } from './routes/attendee';
@@ -36,7 +36,6 @@ app.get('/', (req: Request, res: Response) => res.redirect('/docs'));
 app.use('/docs', sui.serve, sui.setup(YAML.parse(file),
   { swaggerOptions: { docExpansion: config.expandDocs ? 'full' : 'list' } }));
 
-app.get('/echo', getEcho);
 app.delete('/clear', getClear);
 
 app.use('/auth', authRouter);
