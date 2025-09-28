@@ -148,12 +148,7 @@ async function setResetPassword(userId: string, rsToken: string, newPassword: st
   }
 
   const previousPasswds = currUser.passwordHistory;
-  try {
-    checkNewPasswd(previousPasswds, newPassword, confirmNewPasswd);
-  } catch (error) {
-    throw new Error(error.message);
-  }
-
+  await checkNewPasswd(previousPasswds, newPassword, confirmNewPasswd);
   newPassword = await hashPassword(newPassword);
 
   // invalidate resetToken after setting new password
@@ -195,12 +190,7 @@ async function userChangePasswords(userId: string, currentPassword: string, newP
   }
 
   const previousPasswds = currUser.passwordHistory;
-  try {
-    checkNewPasswd(previousPasswds, newPassword, confirmNewPasswd);
-  } catch (error) {
-    throw new Error(error.message);
-  }
-
+  await checkNewPasswd(previousPasswds, newPassword, confirmNewPasswd);
   newPassword = await hashPassword(newPassword);
   currUser.password = newPassword;
   currUser.passwordHistory = [newPassword, ...(previousPasswds || [])];
