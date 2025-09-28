@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { Users } from './interfaces';
 
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -16,4 +17,4 @@ const userSchema = new mongoose.Schema({
   attendingEvents: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Event' }],
 });
 
-export const UserModel = mongoose.model('User', userSchema);
+export const UserModel = mongoose.model<Users>('User', userSchema);

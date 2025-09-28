@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { Events } from './interfaces';
 
 const eventSchema = new mongoose.Schema({
   title: { type: String, required: true },
@@ -12,4 +13,4 @@ const eventSchema = new mongoose.Schema({
   notAttending: { type: [String], default: [] }
 });
 
-export const eventModel = mongoose.model('Event', eventSchema);
+export const EventModel = mongoose.model<Events>('Event', eventSchema);

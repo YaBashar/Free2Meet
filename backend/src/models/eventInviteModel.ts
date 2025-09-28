@@ -5,4 +5,4 @@ const eventInviteSchema = new mongoose.Schema({
   link: { type: String }
 });
 
-export const eventInviteModel = mongoose.model('EventInvite', eventInviteSchema);
+export const EventInviteModel = mongoose.model('EventInvite', eventInviteSchema);

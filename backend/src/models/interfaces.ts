@@ -1,3 +1,4 @@
+import { Types } from 'mongoose';
 
 export interface Store {
     events: Events[],
@@ -49,10 +50,10 @@ export interface Users {
     numSuccessfulLogins: number,
     numfailedSinceLastLogin: number,
     passwordHistory: string[],
-    refreshToken: string[],
+    refreshTokens: string[],
     resetToken: ResetToken,
-    organisedEvents: Events[],
-    attendingEvents: Events[]
+    organisedEvents: Types.ObjectId[],
+    attendingEvents: Types.ObjectId[]
 }
 
 export interface ResetToken {
