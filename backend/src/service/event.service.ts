@@ -1,28 +1,22 @@
-import { getData, setData } from '../models/dataStore';
 import crypto from 'crypto';
-import { EventInvite, Events } from '../models/interfaces';
 import { checkEventConstraints } from '../utils/eventHelper';
+import { UserModel } from '../models/userModel';
+import { EventModel } from '../models/eventModel';
+import { EventInviteModel } from '../models/eventInviteModel';
+import { Events } from '../models/interfaces';
 
 // TODO Future
-// Use Date Object Instead of String
 // Handling Multiple Dates and Timings ie 1 week range.
 
-function createEvent(userId: string, title: string, description: string, location: string, date: string, startTime: number, endTime: number): string {
-  const store = getData();
-  const userIndex = store.users.findIndex(user => (user.userId === userId));
-  const user = store.users[userIndex];
+async function createEvent(userId: string, title: string, description: string, location: string, date: string, startTime: number, endTime: number): Promise<string> {
+  const user = await UserModel.findById(userId);
 
   if (!user) {
     throw new Error('Invalid User Id');
   }
 
-  const clash = user.organisedEvents.some(event =>
-    event.location === location &&
-    event.date === date &&
-    !(endTime <= event.startTime || startTime >= event.endTime)
-  );
-
-  if (clash) {
+  const event = await EventModel.findOne({ location: location, date: date, organiser: user.name });
+  if (event) {
     throw new Error('Event already exists');
   }
 
@@ -33,7 +27,7 @@ function createEvent(userId: string, title: string, description: string, locatio
   }
 
   const eventId = Date.now().toString();
-  const newEvent: Events = {
+  const newEvent = new EventModel({
     id: eventId,
     title: title,
     description: description,
@@ -44,25 +38,20 @@ function createEvent(userId: string, title: string, description: string, locatio
     organiser: user.name,
     attendees: [],
     notAttending: []
-  };
+  });
 
-  store.events.push(newEvent);
-  user.organisedEvents.push(newEvent);
-  setData(store);
-  return newEvent.id;
+  await newEvent.save();
+  return newEvent._id.toString();
 }
 
-function eventDetails(userId: string, eventId: string): Events {
-  const store = getData();
-  const userIndex = store.users.findIndex(user => (user.userId === userId));
-  const user = store.users[userIndex];
+async function eventDetails(userId: string, eventId: string): Promise<Events> {
+  const user = (await UserModel.findById(userId));
 
   if (!user) {
     throw new Error('Invalid User Id');
   }
 
-  const eventIndex = user.organisedEvents.findIndex(event => (event.id === eventId));
-  const event = user.organisedEvents[eventIndex];
+  const event = await EventModel.findById(eventId);
   if (!event) {
     throw new Error('Invalid Event Id');
   }
@@ -81,67 +70,49 @@ function eventDetails(userId: string, eventId: string): Events {
   };
 }
 
-function deleteEvent(userId: string, eventId: string): object {
-  const store = getData();
-  const userIndex = store.users.findIndex(user => (user.userId === userId));
-  const user = store.users[userIndex];
-
+async function deleteEvent(userId: string, eventId: string): Promise<object> {
+  const user = await UserModel.findById(userId);
   if (!user) {
     throw new Error('Invalid User Id');
   }
 
-  const userEventIndex = user.organisedEvents.findIndex(event => (event.id === eventId));
-  const event = user.organisedEvents[userEventIndex];
-  if (!event) {
-    throw new Error('Invalid Event Id');
+  try {
+    await EventModel.findByIdAndDelete(eventId);
+  } catch (error) {
+    throw new Error(error.message);
   }
-
-  const eventIndex = store.events.findIndex((event) => event.id === eventId);
-
-  user.organisedEvents.splice(userEventIndex, 1);
-  store.events.splice(eventIndex, 1);
-  setData(store);
 
   return {};
 }
 
-function inviteLink(userId: string, eventId: string): string {
-  const store = getData();
-  const userIndex = store.users.findIndex(user => (user.userId === userId));
-  const user = store.users[userIndex];
-
+async function inviteLink(userId: string, eventId: string): Promise<string> {
+  const user = await UserModel.findById(userId);
   if (!user) {
     throw new Error('Invalid User Id');
   }
 
-  const eventIndex = user.organisedEvents.findIndex(event => (event.id === eventId));
-  const event = user.organisedEvents[eventIndex];
+  const event = await EventModel.findById(eventId);
   if (!event) {
     throw new Error('Invalid Event Id');
   }
 
   // Atm invites are public, might need another endpoint for private invites
-  const invite: EventInvite = {
-    eventId: event.id,
+  const invite = new EventInviteModel({
+    eventId: event._id,
     link: crypto.randomBytes(32).toString('hex')
-  };
+  });
 
-  store.invites.push(invite);
-  setData(store);
+  await invite.save();
   return invite.link;
 }
 
-function updateEvent(userId: string, eventId: string, title: string, description: string, location: string, date: string, startTime: number, endTime: number) {
-  const store = getData();
-  const userIndex = store.users.findIndex(user => (user.userId === userId));
-  const user = store.users[userIndex];
-
+async function updateEvent(userId: string, eventId: string, title: string, description: string, location: string, date: string, startTime: number, endTime: number) {
+  const user = await UserModel.findById(userId);
   if (!user) {
     throw new Error('Invalid User Id');
   }
 
-  const eventIndex = user.organisedEvents.findIndex(event => (event.id === eventId));
-  const event = user.organisedEvents[eventIndex];
+  const event = await EventModel.findById(eventId);
   if (!event) {
     throw new Error('Invalid Event Id');
   }
@@ -152,9 +123,14 @@ function updateEvent(userId: string, eventId: string, title: string, description
     throw new Error(error.message);
   }
 
-  const updateFields = { title, description, location, date, startTime, endTime };
-  user.organisedEvents[eventIndex] = { ...event, ...updateFields };
-  setData(store);
+  event.title = title;
+  event.description = description;
+  event.location = location;
+  event.date = date;
+  event.startTime = startTime;
+  event.endTime = endTime;
+
+  await event.save();
   return {};
 }
 
