@@ -7,7 +7,7 @@ const HOST: string = (process.env.IP || '127.0.0.1');
 
 // ====================================================================
 // ====================================================================
-mongoose.connect(process.env.DATABASE, {
+mongoose.connect(process.env.MONGODB_URI, {
 })
   .then(() => console.log('DB Connection Successful'));
 
