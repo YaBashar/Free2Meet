@@ -12,18 +12,9 @@ jobs:
     # Define a service container for MongoDB
     services:
       mongodb:
-        # Use the official MongoDB Docker image
         image: mongo:latest
-        # Map port 27017 inside the container
         ports:
           - 27017:27017
-        # Define environment variables if needed (e.g., for auth)
-        options: >-
-          --name mongodb_server
-          --health-cmd "mongo --eval 'db.runCommand({ping: 1})'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     container:
       image: node:20
@@ -48,7 +39,7 @@ jobs:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
           INVITATION_SECRET: ${{ secrets.JWT_INVITATION_SECRET }}
-          MONGODB_URI: mongodb://mongo_ci:27017/ci_database_name
+          MONGODB_URI: mongodb://mongodb:27017/ci_database_name
         run: |
           npm start &
           SERVER_PID=$!
