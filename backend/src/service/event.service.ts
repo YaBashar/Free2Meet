@@ -15,7 +15,7 @@ async function createEvent(userId: string, title: string, description: string, l
     throw new Error('Invalid User Id');
   }
 
-  const event = await EventModel.findOne({ location: location, date: date, orgainser: user.name });
+  const event = await EventModel.findOne({ location: location, date: date, organiser: user.name });
   if (event) {
     throw new Error('Event already exists');
   }
