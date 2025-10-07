@@ -1,9 +1,9 @@
 import FormInput from "./FormInput"
 import { useState, useEffect } from 'react';
 import axios from '../api/axios';
+import { Link } from 'react-router-dom';
 
 // TODO
-// Add Login redirection button
 
 
 const Register = () => {
@@ -92,54 +92,64 @@ const Register = () => {
       <>
         <h1 className="p-5 mt-[20px] text-center text-4xl">Welcome</h1>
 
-        <form className= "form-container" onSubmit = {handleSubmit}>
+        <div className= "form-container">
+          <form className="flex flex-col justify-center" onSubmit = {handleSubmit}>
 
-          <div className="flex flex-1 justify-between w-[455px]">
-             <div className="flex flex-col w-[225px]">           
-               <FormInput 
-                label = {"First Name"} 
-                placeholder = {"Enter First Name"} 
-                inputId = {"fname"} 
-                onChange = {handleFirstNameChange}
-                isValid = {validFirstName}
-               />
+            <div className="flex flex-1 justify-between w-[455px]">
+              <div className="flex flex-col w-[225px]">           
+                <FormInput 
+                  label = {"First Name"} 
+                  placeholder = {"Enter First Name"} 
+                  inputId = {"fname"} 
+                  onChange = {handleFirstNameChange}
+                  isValid = {validFirstName}
+                />
+                </div>
+
+              <div className="flex flex-col w-[225px]">
+                <FormInput 
+                  label = {"Last Name"} 
+                  placeholder = {"Enter Last Name"} 
+                  inputId = {"lname"}
+                  onChange = {handleLastNameChange}
+                  isValid = {validLastName}
+                />
               </div>
-
-            <div className="flex flex-col w-[225px]">
-              <FormInput 
-                label = {"Last Name"} 
-                placeholder = {"Enter Last Name"} 
-                inputId = {"lname"}
-                onChange = {handleLastNameChange}
-                isValid = {validLastName}
-              />
             </div>
-          </div>
 
-          <div className="flex flex-col mt-[10px]">
-              <FormInput 
-                label = {"Email"} 
-                placeholder = {"Enter Email"} 
-                inputId = {"email"}
-                onChange = {handleEmailChange}
-                isValid = {validEmail}
-              />
-          </div>
+            <div className="flex flex-col mt-[10px]">
+                <FormInput 
+                  label = {"Email"} 
+                  placeholder = {"Enter Email"} 
+                  inputId = {"email"}
+                  onChange = {handleEmailChange}
+                  isValid = {validEmail}
+                />
+            </div>
 
-          <div className="flex flex-col mt-[10px]">
-              <FormInput 
-                label = {"Password"} 
-                placeholder = {"Enter Password"} 
-                inputId = {"password"}
-                onChange = {handlePasswordChange}
-                isValid = {validPassword}
-              />
+            <div className="flex flex-col mt-[10px]">
+                <FormInput 
+                  label = {"Password"} 
+                  placeholder = {"Enter Password"} 
+                  inputId = {"password"}
+                  onChange = {handlePasswordChange}
+                  isValid = {validPassword}
+                />
 
-          </div>
+            </div>
 
-          <button className="button-base">Submit</button>
-          
-        </form>
+            <button className="button-base">Sign Up</button>
+          </form>
+
+          <p className='text-center p-2'>
+            Already Registered? <br/>
+            <span>
+             <Link to = "/login">Sign In</Link>
+            </span>
+          </p>
+
+        </div>
+        
       
       </>
     )
