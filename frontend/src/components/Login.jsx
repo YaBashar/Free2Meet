@@ -1,7 +1,9 @@
+import axios from '../api/axios';
 import FormInput from './FormInput'
 import { useState, useEffect } from 'react';
 
 const Login = () => {
+    const LOGIN_URL = '/auth/login'
     
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,}$/;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -36,6 +38,20 @@ const Login = () => {
     
       const handleSubmit = async (e) => {
         e.preventDefault();
+
+        try {
+            const response = await axios.post(LOGIN_URL, 
+                JSON.stringify({ email, password}), 
+                {
+                    headers: {'Content-Type': 'application/json'},
+                    withCredentials: true
+                }
+            );
+
+            console.log(JSON.stringify(response));
+        } catch (err) {
+            console.log(JSON.stringify(err.response.data.error));
+        }
       }
  
     return (
