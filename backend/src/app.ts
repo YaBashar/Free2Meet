@@ -22,7 +22,14 @@ app.use(cookieParser());
 // Use middleware that allows us to access JSON body of requests
 app.use(json());
 // Use middleware that allows for access from other domains
-app.use(cors());
+const corsOptions = {
+  origin: 'http://localhost:3000',
+  methods: 'GET,PUT,PATCH,POST,DELETE',
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
 // For logging purposes
 app.use(morgan('dev'));
 
