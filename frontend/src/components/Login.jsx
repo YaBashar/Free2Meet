@@ -4,10 +4,7 @@ import { useState, useEffect } from 'react';
 
 const Login = () => {
     const LOGIN_URL = '/auth/login'
-    
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,}$/;
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
- 
+
     const [password, setPassword] = useState('');
     const [validPassword, setValidPassword] = useState(false);
 
@@ -15,22 +12,24 @@ const Login = () => {
     const[validEmail, setValidEmail] = useState(false);
     
     useEffect(() => {
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,}$/;
         const result = passwordRegex.test(password);
         console.log(result);
         console.log(password);
         setValidPassword(result);
-      }, [password, passwordRegex]);
+      }, [password]);
     
       const handlePasswordChange = (e) => {
         setPassword(e.target.value);
       }
     
       useEffect(() => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         const result = emailRegex.test(email);
         console.log(result);
         console.log(email);
         setValidEmail(result);
-      }, [email, emailRegex]);
+      }, [email]);
     
       const handleEmailChange = (e) => {
         setEmail(e.target.value);
@@ -57,10 +56,10 @@ const Login = () => {
     return (
 
     <>
-        <h1 className="p-5 mt-[20px] text-center text-4xl">Login</h1>
+        <h1 className="p-5 mt-[20px] text-center text-5xl">Login</h1>
 
-        <div className= "form-container">
-          <form className="flex flex-col justify-center" onSubmit = {handleSubmit}>
+        <div className= "form-container frosted rounded-3xl shadow-2xl backdrop-blur-3xl">
+          <form className="flex flex-col justify-center text-marian-blue" onSubmit = {handleSubmit}>
 
             <div className="flex flex-col mt-[10px]">
                 <FormInput 

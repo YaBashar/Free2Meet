@@ -90,9 +90,9 @@ const Register = () => {
 
   return(
       <>
-        <h1 className="p-5 mt-[20px] text-center text-4xl">Welcome</h1>
+        <h1 className="p-5 text-center text-5xl">Welcome</h1>
 
-        <div className= "form-container">
+        <div className= "form-container frosted rounded-3xl shadow-2xl backdrop-blur-3xl text-marian-blue">
           <form className="flex flex-col justify-center" onSubmit = {handleSubmit}>
 
             <div className="flex flex-1 justify-between w-[455px]">
@@ -138,13 +138,13 @@ const Register = () => {
 
             </div>
 
-            <button className="button-base">Sign Up</button>
+            <button className="button-base text-marian-blue">Sign Up</button>
           </form>
 
-          <p className='text-center p-2'>
+          <p className='text-center text-delft-blue p-2'>
             Already Registered? <br/>
             <span>
-             <Link to = "/login">Sign In</Link>
+             <Link to = "/login" className='text-delft-blue underline'>Sign In</Link>
             </span>
           </p>
 
