@@ -1,0 +1,39 @@
+* {
+  background: #4055BF; 
+  color: white;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Outfit', sans-serif;
+}
+
+.frosted {
+  background-color: rgba(236, 238, 249, 0.85);
+}
+
+.frosted * {
+  background-color: transparent;
+}
+
+.image {
+  width: 75px;
+  height: 75px;
+  margin: 25px;
+}
+
+.input-base {
+  @apply border-2 border-solid border-delft-blue text-delft-blue p-2 rounded-lg;
+}
+
+
+.form-container {
+  @apply border-4 border-solid p-5 max-w-[500px] min-w-[250px] max-h-[500px] min-h-[320px] mx-auto rounded-xl;
+}
+
+.button-base {
+  @apply border-2 border-delft-blue p-2 w-[100px] block mx-auto mt-4 rounded-lg  hover:text-white hover:bg-marian-blue hover:border-byzantine-blue
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
