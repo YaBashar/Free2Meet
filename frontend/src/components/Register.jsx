@@ -134,6 +134,7 @@ const Register = () => {
                   inputId = {"password"}
                   onChange = {handlePasswordChange}
                   isValid = {validPassword}
+                  type = {"password"}
                 />
 
             </div>
