@@ -1,39 +1,14 @@
 import axios from '../api/axios';
+import useValidateLoginForm from '../hooks/useValidateLoginForm';
 import FormInput from './FormInput'
-import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
     const LOGIN_URL = '/auth/login'
 
-    const [password, setPassword] = useState('');
-    const [validPassword, setValidPassword] = useState(false);
-
-    const[email, setEmail] = useState('');
-    const[validEmail, setValidEmail] = useState(false);
-    
-    useEffect(() => {
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,}$/;
-        const result = passwordRegex.test(password);
-        console.log(result);
-        console.log(password);
-        setValidPassword(result);
-      }, [password]);
-    
-      const handlePasswordChange = (e) => {
-        setPassword(e.target.value);
-      }
-    
-      useEffect(() => {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        const result = emailRegex.test(email);
-        console.log(result);
-        console.log(email);
-        setValidEmail(result);
-      }, [email]);
-    
-      const handleEmailChange = (e) => {
-        setEmail(e.target.value);
-      }
+    const navigate = useNavigate();
+    const { password, email, validEmail, validPassword, handleEmailChange, handlePasswordChange } = useValidateLoginForm()
+   
     
       const handleSubmit = async (e) => {
         e.preventDefault();
@@ -48,6 +23,8 @@ const Login = () => {
             );
 
             console.log(JSON.stringify(response));
+
+            navigate('/dashboard');
         } catch (err) {
             console.log(JSON.stringify(err.response.data.error));
         }
