@@ -2,14 +2,16 @@ import FormInput from "./FormInput"
 import axios from '../api/axios';
 import { Link } from 'react-router-dom';
 import { useValidateSignUpForm } from '../hooks/useValidateSignUpForm';
+import { useAuth } from '../hooks/useAuth';
 
 
 const Register = () => {
  
   const REGISTER_URL = '/auth/register'
-
   const {values, valid, handleChange} = useValidateSignUpForm();
   const {firstName, lastName, password, email} = values;
+
+  const {signUp } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,7 +25,16 @@ const Register = () => {
         }
       );
       
-      console.log(JSON.stringify(response.userId));
+
+      if (response.status === 200) {
+        const recievedUserId = response.data.userId;
+        signUp(recievedUserId);
+        alert(`Signed Up Successfully, UserId is ${recievedUserId}`);
+
+      } else {
+        alert("Sign Up Failed")
+      }
+
     } catch (err) {
       console.log(JSON.stringify(err.response.data.error));
     }
@@ -31,8 +42,7 @@ const Register = () => {
 
   return(
       <>
-        <h1 className="p-5 text-center text-5xl">Welcome</h1>
-
+      <h1 className="p-5 text-center text-5xl">Welcome</h1>
         <div className= "form-container frosted rounded-3xl shadow-2xl backdrop-blur-3xl text-marian-blue">
           <form className="flex flex-col justify-center" onSubmit = {handleSubmit}>
 
@@ -41,7 +51,7 @@ const Register = () => {
                 <FormInput 
                   label = {"First Name"} 
                   placeholder = {"Enter First Name"} 
-                  inputId = {"fname"} 
+                  name = {"firstName"} 
                   onChange = {handleChange}
                   isValid = {valid.firstName}
                 />
@@ -51,7 +61,7 @@ const Register = () => {
                 <FormInput 
                   label = {"Last Name"} 
                   placeholder = {"Enter Last Name"} 
-                  inputId = {"lname"}
+                  name = {"lastName"}
                   onChange = {handleChange}
                   isValid = {valid.lastName}
                 />
@@ -62,7 +72,7 @@ const Register = () => {
                 <FormInput 
                   label = {"Email"} 
                   placeholder = {"Enter Email"} 
-                  inputId = {"email"}
+                  name = {"email"}
                   onChange = {handleChange}
                   isValid = {valid.email}
                 />
@@ -70,9 +80,9 @@ const Register = () => {
 
             <div className="flex flex-col mt-[10px]">
                 <FormInput 
-                  label = {"Password"} 
+                  label = {"password"} 
                   placeholder = {"Enter Password"} 
-                  inputId = {"password"}
+                  name = {"password"}
                   onChange = {handleChange}
                   isValid = {valid.password}
                   type = {"password"}
@@ -89,10 +99,7 @@ const Register = () => {
              <Link to = "/login" className='text-delft-blue underline'>Sign In</Link>
             </span>
           </p>
-
-        </div>
-        
-      
+        </div>   
       </>
     )
 }

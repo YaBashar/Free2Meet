@@ -1,4 +1,5 @@
 import axios from '../api/axios';
+import { useAuth } from '../hooks/useAuth';
 import useValidateLoginForm from '../hooks/useValidateLoginForm';
 import FormInput from './FormInput'
 import { useNavigate } from 'react-router-dom';
@@ -8,7 +9,7 @@ const Login = () => {
 
     const navigate = useNavigate();
     const { password, email, validEmail, validPassword, handleEmailChange, handlePasswordChange } = useValidateLoginForm()
-   
+    const { signIn } = useAuth();
     
       const handleSubmit = async (e) => {
         e.preventDefault();
@@ -22,7 +23,8 @@ const Login = () => {
                 }
             );
 
-            console.log(JSON.stringify(response));
+            const accessToken = response.data.token;
+            signIn(accessToken);
 
             navigate('/dashboard');
         } catch (err) {
