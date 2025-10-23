@@ -2,12 +2,15 @@ import axios from '../api/axios';
 import { useAuth } from '../hooks/useAuth';
 import useValidateLoginForm from '../hooks/useValidateLoginForm';
 import FormInput from './FormInput'
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const Login = () => {
     const LOGIN_URL = '/auth/login'
 
     const navigate = useNavigate();
+    const location = useLocation();
+    const from = location.state?.from?.pathname || "/dashboard";
+
     const { password, email, validEmail, validPassword, handleEmailChange, handlePasswordChange } = useValidateLoginForm()
     const { signIn } = useAuth();
     
@@ -15,18 +18,12 @@ const Login = () => {
         e.preventDefault();
 
         try {
-            const response = await axios.post(LOGIN_URL, 
-                JSON.stringify({ email, password}), 
-                {
-                    headers: {'Content-Type': 'application/json'},
-                    withCredentials: true
-                }
-            );
-
+            console.log(password)
+            const response = await axios.post(LOGIN_URL, { email, password});
             const accessToken = response.data.token;
             signIn(accessToken);
 
-            navigate('/dashboard');
+            navigate(from, { replace: true });
         } catch (err) {
             console.log(JSON.stringify(err.response.data.error));
         }

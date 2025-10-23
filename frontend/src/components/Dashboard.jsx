@@ -1,30 +1,22 @@
-import axios from '../api/axios';
-import { useAuth } from '../hooks/useAuth';
-
+import { useAxiosPrivate } from '../hooks/useAxiosPrivate';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
-
+    
     const USER_URL = '/auth/user-details'
-    const { accessToken } = useAuth();
+    const axiosPrivate = useAxiosPrivate();
+    const navigate = useNavigate();
+    const location = useLocation();
 
     const handleClick = async() => {
 
         try {
-            const response = await axios.get(
-                USER_URL, 
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${accessToken}`
-                    },
-                    withCredentials: true
-                }
-            );
-
+            const response = await axiosPrivate.get(USER_URL);
             console.log(JSON.stringify(response));
 
         } catch (err) {
             console.log(JSON.stringify(err.response.data.error));
+            navigate('/login', { state: { from: location }, replace: true})
         }
     }
 

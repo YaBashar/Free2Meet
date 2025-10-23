@@ -17,15 +17,8 @@ const Register = () => {
     e.preventDefault();
 
     try { 
-      const response = await axios.post(REGISTER_URL, 
-        JSON.stringify({ firstName, lastName, password, email}), 
-        {
-          headers: {'Content-Type': 'application/json'},
-          withCredentials: true
-        }
-      );
+      const response = await axios.post(REGISTER_URL, { firstName, lastName, password, email});
       
-
       if (response.status === 200) {
         const recievedUserId = response.data.userId;
         signUp(recievedUserId);
