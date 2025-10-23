@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 // Show / Hide Password
 
-const FormInput = ({ label, placeholder, inputId, onChange, isValid, type = "text"}) => {
+const FormInput = ({ label, placeholder, name, onChange, isValid, type = "text"}) => {
   
 
   const [showPassword, setShowPassword ] = useState(false);
@@ -32,7 +32,7 @@ const FormInput = ({ label, placeholder, inputId, onChange, isValid, type = "tex
       <input 
         className ="input-base" 
         type = {inputType}
-        id = {inputId} 
+        name = {name} 
         placeholder= {placeholder}
         onChange = {onChange}
         autoComplete="off"

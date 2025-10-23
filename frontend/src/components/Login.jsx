@@ -1,53 +1,29 @@
 import axios from '../api/axios';
+import { useAuth } from '../hooks/useAuth';
+import useValidateLoginForm from '../hooks/useValidateLoginForm';
 import FormInput from './FormInput'
-import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const Login = () => {
     const LOGIN_URL = '/auth/login'
 
-    const [password, setPassword] = useState('');
-    const [validPassword, setValidPassword] = useState(false);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const from = location.state?.from?.pathname || "/dashboard";
 
-    const[email, setEmail] = useState('');
-    const[validEmail, setValidEmail] = useState(false);
-    
-    useEffect(() => {
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,}$/;
-        const result = passwordRegex.test(password);
-        console.log(result);
-        console.log(password);
-        setValidPassword(result);
-      }, [password]);
-    
-      const handlePasswordChange = (e) => {
-        setPassword(e.target.value);
-      }
-    
-      useEffect(() => {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        const result = emailRegex.test(email);
-        console.log(result);
-        console.log(email);
-        setValidEmail(result);
-      }, [email]);
-    
-      const handleEmailChange = (e) => {
-        setEmail(e.target.value);
-      }
+    const { password, email, validEmail, validPassword, handleEmailChange, handlePasswordChange } = useValidateLoginForm()
+    const { signIn } = useAuth();
     
       const handleSubmit = async (e) => {
         e.preventDefault();
 
         try {
-            const response = await axios.post(LOGIN_URL, 
-                JSON.stringify({ email, password}), 
-                {
-                    headers: {'Content-Type': 'application/json'},
-                    withCredentials: true
-                }
-            );
+            console.log(password)
+            const response = await axios.post(LOGIN_URL, { email, password});
+            const accessToken = response.data.token;
+            signIn(accessToken);
 
-            console.log(JSON.stringify(response));
+            navigate(from, { replace: true });
         } catch (err) {
             console.log(JSON.stringify(err.response.data.error));
         }

@@ -1,88 +1,33 @@
 import FormInput from "./FormInput"
-import { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import { Link } from 'react-router-dom';
-
-// TODO
+import { useValidateSignUpForm } from '../hooks/useValidateSignUpForm';
+import { useAuth } from '../hooks/useAuth';
 
 
 const Register = () => {
-  const firstNameRegex = /^[a-zA-Z0-9 ]{2,10}$/;
-  const lastNameRegex = /^[a-zA-Z0-9 ]{2,10}$/;
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,}$/;
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  
   const REGISTER_URL = '/auth/register'
+  const {values, valid, handleChange} = useValidateSignUpForm();
+  const {firstName, lastName, password, email} = values;
 
-  const [firstName, setFirstName] = useState('');
-  const [validFirstName, setValidFirstName] = useState(false);
-
-  const [lastName, setLastName] = useState('');
-  const [validLastName, setValidLastName] = useState(false);
-
-  const [password, setPassword] = useState('');
-  const [validPassword, setValidPassword] = useState(false);
-
-  const[email, setEmail] = useState('');
-  const[validEmail, setValidEmail] = useState(false);
- 
-  useEffect(() => {
-    const result = firstNameRegex.test(firstName);
-    console.log(result);
-    console.log(firstName);
-    setValidFirstName(result);
-  }, [firstName, firstNameRegex]);
-
-  const handleFirstNameChange = (e) => {
-    setFirstName(e.target.value);
-  }
-
-  useEffect(() => {
-    const result = lastNameRegex.test(lastName);
-    console.log(result);
-    console.log(lastName);
-    setValidLastName(result);
-  }, [lastName, lastNameRegex]);
-
-  const handleLastNameChange = (e) => {
-    setLastName(e.target.value);
-  }
-
-  useEffect(() => {
-    const result = passwordRegex.test(password);
-    console.log(result);
-    console.log(password);
-    setValidPassword(result);
-  }, [password, passwordRegex]);
-
-  const handlePasswordChange = (e) => {
-    setPassword(e.target.value);
-  }
-
-  useEffect(() => {
-    const result = emailRegex.test(email);
-    console.log(result);
-    console.log(email);
-    setValidEmail(result);
-  }, [email, emailRegex]);
-
-  const handleEmailChange = (e) => {
-    setEmail(e.target.value);
-  }
+  const {signUp } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    try {
-      const response = await axios.post(REGISTER_URL, 
-        JSON.stringify({ firstName, lastName, password, email}), 
-        {
-          headers: {'Content-Type': 'application/json'},
-          withCredentials: true
-        }
-      );
+
+    try { 
+      const response = await axios.post(REGISTER_URL, { firstName, lastName, password, email});
       
-      console.log(JSON.stringify(response.userId));
+      if (response.status === 200) {
+        const recievedUserId = response.data.userId;
+        signUp(recievedUserId);
+        alert(`Signed Up Successfully, UserId is ${recievedUserId}`);
+
+      } else {
+        alert("Sign Up Failed")
+      }
+
     } catch (err) {
       console.log(JSON.stringify(err.response.data.error));
     }
@@ -90,8 +35,7 @@ const Register = () => {
 
   return(
       <>
-        <h1 className="p-5 text-center text-5xl">Welcome</h1>
-
+      <h1 className="p-5 text-center text-5xl">Welcome</h1>
         <div className= "form-container frosted rounded-3xl shadow-2xl backdrop-blur-3xl text-marian-blue">
           <form className="flex flex-col justify-center" onSubmit = {handleSubmit}>
 
@@ -100,9 +44,9 @@ const Register = () => {
                 <FormInput 
                   label = {"First Name"} 
                   placeholder = {"Enter First Name"} 
-                  inputId = {"fname"} 
-                  onChange = {handleFirstNameChange}
-                  isValid = {validFirstName}
+                  name = {"firstName"} 
+                  onChange = {handleChange}
+                  isValid = {valid.firstName}
                 />
                 </div>
 
@@ -110,9 +54,9 @@ const Register = () => {
                 <FormInput 
                   label = {"Last Name"} 
                   placeholder = {"Enter Last Name"} 
-                  inputId = {"lname"}
-                  onChange = {handleLastNameChange}
-                  isValid = {validLastName}
+                  name = {"lastName"}
+                  onChange = {handleChange}
+                  isValid = {valid.lastName}
                 />
               </div>
             </div>
@@ -121,19 +65,19 @@ const Register = () => {
                 <FormInput 
                   label = {"Email"} 
                   placeholder = {"Enter Email"} 
-                  inputId = {"email"}
-                  onChange = {handleEmailChange}
-                  isValid = {validEmail}
+                  name = {"email"}
+                  onChange = {handleChange}
+                  isValid = {valid.email}
                 />
             </div>
 
             <div className="flex flex-col mt-[10px]">
                 <FormInput 
-                  label = {"Password"} 
+                  label = {"password"} 
                   placeholder = {"Enter Password"} 
-                  inputId = {"password"}
-                  onChange = {handlePasswordChange}
-                  isValid = {validPassword}
+                  name = {"password"}
+                  onChange = {handleChange}
+                  isValid = {valid.password}
                   type = {"password"}
                 />
 
@@ -148,10 +92,7 @@ const Register = () => {
              <Link to = "/login" className='text-delft-blue underline'>Sign In</Link>
             </span>
           </p>
-
-        </div>
-        
-      
+        </div>   
       </>
     )
 }
