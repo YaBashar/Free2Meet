@@ -1,12 +1,33 @@
-* {
-  background: #4055BF; 
-  color: white;
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Outfit', sans-serif;
+@import "tailwindcss/preflight";
+@tailwind utilities;
+@tailwind utilities;
+
+@import "tailwindcss";
+
+@theme {
+  --color-white: #FFFFFF;
+  --color-ghost-white: #ECEEF9;
+  --color-lavender: #D8DDF3;
+  --color-vista-blue: #8C99D9;
+  --color-byzantine-blue: #4055BF;
+  --color-marian-blue: #2D3C86;
+  --color-delft-blue: #202B60;
+  
+  --radius: 0.5rem;
 }
 
+@layer base {
+  * {
+    background: #4055BF; 
+    color: white;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Outfit', sans-serif;
+  }
+}
+
+/*Custom Styles*/
 .frosted {
   background-color: rgba(236, 238, 249, 0.85);
 }
@@ -33,7 +54,3 @@
 .button-base {
   @apply border-2 border-delft-blue p-2 w-[100px] block mx-auto mt-4 rounded-lg  hover:text-white hover:bg-marian-blue hover:border-byzantine-blue
 }
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
