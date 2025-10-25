@@ -9,27 +9,27 @@
   --color-marian-blue: #2D3C86;
   --color-delft-blue: #202B60;
   
-  --radius: 0.5rem;
 }
 
+
 @layer base {
-  * {
-    background: #4055BF; 
-    color: white;
+  body {
+    background: var(--color-byzantine-blue);
+    color: var(--color-white);
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
     font-family: 'Outfit', sans-serif;
   }
+  
+  * {
+    box-sizing: border-box;
+  }
 }
+
 
 /*Custom Styles*/
 .frosted {
   background-color: rgba(236, 238, 249, 0.85);
-}
-
-.frosted * {
-  background-color: transparent;
 }
 
 .image {
