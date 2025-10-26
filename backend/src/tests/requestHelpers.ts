@@ -90,6 +90,13 @@ export const requestEventDetails = (token: string, eventId: string) => {
   }));
 };
 
+export const requestOrganisedEvents = (token: string) => {
+  return (request('GET', SERVER_URL + '/events/organised-events', {
+    headers: { Authorization: `Bearer ${token}` },
+    timeout: TIMEOUT_MS
+  }));
+};
+
 export const requestEventUpdate = (token: string, eventId: string, updatedFields: UpdateEvents) => {
   return (request('PUT', SERVER_URL + `/events/${eventId}`, {
     headers: { Authorization: `Bearer ${token}` },
