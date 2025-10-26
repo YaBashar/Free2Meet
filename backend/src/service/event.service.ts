@@ -163,4 +163,26 @@ async function getOrganisedEvents(userId: string) {
   return { events: cleanEvents };
 }
 
-export { createEvent, deleteEvent, eventDetails, inviteLink, updateEvent, getOrganisedEvents };
+async function getAttendingEvents(userId: string) {
+  const user = await UserModel.findById(userId);
+  if (!user) {
+    throw new Error('Invalid User Id');
+  }
+
+  const attendee = user.name;
+  const events = await EventModel.find({ attendees: attendee });
+
+  const cleanEvents = events.map(event => ({
+    title: event.title,
+    description: event.description,
+    location: event.location,
+    date: event.date,
+    startTime: event.startTime,
+    endTime: event.endTime,
+    organiser: event.organiser,
+  }));
+
+  return { events: cleanEvents };
+}
+
+export { createEvent, deleteEvent, eventDetails, inviteLink, updateEvent, getOrganisedEvents, getAttendingEvents };

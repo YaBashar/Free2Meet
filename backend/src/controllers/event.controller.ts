@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { createEvent, deleteEvent, eventDetails, inviteLink, updateEvent, getOrganisedEvents } from '../service/event.service';
+import { createEvent, deleteEvent, eventDetails, inviteLink, updateEvent, getOrganisedEvents, getAttendingEvents } from '../service/event.service';
 import { UpdateEvents } from '../models/interfaces';
 
 export const create = async (req: Request, res: Response) => {
@@ -73,6 +73,17 @@ export const organisedEvents = async (req: Request, res: Response) => {
     res.status(200).json(result);
   } catch (error) {
     console.log(error.message);
+    res.status(400).json({ error: error.message });
+  }
+};
+
+export const attendingEvents = async (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+
+  try {
+    const result = await getAttendingEvents(userId);
+    res.status(200).json(result);
+  } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
