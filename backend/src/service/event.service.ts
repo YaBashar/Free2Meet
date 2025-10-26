@@ -134,4 +134,55 @@ async function updateEvent(userId: string, eventId: string, title: string, descr
   return {};
 }
 
-export { createEvent, deleteEvent, eventDetails, inviteLink, updateEvent };
+// Get All Events Organised by User
+// Get All Events Attended by User
+
+async function getOrganisedEvents(userId: string) {
+  const user = await UserModel.findById(userId);
+  if (!user) {
+    throw new Error('Invalid User Id');
+  }
+
+  const organiser = user.name;
+  console.log(organiser);
+
+  const events = await EventModel.find({ organiser: organiser });
+
+  const cleanEvents = events.map(event => ({
+    title: event.title,
+    description: event.description,
+    location: event.location,
+    date: event.date,
+    startTime: event.startTime,
+    endTime: event.endTime,
+    organiser: event.organiser,
+    attendees: event.attendees,
+    notAttending: event.notAttending
+  }));
+
+  return { events: cleanEvents };
+}
+
+async function getAttendingEvents(userId: string) {
+  const user = await UserModel.findById(userId);
+  if (!user) {
+    throw new Error('Invalid User Id');
+  }
+
+  const attendee = user.name;
+  const events = await EventModel.find({ attendees: attendee });
+
+  const cleanEvents = events.map(event => ({
+    title: event.title,
+    description: event.description,
+    location: event.location,
+    date: event.date,
+    startTime: event.startTime,
+    endTime: event.endTime,
+    organiser: event.organiser,
+  }));
+
+  return { events: cleanEvents };
+}
+
+export { createEvent, deleteEvent, eventDetails, inviteLink, updateEvent, getOrganisedEvents, getAttendingEvents };
