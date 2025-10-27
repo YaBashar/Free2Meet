@@ -12,10 +12,11 @@ import { Label } from "@/components/ui/label"
 
 import { useState } from 'react'
 import { useAxiosPrivate } from '../hooks/useAxiosPrivate'
+
 // TODO:
 // Validate form fields based on backend restrictions
 
-function DialogDemo() {
+function EventInputDialog ({ setData }) {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -35,13 +36,21 @@ function DialogDemo() {
       return;
     }
 
-    console.log({ title, description, location, date, startTime, endTime });
-
     try {
         const response = await axiosPrivate.post(EVENT_URL, { title, description, location, date, startTime, endTime });
         
         if (response.status === 200) {
             const recievedEventId = response.data.eventId;
+            setData(prevData => [...prevData, {
+              eventId: recievedEventId,
+              title,
+              description, 
+              location,
+              date, 
+              startTime, 
+              endTime
+            }])
+            
             alert(`Successfully Created Event with EventId ${recievedEventId}`);
         }
 
@@ -49,7 +58,6 @@ function DialogDemo() {
         console.log(JSON.stringify(err.response.data.error));
     }
 
-    // Process your form data here
   };
 
   return (
@@ -58,7 +66,7 @@ function DialogDemo() {
           <Button variant="outline" className="cursor-pointer">New Event</Button>
         </DialogTrigger>
       <form>
-        <DialogContent className="sm:max-w-[425px] bg-amber-50 text-black">
+        <DialogContent className="sm:max-w-[425px] bg-blue-100 text-black">
           <DialogTitle>New Event</DialogTitle>
           <div className="grid gap-3">
             <div className="grid gap-1.5">
@@ -96,10 +104,10 @@ function DialogDemo() {
 
           <DialogFooter>
             <DialogClose asChild>
-              <Button className="cursor-pointer">Cancel</Button>
+              <Button variant="outline" className="cursor-pointer">Cancel</Button>
             </DialogClose>
             
-            <Button type="submit" className="cursor-pointer" onClick = {handleSubmit}>Submit</Button>
+            <Button variant="outline" type="submit" className="cursor-pointer" onClick = {handleSubmit}>Submit</Button>
           
           </DialogFooter>
         </DialogContent>
@@ -108,4 +116,4 @@ function DialogDemo() {
   )
 }
 
-export { DialogDemo}
+export { EventInputDialog }

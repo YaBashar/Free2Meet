@@ -42,6 +42,9 @@
   @apply border-2 border-solid border-delft-blue text-delft-blue p-2 rounded-lg;
 }
 
+.card-base {
+  @apply w-[150px] h-[150px] bg-red-100 m-5 flex flex-col rounded-xl justify-center items-center text-center text-black;
+}
 
 .form-container {
   @apply border-4 border-solid p-5 max-w-[500px] min-w-[250px] max-h-[500px] min-h-[320px] mx-auto rounded-xl;
