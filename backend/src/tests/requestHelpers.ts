@@ -40,7 +40,7 @@ export const requestAuthLogout = (accessToken: string, cookie: string[]) => {
 };
 
 export const requestRefreshToken = (cookie: string[]) => {
-  return (request('POST', SERVER_URL + '/auth/refresh', {
+  return (request('GET', SERVER_URL + '/auth/refresh', {
     headers: {
       Cookie: cookie
     }
