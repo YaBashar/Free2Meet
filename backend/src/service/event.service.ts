@@ -149,6 +149,7 @@ async function getOrganisedEvents(userId: string) {
   const events = await EventModel.find({ organiser: organiser });
 
   const cleanEvents = events.map(event => ({
+    eventId: event._id.toString(),
     title: event.title,
     description: event.description,
     location: event.location,

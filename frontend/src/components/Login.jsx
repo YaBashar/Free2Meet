@@ -12,7 +12,7 @@ const Login = () => {
     const from = location.state?.from?.pathname || "/dashboard";
 
     const { password, email, validEmail, validPassword, handleEmailChange, handlePasswordChange } = useValidateLoginForm()
-    const { signIn } = useAuth();
+    const { setAccessToken } = useAuth();
     
       const handleSubmit = async (e) => {
         e.preventDefault();
@@ -21,7 +21,7 @@ const Login = () => {
             console.log(password)
             const response = await axios.post(LOGIN_URL, { email, password});
             const accessToken = response.data.token;
-            signIn(accessToken);
+            setAccessToken(accessToken);
 
             navigate(from, { replace: true });
         } catch (err) {
@@ -32,7 +32,7 @@ const Login = () => {
     return (
 
     <>
-        <h1 className="p-5 mt-[20px] text-center text-5xl">Login</h1>
+        <h1 className="p-5 mt-5 text-center text-5xl">Login</h1>
 
         <div className= "flex flex-col justify-around form-container frosted rounded-3xl shadow-2xl backdrop-blur-3xl">
           <form className=" text-marian-blue" onSubmit = {handleSubmit}>

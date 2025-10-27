@@ -5,15 +5,6 @@ function AuthProvider({children}) {
     const [userId, setUserId] = useState('');
     const [accessToken, setAccessToken] = useState('')
 
-    const signUp = (newUserId) => {
-        setUserId(newUserId);
-    }
-
-    const signIn = (accessToken) => {
-        setAccessToken(accessToken);
-        console.log("Setting accessToken", accessToken);
-    }
-
     const signOut = () => {
         setUserId(null);
         setAccessToken(null);
@@ -21,10 +12,10 @@ function AuthProvider({children}) {
 
     const contextValue = {
         userId, 
+        setUserId, 
         accessToken,
-        signUp, 
+        setAccessToken,
         signOut,
-        signIn
     }
 
     return (

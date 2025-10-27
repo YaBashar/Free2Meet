@@ -9,27 +9,27 @@
   --color-marian-blue: #2D3C86;
   --color-delft-blue: #202B60;
   
-  --radius: 0.5rem;
 }
 
+
 @layer base {
-  * {
-    background: #4055BF; 
-    color: white;
+  body {
+    background: var(--color-byzantine-blue);
+    color: var(--color-white);
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
     font-family: 'Outfit', sans-serif;
   }
+  
+  * {
+    box-sizing: border-box;
+  }
 }
+
 
 /*Custom Styles*/
 .frosted {
   background-color: rgba(236, 238, 249, 0.85);
-}
-
-.frosted * {
-  background-color: transparent;
 }
 
 .image {
@@ -42,6 +42,9 @@
   @apply border-2 border-solid border-delft-blue text-delft-blue p-2 rounded-lg;
 }
 
+.card-base {
+  @apply w-[150px] h-[150px] bg-red-100 m-5 flex flex-col rounded-xl justify-center items-center text-center text-black;
+}
 
 .form-container {
   @apply border-4 border-solid p-5 max-w-[500px] min-w-[250px] max-h-[500px] min-h-[320px] mx-auto rounded-xl;

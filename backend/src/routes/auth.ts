@@ -6,7 +6,7 @@ export const authRouter = express.Router();
 
 authRouter.post('/register', authController.register);
 authRouter.post('/login', authController.login);
-authRouter.post('/refresh', authController.refresh);
+authRouter.get('/refresh', authController.refresh);
 authRouter.post('/request-reset', authController.requestReset);
 authRouter.post('/reset-password', authController.resetPassword);
 authRouter.get('/user-details', verifyJWT, authController.userInfo);

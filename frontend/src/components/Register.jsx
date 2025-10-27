@@ -11,7 +11,7 @@ const Register = () => {
   const {values, valid, handleChange} = useValidateSignUpForm();
   const {firstName, lastName, password, email} = values;
 
-  const {signUp } = useAuth();
+  const { setUserId } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,7 +21,7 @@ const Register = () => {
       
       if (response.status === 200) {
         const recievedUserId = response.data.userId;
-        signUp(recievedUserId);
+        setUserId(recievedUserId);
         alert(`Signed Up Successfully, UserId is ${recievedUserId}`);
 
       } else {
@@ -61,7 +61,7 @@ const Register = () => {
               </div>
             </div>
 
-            <div className="flex flex-col mt-[10px]">
+            <div className="flex flex-col mt-2.5">
                 <FormInput 
                   label = {"Email"} 
                   placeholder = {"Enter Email"} 
@@ -71,7 +71,7 @@ const Register = () => {
                 />
             </div>
 
-            <div className="flex flex-col mt-[10px]">
+            <div className="flex flex-col mt-2.5">
                 <FormInput 
                   label = {"password"} 
                   placeholder = {"Enter Password"} 
