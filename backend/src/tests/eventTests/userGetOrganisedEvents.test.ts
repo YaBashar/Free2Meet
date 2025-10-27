@@ -7,7 +7,6 @@ beforeEach(() => {
   const res = requestAuthLogin('example@gmail.com', 'Abcdefg123$');
   const data = JSON.parse(res.body.toString());
   token = data.token;
-  console.log(token);
   requestNewEvent(token, 'New Event', 'New Description', 'House', '31/08/2025', 10, 14);
   requestNewEvent(token, 'New Event 2', 'New Description 2', 'House 2', '31/08/2026', 11, 14);
 });
@@ -32,8 +31,10 @@ describe('Success Case', () => {
     const data = JSON.parse(res.body.toString());
 
     expect(res.statusCode).toStrictEqual(200);
+    console.log(data.events);
     expect(data.events).toStrictEqual([
       {
+        eventId: expect.any(String),
         title: 'New Event',
         description: 'New Description',
         location: 'House',
@@ -45,6 +46,7 @@ describe('Success Case', () => {
         notAttending: []
       },
       {
+        eventId: expect.any(String),
         title: 'New Event 2',
         description: 'New Description 2',
         location: 'House 2',
