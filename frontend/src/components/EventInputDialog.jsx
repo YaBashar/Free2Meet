@@ -70,34 +70,34 @@ function EventInputDialog ({ setData }) {
           <DialogTitle>New Event</DialogTitle>
           <div className="grid gap-3">
             <div className="grid gap-1.5">
-              <Label htmlFor="name-1">Event Title</Label>
-              <Input id="name-1" name="name" onChange = {(e) => setTitle(e.target.value)}/>
+              <Label htmlFor="title">Event Title</Label>
+              <Input id="title" name="eventTitle" onChange = {(e) => setTitle(e.target.value)}/>
             </div>
 
             <div className="grid gap-1.5">
-              <Label htmlFor="username-1">Description</Label>
-              <Input id="username-1" name="username" onChange = {(e) => setDescription(e.target.value)} />
+              <Label htmlFor="description">Description</Label>
+              <Input id="description" name="eventDesc" onChange = {(e) => setDescription(e.target.value)} />
             </div>
 
             <div className="grid gap-1.5">
-              <Label htmlFor="username-1">Location</Label>
-              <Input id="username-1" name="username" onChange = {(e) => setLocation(e.target.value)} />
+              <Label htmlFor ="location">Location</Label>
+              <Input id ="location" name="eventLocation" onChange = {(e) => setLocation(e.target.value)} />
             </div>
 
             <div className="grid gap-1.5">
-              <Label htmlFor="username-1">Date</Label>
-              <Input id="username-1" name="username" onChange = {(e) => setDate(e.target.value)} />
+              <Label htmlFor="date">Date</Label>
+              <Input id="date" name="eventDate" type = "date" onChange = {(e) => setDate(e.target.value)}></Input>
             </div>
 
             <div className="flex">
                 <div className="grid gap-1.5">
-                    <Label htmlFor="username-1">Start Time</Label>
-                    <Input id="username-1" name="username" onChange = {(e) => setStartTime(e.target.value)} />
+                    <Label htmlFor="startTime">Start Time</Label>
+                    <Input id="startTime" name="startTime" onChange = {(e) => setStartTime(e.target.value)} />
                 </div>
 
                 <div className="grid gap-1.5">
-                    <Label htmlFor="username-1">End Time</Label>
-                    <Input id="username-1" name="username" onChange = {(e) => setEndTime(e.target.value)} />
+                    <Label htmlFor="endTime">End Time</Label>
+                    <Input id="endTime" name="endTime" onChange = {(e) => setEndTime(e.target.value)} />
                 </div>
             </div>
           </div>
