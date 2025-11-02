@@ -2,6 +2,7 @@ import Register from './components/Register';
 import Login from './components/Login';
 import LandingPage from './components/LandingPage';
 import Dashboard from './components/Dashboard';
+import Event from './components/Event';
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './components/AuthProvider';
@@ -17,6 +18,7 @@ function App() {
           <Route path='/login' element={<Login/>}></Route>
           <Route path='/signup' element={<Register/>}></Route>
           <Route path='/dashboard' element = {<Dashboard/>}></Route>
+          <Route path = '/event' element = {<Event/>}></Route>
       </Routes>
       </BrowserRouter>
     </AuthProvider>
