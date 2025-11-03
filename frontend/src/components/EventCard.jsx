@@ -20,7 +20,6 @@ const EventCard = ({event, handleDelete, state, dispatch, setData}) => {
                 </TrashIcon>
             </button>
 
-
             <EventEditDialog
                 state = {state}
                 dispatch = {dispatch}
@@ -28,11 +27,7 @@ const EventCard = ({event, handleDelete, state, dispatch, setData}) => {
                 event = {event}>
             </EventEditDialog>
 
-            <button 
-            className="cursor-pointer" 
-            // Pass data via URL parameters navigate(`/event/${eventId}`)} 
-            onClick={() => navigate('/event')} 
-            >
+            <button className="cursor-pointer" onClick={() =>  navigate(`/events/${event.eventId}`)} >
                 <ArrowTopRightOnSquareIcon 
                     className="h-5 w-5 mx-1"
                 ></ArrowTopRightOnSquareIcon>

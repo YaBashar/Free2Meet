@@ -18,7 +18,7 @@ function App() {
           <Route path='/login' element={<Login/>}></Route>
           <Route path='/signup' element={<Register/>}></Route>
           <Route path='/dashboard' element = {<Dashboard/>}></Route>
-          <Route path = '/event' element = {<Event/>}></Route>
+          <Route path = '/events/:id' element = {<Event/>}></Route>
       </Routes>
       </BrowserRouter>
     </AuthProvider>
