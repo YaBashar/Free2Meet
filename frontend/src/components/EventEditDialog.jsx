@@ -1,3 +1,5 @@
+
+import { PencilSquareIcon } from '@heroicons/react/24/outline'
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -9,16 +11,20 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+
+import { useEffect } from 'react'
 import { useAxiosPrivate } from '../hooks/useAxiosPrivate'
 
 // TODO:
 // Validate form fields based on backend restrictions
 
-function EventInputDialog ({ setData, state, dispatch }) {
+function EventEditDialog ({ setData, event, state, dispatch }) {
 
   const axiosPrivate = useAxiosPrivate();
-  const EVENT_URL = '/events/new-event'
   const { title, description, location, date, startTime, endTime } = state;
+  const eventId = event.eventId;
+  const EVENT_URL = `/events/${eventId}`
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,16 +35,18 @@ function EventInputDialog ({ setData, state, dispatch }) {
     }
 
     try {
-        const response = await axiosPrivate.post(EVENT_URL, { title, description, location, date, startTime, endTime });
+        const response = await axiosPrivate.put(EVENT_URL, { title, description, location, date, startTime, endTime });
         
         if (response.status === 200) {
-            const recievedEventId = response.data.eventId;
-            setData(prevData => [...prevData, {
-              eventId: recievedEventId,
-              ...state
+            setData(() => [{
+              eventId: eventId,
+              title,
+              description, 
+              location,
+              date, 
+              startTime, 
+              endTime
             }])
-            
-            alert(`Successfully Created Event with EventId ${recievedEventId}`);
         }
 
     } catch (err) {
@@ -51,27 +59,38 @@ function EventInputDialog ({ setData, state, dispatch }) {
     dispatch({ type: 'UPDATE_EVENT', field, value: e.target.value });
   }
 
+  useEffect(() => {
+    if (event) {
+      dispatch({ 
+        type: 'NEW_EVENT', 
+        payload: {
+          title: event.title,
+          description: event.description,
+          location: event.location,
+          date: event.date,
+          startTime: event.startTime,
+          endTime: event.endTime
+        }
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [event]);
+
   return (
     <Dialog>
         <DialogTrigger asChild>
-          <Button 
-            variant="outline" 
-            className="cursor-pointer" 
-            onClick = {() => dispatch({ type: 'RESET', payload: {}})}
-          >New Event  
-          </Button>
+          <button className = "cursor-pointer">
+            <PencilSquareIcon className="h-5 w-5"></PencilSquareIcon>
+          </button>
         </DialogTrigger>
+
       <form>
         <DialogContent className="sm:max-w-[425px] bg-blue-100 text-black">
-          <DialogTitle>New Event</DialogTitle>
+          <DialogTitle>Edit Event</DialogTitle>
           <div className="grid gap-3">
             <div className="grid gap-1.5">
               <Label htmlFor="title">Event Title</Label>
-              <Input 
-                id="title" 
-                name="eventTitle" 
-                onChange = {handleFieldChange('title')}
-              />
+              <Input id="title" name="eventTitle" value = {state.title} onChange = {handleFieldChange('title')}/>
             </div>
 
             <div className="grid gap-1.5">
@@ -133,14 +152,7 @@ function EventInputDialog ({ setData, state, dispatch }) {
               <Button variant="outline" className="cursor-pointer">Cancel</Button>
             </DialogClose>
             
-            <Button 
-              variant="outline" 
-              type="submit" 
-              className="cursor-pointer" 
-              onClick = {handleSubmit}
-            >Submit
-            </Button>
-          
+            <Button variant="outline" type="submit" className="cursor-pointer" onClick = {handleSubmit}>Submit</Button>
           </DialogFooter>
         </DialogContent>
       </form>
@@ -148,4 +160,4 @@ function EventInputDialog ({ setData, state, dispatch }) {
   )
 }
 
-export { EventInputDialog }
+export { EventEditDialog }
