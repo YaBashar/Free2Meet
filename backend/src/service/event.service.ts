@@ -96,14 +96,22 @@ async function inviteLink(userId: string, eventId: string): Promise<string> {
     throw new Error('Invalid Event Id');
   }
 
-  // Atm invites are public, might need another endpoint for private invites
-  const invite = new EventInviteModel({
-    eventId: event._id,
-    link: crypto.randomBytes(32).toString('hex')
-  });
+  const existingInvite = await EventInviteModel.findOne({ eventId: event._id });
+  let inviteLink;
 
-  await invite.save();
-  return invite.link;
+  if (existingInvite) {
+    inviteLink = existingInvite.link;
+  } else {
+    const invite = new EventInviteModel({
+      eventId: event._id,
+      link: crypto.randomBytes(32).toString('hex')
+    });
+
+    await invite.save();
+    inviteLink = invite.link;
+  }
+
+  return inviteLink;
 }
 
 async function updateEvent(userId: string, eventId: string, title: string, description: string, location: string, date: string, startTime: number, endTime: number) {
