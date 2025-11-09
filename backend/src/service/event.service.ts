@@ -4,6 +4,7 @@ import { UserModel } from '../models/userModel';
 import { EventModel } from '../models/eventModel';
 import { EventInviteModel } from '../models/eventInviteModel';
 import { Events } from '../models/interfaces';
+import { AttendeeModel } from '../models/attendeeModel';
 
 // TODO Future
 // Handling Multiple Dates and Timings ie 1 week range.
@@ -96,14 +97,46 @@ async function inviteLink(userId: string, eventId: string): Promise<string> {
     throw new Error('Invalid Event Id');
   }
 
-  // Atm invites are public, might need another endpoint for private invites
-  const invite = new EventInviteModel({
-    eventId: event._id,
-    link: crypto.randomBytes(32).toString('hex')
-  });
+  const existingInvite = await EventInviteModel.findOne({ eventId: event._id });
+  let inviteLink;
 
-  await invite.save();
-  return invite.link;
+  if (existingInvite) {
+    inviteLink = existingInvite.link;
+  } else {
+    const invite = new EventInviteModel({
+      eventId: event._id,
+      link: crypto.randomBytes(32).toString('hex')
+    });
+
+    await invite.save();
+    inviteLink = invite.link;
+  }
+
+  return inviteLink;
+}
+
+async function inviteDetails(inviteLink: string) {
+  const invite = await EventInviteModel.findOne({ link: inviteLink });
+
+  if (!invite) {
+    throw new Error('Invalid Invite Link');
+  }
+
+  const eventId = invite.eventId;
+  const event = await EventModel.findById(eventId);
+
+  return {
+    id: event.id,
+    title: event.title,
+    description: event.description,
+    location: event.location,
+    date: event.date,
+    startTime: event.startTime,
+    endTime: event.endTime,
+    organiser: event.organiser,
+    attendees: event.attendees,
+    notAttending: event.notAttending
+  };
 }
 
 async function updateEvent(userId: string, eventId: string, title: string, description: string, location: string, date: string, startTime: number, endTime: number) {
@@ -134,9 +167,6 @@ async function updateEvent(userId: string, eventId: string, title: string, descr
   return {};
 }
 
-// Get All Events Organised by User
-// Get All Events Attended by User
-
 async function getOrganisedEvents(userId: string) {
   const user = await UserModel.findById(userId);
   if (!user) {
@@ -144,8 +174,6 @@ async function getOrganisedEvents(userId: string) {
   }
 
   const organiser = user.name;
-  console.log(organiser);
-
   const events = await EventModel.find({ organiser: organiser });
 
   const cleanEvents = events.map(event => ({
@@ -165,25 +193,23 @@ async function getOrganisedEvents(userId: string) {
 }
 
 async function getAttendingEvents(userId: string) {
-  const user = await UserModel.findById(userId);
-  if (!user) {
-    throw new Error('Invalid User Id');
-  }
+  const attendeeRecoards = await AttendeeModel
+    .find({ userId: userId })
+    .populate({
+      path: 'eventId',
+      select: 'title description location date startTime endTime organiser'
+    })
+    .lean();
 
-  const attendee = user.name;
-  const events = await EventModel.find({ attendees: attendee });
+  const events = attendeeRecoards
+    .filter(record => record.eventId != null)
+    .map(record => record.eventId)
+    .map(({ _id, ...event }) => ({
+      eventId: _id.toString(),
+      ...event
+    }));
 
-  const cleanEvents = events.map(event => ({
-    title: event.title,
-    description: event.description,
-    location: event.location,
-    date: event.date,
-    startTime: event.startTime,
-    endTime: event.endTime,
-    organiser: event.organiser,
-  }));
-
-  return { events: cleanEvents };
+  return { events: events };
 }
 
-export { createEvent, deleteEvent, eventDetails, inviteLink, updateEvent, getOrganisedEvents, getAttendingEvents };
+export { createEvent, deleteEvent, eventDetails, inviteLink, inviteDetails, updateEvent, getOrganisedEvents, getAttendingEvents };

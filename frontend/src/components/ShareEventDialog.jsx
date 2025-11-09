@@ -23,7 +23,8 @@ function ShareEventDialog({ eventId }) {
   const getEventInviteLink = async () => {
     try {
         const response = await axiosPrivate.post(`/events/${eventId}/invite`)
-        setLink(response.data.link)
+        const link = `localhost:3000/events/invite/${response.data.link}`
+        setLink(link)
     } catch (error) {
         console.log(JSON.stringify(error.response.data.error));
     }

@@ -9,8 +9,6 @@ const eventSchema = new mongoose.Schema({
   startTime: { type: Number, required: true },
   endTime: { type: Number, required: true },
   organiser: { type: String },
-  attendees: { type: [String], default: [] },
-  notAttending: { type: [String], default: [] }
 });
 
 export const EventModel = mongoose.model<Events>('Event', eventSchema);

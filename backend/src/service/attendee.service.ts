@@ -22,15 +22,17 @@ async function attendeeRespond(userId: string, inviteLink: string, action: strin
   }
 
   if (action === 'accept') {
+    // also change user model
     user.attendingEvents.push(event._id);
     await user.save();
 
-    event.attendees.push(user.name);
-    await event.save();
+    // remove;
+    // event.attendees.push(user.name);
+    // await event.save();
 
     const attendee = new AttendeeModel({
       userId: user._id.toString(),
-      eventId: event._id.toString(),
+      eventId: event._id,
       name: user.name,
       startAvailable: -1,
       endAvailable: -1
@@ -38,13 +40,13 @@ async function attendeeRespond(userId: string, inviteLink: string, action: strin
 
     await attendee.save();
   } else if (action === 'reject') {
-    event.notAttending.push(user.name);
-    await event.save();
+    // Decide whether to keep rejections
   }
 
   return {};
 }
 
+// TODO : fix
 async function attendeeSelectAvailability(userId: string, eventId: string, startTime: number, endTime: number) {
   const user = await UserModel.findById(userId);
   if (!user) {

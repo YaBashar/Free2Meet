@@ -31,7 +31,6 @@ describe('Success Case', () => {
     const data = JSON.parse(res.body.toString());
 
     expect(res.statusCode).toStrictEqual(200);
-    console.log(data.events);
     expect(data.events).toStrictEqual([
       {
         eventId: expect.any(String),
@@ -41,9 +40,7 @@ describe('Success Case', () => {
         date: '31/08/2025',
         startTime: 10,
         endTime: 14,
-        organiser: 'Mubashir Hussain',
-        attendees: [],
-        notAttending: []
+        organiser: 'Mubashir Hussain'
       },
       {
         eventId: expect.any(String),
@@ -53,9 +50,7 @@ describe('Success Case', () => {
         date: '31/08/2026',
         startTime: 11,
         endTime: 14,
-        organiser: 'Mubashir Hussain',
-        attendees: [],
-        notAttending: []
+        organiser: 'Mubashir Hussain'
       }
     ]);
   });

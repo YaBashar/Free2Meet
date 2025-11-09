@@ -65,9 +65,7 @@ describe('Success', () => {
       date: '31/08/2025',
       startTime: 10,
       endTime: 14,
-      organiser: 'Mubashir Hussain',
-      attendees: [],
-      notAttending: []
+      organiser: 'Mubashir Hussain'
     });
 
     expect(res.statusCode).toStrictEqual(200);

@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 
 export interface Store {
     events: Events[],
@@ -29,7 +29,7 @@ export interface Attendee {
 }
 
 export interface EventInvite {
-    eventId: string,
+    eventId: mongoose.Types.ObjectId,
     link: string
 }
 
