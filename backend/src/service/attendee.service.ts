@@ -26,10 +26,6 @@ async function attendeeRespond(userId: string, inviteLink: string, action: strin
     user.attendingEvents.push(event._id);
     await user.save();
 
-    // remove;
-    // event.attendees.push(user.name);
-    // await event.save();
-
     const attendee = new AttendeeModel({
       userId: user._id.toString(),
       eventId: event._id,
@@ -46,18 +42,7 @@ async function attendeeRespond(userId: string, inviteLink: string, action: strin
   return {};
 }
 
-// TODO : fix
 async function attendeeSelectAvailability(userId: string, eventId: string, startTime: number, endTime: number) {
-  const user = await UserModel.findById(userId);
-  if (!user) {
-    throw new Error('Invalid User ID');
-  }
-
-  const event = await EventModel.findById(eventId);
-  if (!event) {
-    throw new Error('Invalid Event ID');
-  }
-
   if (endTime <= startTime) {
     throw new Error('Invalid Availability Block');
   }
@@ -80,22 +65,13 @@ async function attendeeLeaveEvent(userId: string, eventId: string) {
     throw new Error('Invalid User ID');
   }
 
-  const event = await EventModel.findById(eventId);
-  if (!event) {
-    throw new Error('Invalid Event ID');
-  }
-
   const attendee = await AttendeeModel.findOne({ userId: userId, eventId: eventId });
   if (!attendee) {
     throw new Error('Attendee already left');
   }
 
   user.attendingEvents = user.attendingEvents.filter((e) => e.toString() !== eventId);
-  event.attendees = event.attendees.filter((name: string) => name !== attendee.name);
-  event.notAttending.push(user.name);
-
   await user.save();
-  await event.save();
   await attendee.deleteOne();
 
   return {};
