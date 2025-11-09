@@ -98,7 +98,6 @@ export const requestOrganisedEvents = (token: string) => {
 };
 
 export const requestAttendingEvents = (token: string) => {
-  console.log(token);
   return (request('GET', SERVER_URL + '/events/attending-events', {
     headers: { Authorization: `Bearer ${token}` },
     timeout: TIMEOUT_MS
@@ -118,6 +117,10 @@ export const requestEventInvite = (token: string, eventId: string) => {
     headers: { Authorization: `Bearer ${token}` },
     timeout: TIMEOUT_MS
   }));
+};
+
+export const requestEventInviteDetails = (inviteLink: string) => {
+  return (request('GET', SERVER_URL + `/events/invite/${inviteLink}`));
 };
 
 // Attendee
