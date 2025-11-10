@@ -1,4 +1,5 @@
 import { AttendeeModel } from '../models/attendeeModel';
+import { DeclinedModel } from '../models/declinedInviteModel';
 import { EventInviteModel } from '../models/eventInviteModel';
 import { EventModel } from '../models/eventModel';
 import { UserModel } from '../models/userModel';
@@ -33,10 +34,15 @@ async function attendeeRespond(userId: string, inviteLink: string, action: strin
       startAvailable: -1,
       endAvailable: -1
     });
-
     await attendee.save();
   } else if (action === 'reject') {
-    // Decide whether to keep rejections
+    const declined = new DeclinedModel({
+      userId: user._id.toString(),
+      eventId: event._id,
+      name: user.name,
+      declinedAt: Date.now()
+    });
+    await declined.save();
   }
 
   return {};
