@@ -1,6 +1,6 @@
 // TODO FIX
 
-import { requestAttendeeLeave, requestAttendeeRespond, requestAuthLogin, requestAuthRegister, requestDelete, requestEventInvite, requestNewEvent } from '../requestHelpers';
+import { requestAttendeeLeave, requestAttendeeRespond, requestAttendingEvents, requestAuthLogin, requestAuthRegister, requestDelete, requestEventInvite, requestNewEvent } from '../requestHelpers';
 
 let organiserToken: string;
 let attendeeToken: string;
@@ -44,36 +44,36 @@ describe('Error Cases', () => {
     expect(res.statusCode).toStrictEqual(401);
   });
 
-  //   test('Invalid Event Link', () => {
-  //     const res = requestAttendeeLeave(attendeeToken, 'invalid');
-  //     const data = JSON.parse(res.body.toString());
+  test('Invalid Event Link', () => {
+    const res = requestAttendeeLeave(attendeeToken, 'invalid');
+    const data = JSON.parse(res.body.toString());
 
-  //     expect(data).toStrictEqual({ error: expect.any(String) });
-  //     expect(res.statusCode).toStrictEqual(400);
-  //   });
+    expect(data).toStrictEqual({ error: expect.any(String) });
+    expect(res.statusCode).toStrictEqual(400);
+  });
 
-  //   test('Attendee already left', () => {
-  //     requestAttendeeLeave(attendeeToken, eventId);
-  //     const res = requestAttendeeLeave(attendeeToken, eventId);
-  //     const data = JSON.parse(res.body.toString());
-//     expect(data).toStrictEqual({ error: expect.any(String) });
-//     expect(res.statusCode).toStrictEqual(400);
-//   });
+  test('Attendee already left', () => {
+    requestAttendeeLeave(attendeeToken, eventId);
+    const res = requestAttendeeLeave(attendeeToken, eventId);
+    const data = JSON.parse(res.body.toString());
+    expect(data).toStrictEqual({ error: expect.any(String) });
+    expect(res.statusCode).toStrictEqual(400);
+  });
 });
 
-// describe('Success', () => {
-//   test('Correct Return Type', () => {
-//     const res = requestAttendeeLeave(attendeeToken, eventId);
-//     const data = JSON.parse(res.body.toString());
-//     expect(data).toStrictEqual({});
-//     expect(res.statusCode).toStrictEqual(200);
-//   });
+describe('Success', () => {
+  test('Correct Return Type', () => {
+    const res = requestAttendeeLeave(attendeeToken, eventId);
+    const data = JSON.parse(res.body.toString());
+    expect(data).toStrictEqual({});
+    expect(res.statusCode).toStrictEqual(200);
+  });
 
-//   // Fix attendee Service
-//   // test('Confirm Attendee Left', () => {
-//   //   requestAttendeeLeave(attendeeToken, eventId);
-//   //   const res = requestEventDetails(organiserToken, eventId);
-//   //   const data = JSON.parse(res.body.toString());
-//   //   expect(res.statusCode).toStrictEqual(200);
-//   // });
-// });
+  test('Confirm Attendee Left', () => {
+    requestAttendeeLeave(attendeeToken, eventId);
+    const res = requestAttendingEvents(attendeeToken);
+    const data = JSON.parse(res.body.toString());
+    expect(res.statusCode).toStrictEqual(200);
+    expect(data.events).toStrictEqual([]);
+  });
+});

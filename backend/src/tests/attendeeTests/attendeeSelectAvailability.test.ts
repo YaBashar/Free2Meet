@@ -32,51 +32,51 @@ afterEach(() => {
   requestDelete();
 });
 
-// describe('Error Cases', () => {
-//   test('Invalid User ID', () => {
-//     requestAttendeeRespond(attendeeToken, link, 'accept');
-//     const res = requestAttendeeSelectAvail('invalid', eventId, 10, 12);
-//     const data = JSON.parse(res.body.toString());
+describe('Error Cases', () => {
+  test('Invalid User ID', () => {
+    requestAttendeeRespond(attendeeToken, link, 'accept');
+    const res = requestAttendeeSelectAvail('invalid', eventId, 10, 12);
+    const data = JSON.parse(res.body.toString());
 
-//     expect(data).toStrictEqual({ error: expect.any(String) });
-//     expect(res.statusCode).toStrictEqual(401);
-//   });
+    expect(data).toStrictEqual({ error: expect.any(String) });
+    expect(res.statusCode).toStrictEqual(401);
+  });
 
-test('Invalid Event ID', () => {
-  requestAttendeeRespond(attendeeToken, link, 'accept');
-  const res = requestAttendeeSelectAvail(attendeeToken, 'invalid', 10, 12);
-  const data = JSON.parse(res.body.toString());
+  test('Invalid Event ID', () => {
+    requestAttendeeRespond(attendeeToken, link, 'accept');
+    const res = requestAttendeeSelectAvail(attendeeToken, 'invalid', 10, 12);
+    const data = JSON.parse(res.body.toString());
 
-  expect(data).toStrictEqual({ error: expect.any(String) });
-  expect(res.statusCode).toStrictEqual(400);
+    expect(data).toStrictEqual({ error: expect.any(String) });
+    expect(res.statusCode).toStrictEqual(400);
+  });
+
+  test('Invalid Availability', () => {
+    requestAttendeeRespond(attendeeToken, link, 'accept');
+    const res = requestAttendeeSelectAvail(attendeeToken, eventId, 10, 10);
+    const data = JSON.parse(res.body.toString());
+
+    expect(data).toStrictEqual({ error: expect.any(String) });
+    expect(res.statusCode).toStrictEqual(400);
+  });
+
+  test('Attendee not part of Event', () => {
+    requestAttendeeRespond(attendeeToken, link, 'reject');
+    const res = requestAttendeeSelectAvail(attendeeToken, eventId, 10, 12);
+    const data = JSON.parse(res.body.toString());
+
+    expect(data).toStrictEqual({ error: expect.any(String) });
+    expect(res.statusCode).toStrictEqual(400);
+  });
 });
 
-//   test('Invalid Availability', () => {
-//     requestAttendeeRespond(attendeeToken, link, 'accept');
-//     const res = requestAttendeeSelectAvail(attendeeToken, eventId, 10, 10);
-//     const data = JSON.parse(res.body.toString());
+describe('Success', () => {
+  test('Success', () => {
+    requestAttendeeRespond(attendeeToken, link, 'accept');
+    const res = requestAttendeeSelectAvail(attendeeToken, eventId, 10, 12);
+    const data = JSON.parse(res.body.toString());
 
-//     expect(data).toStrictEqual({ error: expect.any(String) });
-//     expect(res.statusCode).toStrictEqual(400);
-//   });
-
-//   test('Attendee not part of Event', () => {
-//     requestAttendeeRespond(attendeeToken, link, 'reject');
-//     const res = requestAttendeeSelectAvail(attendeeToken, eventId, 10, 12);
-//     const data = JSON.parse(res.body.toString());
-
-//     expect(data).toStrictEqual({ error: expect.any(String) });
-//     expect(res.statusCode).toStrictEqual(400);
-//   });
-// });
-
-// describe('Success', () => {
-//   test('Success', () => {
-//     requestAttendeeRespond(attendeeToken, link, 'accept');
-//     const res = requestAttendeeSelectAvail(attendeeToken, eventId, 10, 12);
-//     const data = JSON.parse(res.body.toString());
-
-//     expect(data).toStrictEqual({});
-//     expect(res.statusCode).toStrictEqual(200);
-//   });
-// });
+    expect(data).toStrictEqual({});
+    expect(res.statusCode).toStrictEqual(200);
+  });
+});
