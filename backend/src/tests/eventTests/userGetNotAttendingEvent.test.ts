@@ -1,4 +1,4 @@
-import { requestAttendeeRespond, requestAttendingEvents, requestAuthLogin, requestAuthRegister, requestDelete, requestEventInvite, requestNewEvent } from '../requestHelpers';
+import { requestAttendeeRespond, requestAuthLogin, requestAuthRegister, requestDelete, requestEventInvite, requestNewEvent, requestNotAttendingEvent } from '../requestHelpers';
 
 let organiserToken: string;
 let attendeeToken: string;
@@ -25,39 +25,33 @@ beforeEach(() => {
   const res3 = requestAuthLogin('jonl@gmail.com', 'Abcnmop.123$');
   const data3 = JSON.parse(res3.body.toString());
   attendeeToken = data3.token;
-
-  requestAttendeeRespond(attendeeToken, link, 'accept');
 });
 
 afterEach(() => {
   requestDelete();
 });
 
-describe('Error', () => {
-  test('Error', () => {
-    const res = requestAttendingEvents('invalidToken');
+describe(('Error'), () => {
+  test('Invalid Event Id', () => {
+    requestAttendeeRespond(attendeeToken, link, 'reject');
+    const res = requestNotAttendingEvent('invalid');
     const data = JSON.parse(res.body.toString());
-
-    expect(res.statusCode).toStrictEqual(401);
+    expect(res.statusCode).toStrictEqual(400);
     expect(data).toStrictEqual({ error: expect.any(String) });
   });
 });
 
-describe('Success', () => {
+describe(('Success'), () => {
   test('Success', () => {
-    const res = requestAttendingEvents(attendeeToken);
+    requestAttendeeRespond(attendeeToken, link, 'reject');
+    const res = requestNotAttendingEvent(eventId);
     const data = JSON.parse(res.body.toString());
-
     expect(res.statusCode).toStrictEqual(200);
-    expect(data.events).toStrictEqual([{
-      eventId: expect.any(String),
-      title: 'New Event',
-      description: 'New Description',
-      location: 'House',
-      date: '31/08/2025',
-      startTime: 10,
-      endTime: 14,
-      organiser: 'Mubashir Hussain'
-    }]);
+    expect(data).toStrictEqual([
+      {
+        name: 'Jonathan Lee',
+        declinedAt: expect.any(String)
+      }
+    ]);
   });
 });

@@ -104,6 +104,18 @@ export const requestAttendingEvents = (token: string) => {
   }));
 };
 
+export const requestNotAttendingEvent = (eventId: string) => {
+  return request('GET', SERVER_URL + `/events/${eventId}/notAttending`, {
+    timeout: TIMEOUT_MS
+  });
+};
+
+export const requestAttendingEvent = (eventId: string) => {
+  return request('GET', SERVER_URL + `/events/${eventId}/attending`, {
+    timeout: TIMEOUT_MS
+  });
+};
+
 export const requestEventUpdate = (token: string, eventId: string, updatedFields: UpdateEvents) => {
   return (request('PUT', SERVER_URL + `/events/${eventId}`, {
     headers: { Authorization: `Bearer ${token}` },

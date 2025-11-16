@@ -1,5 +1,5 @@
 
-import { requestAttendeeRespond, requestAttendingEvents, requestAuthLogin, requestAuthRegister, requestDeleteEvent, requestDelete, requestEventInvite, requestNewEvent } from '../requestHelpers';
+import { requestAttendeeRespond, requestAttendingEvents, requestAuthLogin, requestAuthRegister, requestDeleteEvent, requestDelete, requestEventInvite, requestNewEvent, requestNotAttendingEvent } from '../requestHelpers';
 
 let organiserToken: string;
 let attendeeToken: string;
@@ -87,10 +87,16 @@ describe('Success', () => {
     ]);
   });
 
-  // TODO: Decide how to handle rejections
-  // test('Attendee rejected and added to Event', () => {
-  //   requestAttendeeRespond(attendeeToken, link, 'reject');
-  //   // const res = requestEventDetails(organiserToken, eventId);
-  //   // const data = JSON.parse(res.body.toString());
-  // });
+  test('Attendee rejected and added to Event', () => {
+    requestAttendeeRespond(attendeeToken, link, 'reject');
+    const res = requestNotAttendingEvent(eventId);
+    const data = JSON.parse(res.body.toString());
+    expect(res.statusCode).toStrictEqual(200);
+    expect(data).toStrictEqual([
+      {
+        name: 'Jonathan Lee',
+        declinedAt: expect.any(String)
+      }
+    ]);
+  });
 });
