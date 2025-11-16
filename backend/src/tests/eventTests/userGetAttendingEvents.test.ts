@@ -33,15 +33,15 @@ afterEach(() => {
   requestDelete();
 });
 
-// describe('Error', () => {
-//   test('Error', () => {
-//     const res = requestAttendingEvents('invalidToken');
-//     const data = JSON.parse(res.body.toString());
+describe('Error', () => {
+  test('Error', () => {
+    const res = requestAttendingEvents('invalidToken');
+    const data = JSON.parse(res.body.toString());
 
-//     expect(res.statusCode).toStrictEqual(401);
-//     expect(data).toStrictEqual({ error: expect.any(String) });
-//   });
-// });
+    expect(res.statusCode).toStrictEqual(401);
+    expect(data).toStrictEqual({ error: expect.any(String) });
+  });
+});
 
 describe('Success', () => {
   test('Success', () => {
