@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { createEvent, deleteEvent, eventDetails, inviteLink, updateEvent, getOrganisedEvents, getAttendingEvents, inviteDetails } from '../service/event.service';
+import { createEvent, deleteEvent, eventDetails, inviteLink, updateEvent, getOrganisedEvents, getAllAttendingEventsForUser, getInviteDetails, getNotAttending, getAttendeesForEvent } from '../service/event.service';
 import { UpdateEvents } from '../models/interfaces';
 
 export const create = async (req: Request, res: Response) => {
@@ -26,11 +26,11 @@ export const invite = async (req: Request, res: Response) => {
   }
 };
 
-export const getInviteDetails = async (req: Request, res: Response) => {
+export const inviteDetails = async (req: Request, res: Response) => {
   const inviteLink = req.params.inviteLink as string;
 
   try {
-    const result = await inviteDetails(inviteLink);
+    const result = await getInviteDetails(inviteLink);
     res.status(200).json({ event: result });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -87,11 +87,31 @@ export const organisedEvents = async (req: Request, res: Response) => {
   }
 };
 
-export const attendingEvents = async (req: Request, res: Response) => {
+export const allAttendingEventsForUser = async (req: Request, res: Response) => {
   const userId = (req as any).userId;
 
   try {
-    const result = await getAttendingEvents(userId);
+    const result = await getAllAttendingEventsForUser(userId);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+export const notAttending = async (req: Request, res: Response) => {
+  const eventId = req.params.eventId as string;
+  try {
+    const result = await getNotAttending(eventId);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+export const getEventAttendees = async (req: Request, res: Response) => {
+  const eventId = req.params.eventId as string;
+  try {
+    const result = await getAttendeesForEvent(eventId);
     res.status(200).json(result);
   } catch (error) {
     res.status(400).json({ error: error.message });

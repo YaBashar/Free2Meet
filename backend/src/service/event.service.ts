@@ -5,6 +5,7 @@ import { EventModel } from '../models/eventModel';
 import { EventInviteModel } from '../models/eventInviteModel';
 import { Events } from '../models/interfaces';
 import { AttendeeModel } from '../models/attendeeModel';
+import { DeclinedModel } from '../models/declinedInviteModel';
 
 // TODO Future
 // Handling Multiple Dates and Timings ie 1 week range.
@@ -37,8 +38,6 @@ async function createEvent(userId: string, title: string, description: string, l
     startTime: startTime,
     endTime: endTime,
     organiser: user.name,
-    attendees: [],
-    notAttending: []
   });
 
   await newEvent.save();
@@ -66,8 +65,6 @@ async function eventDetails(userId: string, eventId: string): Promise<Events> {
     startTime: event.startTime,
     endTime: event.endTime,
     organiser: event.organiser,
-    attendees: event.attendees,
-    notAttending: event.notAttending
   };
 }
 
@@ -78,6 +75,7 @@ async function deleteEvent(userId: string, eventId: string): Promise<object> {
   }
 
   try {
+    await AttendeeModel.deleteMany({ eventId: eventId });
     await EventModel.findByIdAndDelete(eventId);
   } catch (error) {
     throw new Error(error.message);
@@ -115,7 +113,7 @@ async function inviteLink(userId: string, eventId: string): Promise<string> {
   return inviteLink;
 }
 
-async function inviteDetails(inviteLink: string) {
+async function getInviteDetails(inviteLink: string) {
   const invite = await EventInviteModel.findOne({ link: inviteLink });
 
   if (!invite) {
@@ -134,8 +132,6 @@ async function inviteDetails(inviteLink: string) {
     startTime: event.startTime,
     endTime: event.endTime,
     organiser: event.organiser,
-    attendees: event.attendees,
-    notAttending: event.notAttending
   };
 }
 
@@ -185,14 +181,12 @@ async function getOrganisedEvents(userId: string) {
     startTime: event.startTime,
     endTime: event.endTime,
     organiser: event.organiser,
-    attendees: event.attendees,
-    notAttending: event.notAttending
   }));
 
   return { events: cleanEvents };
 }
 
-async function getAttendingEvents(userId: string) {
+async function getAllAttendingEventsForUser(userId: string) {
   const attendeeRecoards = await AttendeeModel
     .find({ userId: userId })
     .populate({
@@ -212,4 +206,14 @@ async function getAttendingEvents(userId: string) {
   return { events: events };
 }
 
-export { createEvent, deleteEvent, eventDetails, inviteLink, inviteDetails, updateEvent, getOrganisedEvents, getAttendingEvents };
+async function getNotAttending(eventId: string) {
+  const attendeeRecords = await DeclinedModel.find({ eventId: eventId }).select('name declinedAt -_id');
+  return attendeeRecords;
+}
+
+async function getAttendeesForEvent(eventId: string) {
+  const attendeeRecords = await AttendeeModel.find({ eventId: eventId }).select('name -_id');
+  return attendeeRecords;
+}
+
+export { createEvent, deleteEvent, eventDetails, inviteLink, getInviteDetails, updateEvent, getOrganisedEvents, getAllAttendingEventsForUser, getNotAttending, getAttendeesForEvent };

@@ -16,8 +16,6 @@ export interface Events {
     startTime: number,
     endTime: number,
     organiser: string,
-    attendees: string[],
-    notAttending: string[]
 }
 
 export interface Attendee {
