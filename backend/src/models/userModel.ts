@@ -13,8 +13,6 @@ const userSchema = new mongoose.Schema({
     token: { type: String, unique: true },
     expiresAt: { type: Number }
   },
-  organisedEvents: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Event' }],
-  attendingEvents: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Event' }],
 });
 
 export const UserModel = mongoose.model<Users>('User', userSchema);

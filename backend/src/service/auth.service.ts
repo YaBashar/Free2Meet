@@ -36,8 +36,6 @@ async function registerUser(firstName: string, lastName: string, password: strin
       token: undefined,
       expiresAt: -1
     },
-    organisedEvents: [],
-    attendingEvents: []
   });
 
   await newUser.save();
