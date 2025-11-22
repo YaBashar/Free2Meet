@@ -1,22 +1,23 @@
 import { useParams } from 'react-router-dom'
 import { useAxiosPrivate } from '../hooks/useAxiosPrivate';
 import { useEffect, useState } from 'react';
-import { ShareIcon } from '@heroicons/react/24/outline';
 import { ShareEventDialog } from './ShareEventDialog'
+
+// Conditional rendering for attendee and organiser.
 
 const Event = () => {
   
   const { id } = useParams();
+
   const axiosPrivate = useAxiosPrivate();
+
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  const [isOrganiser, setIsOrganiser] = useState(false);
 
   useEffect(() => {
-
     const getEvent = async () => {
       try {
-        console.log("4. Inside try catch function");
         const response = await axiosPrivate.get(`/events/${id}`);
         setEvent(response.data.event);
     
@@ -26,7 +27,7 @@ const Event = () => {
         setLoading(false);
       }
     }
-    
+
     if (id) {
       getEvent();
     } else {
@@ -34,6 +35,22 @@ const Event = () => {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+   useEffect(() => {
+    const getUserName = async () => {
+      try {
+        const response = await axiosPrivate.get('/auth/user-details');
+        if ((response.data.user.name) === event.organiser) {
+          setIsOrganiser(true);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    getUserName();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   if (loading) {
     return <div className="p-10">Loading...</div>;
@@ -44,21 +61,14 @@ const Event = () => {
   }
 
   return (
-
     <>
-      <div className = "w-[400px] h-[500px] flex flex-col items-center m-5 frosted rounded-4xl text-black">
+      <div className = "w-[400px] h-[475px] flex flex-col items-center justify-center m-5 frosted rounded-4xl text-black">
 
-        <div className = "w-[200px] justify-between flex mt-10">
-          <p className='text-3xl'>
-            Event Info 
-          </p>
-
-          <ShareEventDialog
-            eventId = {id}
-          ></ShareEventDialog>
-
+        <div className={isOrganiser ? "w-[200px] justify-between flex" : ""}>
+          <p className='text-3xl'>Event Info</p>
+          {isOrganiser && <ShareEventDialog eventId={id} />}
         </div>
-        
+
         <p className='mt-5 text-3xl'>{event.title}</p>
         <p className='mt-5 text-3xl'>{event.description}</p>
         <p className='mt-5 text-3xl'>{event.location}</p>
