@@ -23,10 +23,6 @@ async function attendeeRespond(userId: string, inviteLink: string, action: strin
   }
 
   if (action === 'accept') {
-    // also change user model
-    user.attendingEvents.push(event._id);
-    await user.save();
-
     const attendee = new AttendeeModel({
       userId: user._id.toString(),
       eventId: event._id,
@@ -76,8 +72,6 @@ async function attendeeLeaveEvent(userId: string, eventId: string) {
     throw new Error('Attendee already left');
   }
 
-  user.attendingEvents = user.attendingEvents.filter((e) => e.toString() !== eventId);
-  await user.save();
   await attendee.deleteOne();
 
   return {};
