@@ -3,6 +3,7 @@ import Login from './components/Login';
 import LandingPage from './components/LandingPage';
 import Dashboard from './components/Dashboard';
 import Event from './components/Event';
+import InvitePage from './components/InvitePage';
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './components/AuthProvider';
@@ -10,7 +11,6 @@ import { AuthProvider } from './components/AuthProvider';
 function App() {
 
   return (
-
     <AuthProvider>
       <BrowserRouter>
         <Routes>
@@ -19,12 +19,10 @@ function App() {
           <Route path='/signup' element={<Register/>}></Route>
           <Route path='/dashboard' element = {<Dashboard/>}></Route>
           <Route path = '/events/:id' element = {<Event/>}></Route>
+          <Route path = '/events/invite/:inviteLink' element = {<InvitePage/>}></Route>
       </Routes>
       </BrowserRouter>
     </AuthProvider>
-    
-
-    
   )
 }
 
