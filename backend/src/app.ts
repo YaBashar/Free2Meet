@@ -1,14 +1,11 @@
-import express, { json, Request, Response } from 'express';
+import express, { json } from 'express';
 import morgan from 'morgan';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import YAML from 'yaml';
-import sui from 'swagger-ui-express';
-import fs from 'fs';
-import path from 'path';
-import process from 'process';
-import config from './config.json';
-import { setData } from './models/dataStore';
+import swaggerUi from 'swagger-ui-express';
+import YAML from 'yamljs';
+
+const swaggerDoc = YAML.load('./swagger.yaml');
 
 import { getClear } from './controllers/clear.controller';
 import { authRouter } from './routes/auth';
@@ -33,15 +30,7 @@ app.use(cors(corsOptions));
 // For logging purposes
 app.use(morgan('dev'));
 
-const file = fs.readFileSync(path.join(process.cwd(), 'swagger.yaml'), 'utf8');
-// Load data from file on startup
-if (fs.existsSync('/data.json')) {
-  const rawData = fs.readFileSync('/data.json', 'utf-8');
-  setData(JSON.parse(rawData));
-}
-app.get('/', (req: Request, res: Response) => res.redirect('/docs'));
-app.use('/docs', sui.serve, sui.setup(YAML.parse(file),
-  { swaggerOptions: { docExpansion: config.expandDocs ? 'full' : 'list' } }));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc));
 
 app.delete('/clear', getClear);
 
