@@ -3,9 +3,9 @@ import morgan from 'morgan';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import swaggerUi from 'swagger-ui-express';
-import YAML from 'yamljs';
-
-const swaggerDoc = YAML.load('./swagger.yaml');
+import YAML from 'yaml';
+import path from 'path';
+import fs from 'fs';
 
 import { getClear } from './controllers/clear.controller';
 import { authRouter } from './routes/auth';
@@ -30,7 +30,13 @@ app.use(cors(corsOptions));
 // For logging purposes
 app.use(morgan('dev'));
 
+const swaggerFile = fs.readFileSync(path.join(__dirname, '../swagger.yaml'), 'utf8');
+const swaggerDoc = YAML.parse(swaggerFile);
+
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc));
+app.get('/', (req, res) => {
+  res.redirect('/api-docs');
+});
 
 app.delete('/clear', getClear);
 
