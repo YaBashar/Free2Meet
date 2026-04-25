@@ -1,159 +1,171 @@
-
-import request from 'sync-request-curl';
-import { port, url } from '../config.json';
-import { UpdateEvents } from '../models/interfaces';
-
-const SERVER_URL = `${url}:${port}`;
-const TIMEOUT_MS = 5 * 1000;
+import request from "supertest";
+import { app } from "../app";
+import { clear } from "../utils/clear";
+import { UserModel } from "../models/userModel";
 
 // Clear
-export const requestDelete = () => {
-  return (request('DELETE', SERVER_URL + '/clear',
-    { timeout: TIMEOUT_MS }));
+export const requestDelete = async () => {
+  return await clear();
 };
+
 // Auth
-export const requestAuthRegister = (firstName: string, lastName: string, password: string, email: string) => {
-  return (request('POST', SERVER_URL + '/auth/register', {
-    json: { firstName, lastName, password, email }, timeout: TIMEOUT_MS
-  }));
+export const requestRegister = async (
+  firstName: string,
+  lastName: string,
+  password: string,
+  email: string
+) => {
+  const body: Record<string, string> = { firstName, lastName, password, email };
+  return await request(app).post("/auth/register").send(body);
 };
 
-export const requestAuthLogin = (email: string, password: string) => {
-  return (request('POST', SERVER_URL + '/auth/login', {
-    json: { email, password }, timeout: TIMEOUT_MS
-  }));
+export const requestLogin = async (email: string, password: string) => {
+  return await request(app).post("/auth/login").send({ email, password });
 };
 
-export const requestAuthUserDetails = (token: string) => {
-  return (request('GET', SERVER_URL + '/auth/user-details',
-    { headers: { Authorization: `Bearer ${token}` } }
-  ));
+export const requestRefresh = async (token: string) => {
+  return await request(app).post("/auth/refresh").send({ refreshToken: token });
 };
 
-export const requestAuthLogout = (accessToken: string, cookie: string[]) => {
-  return (request('POST', SERVER_URL + '/auth/logout', {
-    headers: {
-      Cookie: cookie,
-      Authorization: `Bearer ${accessToken}`
-    }
-  }));
+export const requestVerifyEmail = async (verificationCode: string) => {
+  return await request(app).post("/auth/verify-email").send({ verificationCode });
 };
 
-export const requestRefreshToken = (cookie: string[]) => {
-  return (request('GET', SERVER_URL + '/auth/refresh', {
-    headers: {
-      Cookie: cookie
-    }
-  }));
+export const requestResendVerifyEmail = async (email: string) => {
+  return await request(app).post("/auth/resend-verification").send({ email });
 };
 
-export const requestResetPasswd = (email:string) => {
-  return (request('POST', SERVER_URL + '/auth/request-reset', {
-    json: { email }, timeout: TIMEOUT_MS
-  }));
+export const requestForgot = async (email: string) => {
+  return await request(app).post("/auth/forgot-password").send({ email });
 };
 
-export const requestSetNewPasswd = (userId: string, token: string, newPassword: string, confirmNewPasswd: string) => {
-  return (request('POST', SERVER_URL + '/auth/reset-password', {
-    json: { userId, token, newPassword, confirmNewPasswd }
-  }));
+export const requestResendResetCode = async (email: string) => {
+  return await request(app).post("/auth/resend-reset-code").send({ email });
 };
 
-export const requestUserChangePassword = (token: string, currentPassword:string, newPassword: string, confirmNewPasswd: string) => {
-  return (request('PUT', SERVER_URL + '/auth/change-password', {
-    headers: { Authorization: `Bearer ${token}` },
-    json: { currentPassword, newPassword, confirmNewPasswd },
-    timeout: TIMEOUT_MS
-  }));
+export const requestVerifyResetCode = async (resetCode: string) => {
+  return await request(app).post("/auth/verify-reset-code").send({ resetCode });
 };
 
-// Event
-export const requestNewEvent = (token: string, title: string, description: string, location: string, date: string, startTime: number, endTime: number) => {
-  return (request('POST', SERVER_URL + '/events/new-event', {
-    headers: { Authorization: `Bearer ${token}` },
-    json: { title, description, location, date, startTime, endTime },
-    timeout: TIMEOUT_MS
-  }));
+export const requestResetPassword = async (resetCode: string, newPassword: string) => {
+  return await request(app).post("/auth/reset-password").send({ resetCode, newPassword });
 };
 
-export const requestDeleteEvent = (token: string, eventId: string) => {
-  return (request('DELETE', SERVER_URL + `/events/${eventId}`, {
-    headers: { Authorization: `Bearer ${token}` },
-    timeout: TIMEOUT_MS
-  }));
+export const requestLogout = async (token: string) => {
+  return await request(app).post("/auth/logout").set("Authorization", `Bearer ${token}`);
 };
 
-export const requestEventDetails = (token: string, eventId: string) => {
-  return (request('GET', SERVER_URL + `/events/${eventId}`, {
-    headers: { Authorization: `Bearer ${token}` },
-    timeout: TIMEOUT_MS
-  }));
+export async function getToken(
+  firstName: string,
+  lastName: string,
+  email: string,
+  password: string
+): Promise<string> {
+  const reg = await requestRegister(firstName, lastName, password, email);
+
+  expect(reg.status).toBe(201);
+  await verifyEmail(email, reg.body.code);
+
+  const loginResponse = await requestLogin(email, password);
+  expect(loginResponse.status).toBe(200);
+  expect(loginResponse.body.accessToken).toBeDefined();
+  return loginResponse.body.accessToken;
+}
+
+export async function verifyEmail(email: string, verificationCode: string) {
+  const response = await requestVerifyEmail(verificationCode);
+  expect(response.statusCode).toBe(200);
+
+  // Verify user is actually verified from db
+  const updatedUser = await UserModel.findOne({ email: email });
+  expect(updatedUser?.emailVerified).toBe(true);
+  expect(updatedUser?.verificationCode).toBe(undefined);
+}
+
+// Events
+export const requestNewEvent = async (
+  token: string,
+  title: string,
+  description: string,
+  location: string,
+  date: string,
+  startTime: number,
+  endTime: number
+) => {
+  return await request(app)
+    .post("/events/new-event")
+    .set("Authorization", `Bearer ${token}`)
+    .send({ title, description, location, date, startTime, endTime });
 };
 
-export const requestOrganisedEvents = (token: string) => {
-  return (request('GET', SERVER_URL + '/events/organised-events', {
-    headers: { Authorization: `Bearer ${token}` },
-    timeout: TIMEOUT_MS
-  }));
+export const requestDeleteEvent = async (token: string, eventId: string) => {
+  return await request(app).delete(`/events/${eventId}`).set("Authorization", `Bearer ${token}`);
 };
 
-export const requestAttendingEvents = (token: string) => {
-  return (request('GET', SERVER_URL + '/events/attending-events', {
-    headers: { Authorization: `Bearer ${token}` },
-    timeout: TIMEOUT_MS
-  }));
+export const requestEventDetails = async (token: string, eventId: string) => {
+  return await request(app).get(`/events/${eventId}`).set("Authorization", `Bearer ${token}`);
 };
 
-export const requestNotAttendingEvent = (eventId: string) => {
-  return request('GET', SERVER_URL + `/events/${eventId}/notAttending`, {
-    timeout: TIMEOUT_MS
-  });
+export const requestOrganisedEvents = async (token: string) => {
+  return await request(app).get("/events/organised-events").set("Authorization", `Bearer ${token}`);
 };
 
-export const requestAttendingEvent = (eventId: string) => {
-  return request('GET', SERVER_URL + `/events/${eventId}/attending`, {
-    timeout: TIMEOUT_MS
-  });
+export const requestAttendingEvents = async (token: string) => {
+  return await request(app).get("/events/attending-events").set("Authorization", `Bearer ${token}`);
 };
 
-export const requestEventUpdate = (token: string, eventId: string, updatedFields: UpdateEvents) => {
-  return (request('PUT', SERVER_URL + `/events/${eventId}`, {
-    headers: { Authorization: `Bearer ${token}` },
-    json: updatedFields,
-    timeout: TIMEOUT_MS
-  }));
+export const requestNotAttendingEvent = async (eventId: string) => {
+  return await request(app).get(`/events/${eventId}/notAttending`);
 };
 
-export const requestEventInvite = (token: string, eventId: string) => {
-  return (request('POST', SERVER_URL + `/events/${eventId}/invite`, {
-    headers: { Authorization: `Bearer ${token}` },
-    timeout: TIMEOUT_MS
-  }));
+export const requestAttendingEvent = async (eventId: string) => {
+  return await request(app).get(`/events/${eventId}/attending`);
 };
 
-export const requestEventInviteDetails = (inviteLink: string) => {
-  return (request('GET', SERVER_URL + `/events/invite/${inviteLink}`));
+export const requestEventUpdate = async (
+  token: string,
+  eventId: string,
+  updatedFields: Record<string, unknown>
+) => {
+  return await request(app)
+    .put(`/events/${eventId}`)
+    .set("Authorization", `Bearer ${token}`)
+    .send(updatedFields);
+};
+
+export const requestEventInvite = async (token: string, eventId: string) => {
+  return await request(app)
+    .post(`/events/${eventId}/invite`)
+    .set("Authorization", `Bearer ${token}`);
+};
+
+export const requestEventInviteDetails = async (inviteLink: string) => {
+  return await request(app).get(`/events/invite/${inviteLink}`);
 };
 
 // Attendee
 
-export const requestAttendeeRespond = (token: string, inviteLink: string, action: string) => {
-  return (request('POST', SERVER_URL + '/attendees/respond', {
-    headers: { Authorization: `Bearer ${token}` },
-    json: { inviteLink, action }
-  }));
+export const requestAttendeeRespond = async (token: string, inviteLink: string, action: string) => {
+  return await request(app)
+    .post("/attendees/respond")
+    .set("Authorization", `Bearer ${token}`)
+    .send({ inviteLink, action });
 };
 
-export const requestAttendeeLeave = (token: string, eventId: string) => {
-  return (request('DELETE', SERVER_URL + `/attendees/leave/${eventId}`, {
-    headers: { Authorization: `Bearer ${token}` },
-    timeout: TIMEOUT_MS
-  }));
+export const requestAttendeeLeave = async (token: string, eventId: string) => {
+  return await request(app)
+    .delete(`/attendees/leave/${eventId}`)
+    .set("Authorization", `Bearer ${token}`);
 };
 
-export const requestAttendeeSelectAvail = (token: string, eventId: string, startAvailable: number, endAvailable: number) => {
-  return (request('PUT', SERVER_URL + `/attendees/availability/${eventId}`, {
-    headers: { authorization: `Bearer ${token}` },
-    json: { startAvailable, endAvailable }
-  }));
+export const requestAttendeeSelectAvail = async (
+  token: string,
+  eventId: string,
+  startAvailable: number,
+  endAvailable: number
+) => {
+  return await request(app)
+    .put(`/attendees/availability/${eventId}`)
+    .set("Authorization", `Bearer ${token}`)
+    .send({ startAvailable, endAvailable });
 };
