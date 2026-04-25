@@ -1,23 +1,38 @@
 import 'dotenv/config';
 import jwt from 'jsonwebtoken';
-const SECRET = process.env.JWT_SECRET;
+const SECRET = process.env.JWT_ACCESS_SECRET;
 
 import { Request, Response, NextFunction } from 'express';
 
-const verifyJWT = (req: Request, res: Response, next: NextFunction) => {
-  const authHeaders = req.headers.authorization;
-  if (!authHeaders) return res.status(401).json({ error: 'Unauthorised: No token proivded' });
+export interface JwtPayload {
+  sub: string;
+  email: string;
+  name: string;
+}
 
-  const token = authHeaders.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'Unauthorised: Malformed JWT Token' });
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace Express {
+    interface Request {
+      user?: JwtPayload;
+    }
+  }
+}
+
+export function requireAuth(req: Request, res: Response, next: NextFunction): void {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
+
+  if (!token) {
+    res.status(401).json({ error: "Authentication Required" });
+    return;
+  }
 
   try {
-    const decoded = jwt.verify(token, SECRET);
-    (req as any).userId = decoded.userId;
+    const decoded = jwt.verify(token, SECRET) as JwtPayload;
+    req.user = decoded;
     next();
-  } catch (error) {
-    return res.status(401).json({ error: error.message });
+  } catch {
+    res.status(401).json({ error: "Authentication Required" });
   }
-};
-
-export { verifyJWT };
+}
