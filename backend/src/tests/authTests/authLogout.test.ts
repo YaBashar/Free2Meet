@@ -1,40 +1,76 @@
-import { requestAuthLogin, requestAuthLogout, requestAuthRegister, requestDelete } from '../requestHelpers';
+import request from "supertest";
+import mongoose from "mongoose";
+import { app } from "../../app";
+import {
+  requestLogin,
+  requestRegister,
+  requestDelete,
+  requestLogout,
+  requestRefresh,
+  verifyEmail,
+} from "../requestHelpers";
 
-beforeEach(() => {
-  requestDelete();
+const EMAIL = "logout@example.com";
+const PASSWORD = "Abcdefgh123456$";
+
+const MONGO_OPTIONS = { serverSelectionTimeoutMS: 8000 };
+
+let accessToken: string;
+let refreshToken: string;
+
+beforeEach(async () => {
+  await requestDelete();
+
+  const registerRes = await requestRegister("Mubashir", "Hussain", PASSWORD, EMAIL);
+  expect(registerRes.statusCode).toStrictEqual(201);
+
+  await verifyEmail(EMAIL, registerRes.body.code);
+
+  const loginRes = await requestLogin(EMAIL, PASSWORD);
+  expect(loginRes.statusCode).toStrictEqual(200);
+
+  accessToken = loginRes.body.accessToken;
+  refreshToken = loginRes.body.refreshToken;
 });
 
-afterEach(() => {
-  requestDelete();
+afterEach(async () => {
+  await requestDelete();
 });
 
-describe('Error Cases', () => {
-  test('Refresh token doesn’t belong to user', () => {
-    requestAuthRegister('Mubashir', 'Hussain', 'Abcdefg123$', 'example@gmail.com');
-    const res1 = requestAuthLogin('example@gmail.com', 'Abcdefg123$');
-    const data1 = JSON.parse(res1.body.toString());
-    const accessToken = data1.token;
+afterAll(async () => {
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.connection.close();
+  }
+}, 10000);
 
-    const invalidCookie = 'jwt=wrongRefreshToken';
-    const res = requestAuthLogout(accessToken, [invalidCookie]);
-    const data = JSON.parse(res.body.toString());
-    expect(data).toStrictEqual({ error: expect.any(String) });
-    expect(res.statusCode).toStrictEqual(400);
+beforeAll(async () => {
+  if (!process.env.MONGODB_TEST_URI) {
+    throw new Error(
+      "MONGODB_TEST_URI is not set. Copy backend/.env.example to backend/.env and set MONGODB_URI."
+    );
+  }
+  if (mongoose.connection.readyState === 0) {
+    await mongoose.connect(process.env.MONGODB_TEST_URI, MONGO_OPTIONS);
+  }
+}, 10000);
+
+describe("POST /auth/logout", () => {
+  it("returns 200 and revokes the refresh token", async () => {
+    const logoutRes = await requestLogout(accessToken);
+
+    expect(logoutRes.statusCode).toStrictEqual(200);
+    expect(logoutRes.body).toStrictEqual({ success: true });
+
+    const refreshRes = await requestRefresh(refreshToken);
+
+    expect(refreshRes.statusCode).toStrictEqual(400);
+    expect(refreshRes.body).toStrictEqual({ error: expect.any(String) });
   });
-});
 
-describe('Success Cases', () => {
-  test('Success', () => {
-    requestAuthRegister('Mubashir', 'Hussain', 'Abcdefg123$', 'example@gmail.com');
-    const res1 = requestAuthLogin('example@gmail.com', 'Abcdefg123$');
-    const data1 = JSON.parse(res1.body.toString());
-    const accessToken = data1.token;
+  it("returns 401 when Authorization header is missing", async () => {
+    const res = await request(app).post("/auth/logout");
 
-    const cookie = res1.headers['set-cookie'];
-
-    const res2 = requestAuthLogout(accessToken, cookie);
-    const data = JSON.parse(res2.body.toString());
-    expect(data).toStrictEqual({});
-    expect(res2.statusCode).toStrictEqual(200);
+    expect(res.statusCode).toStrictEqual(401);
+    expect(res.body).toStrictEqual({ error: "Authentication Required" });
   });
 });
