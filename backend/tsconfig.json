@@ -2,14 +2,20 @@
   "compilerOptions": {
     "esModuleInterop": true,
     "noImplicitAny": true,
-    "noEmit": true,
+    "noEmit": false,
+    "outDir": "./dist",
+    "rootDir": "./src",
     "resolveJsonModule": true,
     "allowJs": true,
-    "target": "es2015",
+    "target": "es2022",
     "module": "commonjs",
-    "moduleResolution": "Node"
+    "moduleResolution": "Node",
+    "types": ["jest"],
   },
+  "include": ["src/**/*"],
   "exclude": [
-    "**/**_broken.ts"
+    "**/**_broken.ts",
+    "node_modules",
+    "dist"
   ]
 }
