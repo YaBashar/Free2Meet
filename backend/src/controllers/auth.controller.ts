@@ -73,7 +73,7 @@ export const forgot = async (req: Request, res: Response) => {
     const result = await forgotPassword(email);
     return res.status(200).json(result);
   } catch (error) {
-    return res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
+    return res.status(400).json({ error: error.message });
   }
 };
 
@@ -84,7 +84,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     const result = await resetPasswordService(resetCode, newPassword);
     return res.status(200).json(result);
   } catch (error) {
-    return res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
+    return res.status(400).json({ error: error.message });
   }
 };
 
@@ -95,7 +95,7 @@ export const verifyResetCode = async (req: Request, res: Response) => {
     const result = await verifyResetCodeService(resetCode);
     return res.status(200).json(result);
   } catch (error) {
-    return res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
+    return res.status(400).json({ error: error.message });
   }
 };
 
@@ -106,7 +106,7 @@ export const resendResetCode = async (req: Request, res: Response) => {
     const result = await resendResetCodeService(email);
     return res.status(200).json(result);
   } catch (error) {
-    return res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
+    return res.status(400).json({ error: error.message });
   }
 };
 
