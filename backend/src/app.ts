@@ -1,4 +1,4 @@
-import express, { json, Request, Response } from 'express';
+import express, { json, NextFunction, Request, Response } from 'express';
 import morgan from 'morgan';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -14,6 +14,7 @@ import { getClear } from './controllers/clear.controller';
 import { authRouter } from './routes/auth';
 import { eventRouter } from './routes/event';
 import { attendeeRouter } from './routes/attendee';
+import { AuthError } from './service/auth.service';
 // set up app
 export const app = express();
 
@@ -48,3 +49,14 @@ app.delete('/clear', getClear);
 app.use('/auth', authRouter);
 app.use('/events', eventRouter);
 app.use('/attendees', attendeeRouter);
+
+// eslint-disable-next-line no-unused-vars
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  if (err instanceof AuthError) {
+    return res.status(err.statusCode).json({ error: err.message });
+  }
+
+  console.error(err);
+  // Fallback to 500 if doesnt match any other type of error
+  return res.status(500).json({ error: "Internal Server Error" });
+});

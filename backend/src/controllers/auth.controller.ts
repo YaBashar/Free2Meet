@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import {
   registerUser,
   userLogin,
@@ -12,105 +12,105 @@ import {
   userLogout,
 } from "../service/auth.service";
 
-export const register = async (req: Request, res: Response) => {
+export const register = async (req: Request, res: Response, next: NextFunction) => {
   const { firstName, lastName, email, password } = req.body;
 
   try {
     const result = await registerUser({ firstName, lastName, password, email });
     res.status(201).json(result);
   } catch (error) {
-    return res.status(400).json({ error: error.message });
+    next(error);
   }
 };
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response, next: NextFunction) => {
   const { email, password } = req.body;
 
   try {
     const result = await userLogin({ email, password });
     res.json(result).status(200);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 };
 
-export async function refresh(req: Request, res: Response) {
+export async function refresh(req: Request, res: Response, next: NextFunction) {
   const refreshToken = req.body?.refreshToken;
 
   try {
     const { accessToken, refreshToken: newRefreshToken } = await authRefresh(refreshToken);
     res.status(200).json({ accessToken: accessToken, refreshToken: newRefreshToken });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 }
 
-export const verifyEmail = async (req: Request, res: Response) => {
+export const verifyEmail = async (req: Request, res: Response, next: NextFunction) => {
   const { verificationCode } = req.body;
 
   try {
     const result = await userVerifyEmail(verificationCode);
     res.status(200).json(result);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 };
 
-export const resendVerifyEmail = async (req: Request, res: Response) => {
+export const resendVerifyEmail = async (req: Request, res: Response, next: NextFunction) => {
   const { email } = req.body;
   try {
     const result = await resendVerificationCode(email);
     res.status(200).json(result);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 };
 
-export const forgot = async (req: Request, res: Response) => {
+export const forgot = async (req: Request, res: Response, next: NextFunction) => {
   const { email } = req.body;
 
   try {
     const result = await forgotPassword(email);
     return res.status(200).json(result);
   } catch (error) {
-    return res.status(400).json({ error: error.message });
+    next(error);
   }
 };
 
-export const resetPassword = async (req: Request, res: Response) => {
+export const resetPassword = async (req: Request, res: Response, next: NextFunction) => {
   const { resetCode, newPassword } = req.body;
 
   try {
     const result = await resetPasswordService(resetCode, newPassword);
     return res.status(200).json(result);
   } catch (error) {
-    return res.status(400).json({ error: error.message });
+    next(error);
   }
 };
 
-export const verifyResetCode = async (req: Request, res: Response) => {
+export const verifyResetCode = async (req: Request, res: Response, next: NextFunction) => {
   const { resetCode } = req.body;
 
   try {
     const result = await verifyResetCodeService(resetCode);
     return res.status(200).json(result);
   } catch (error) {
-    return res.status(400).json({ error: error.message });
+    next(error);
   }
 };
 
-export const resendResetCode = async (req: Request, res: Response) => {
+export const resendResetCode = async (req: Request, res: Response, next: NextFunction) => {
   const { email } = req.body;
 
   try {
     const result = await resendResetCodeService(email);
     return res.status(200).json(result);
   } catch (error) {
-    return res.status(400).json({ error: error.message });
+    next(error);
   }
 };
 
-export const logout = async (req: Request, res: Response) => {
+export const logout = async (req: Request, res: Response, next: NextFunction) => {
   const userId = req.user?.sub;
 
   try {
@@ -120,6 +120,6 @@ export const logout = async (req: Request, res: Response) => {
     const result = await userLogout(userId);
     return res.status(200).json(result);
   } catch (error) {
-    return res.status(400).json({ error: error.message });
+    next(error);
   }
 };

@@ -18,6 +18,15 @@ const SECRET = process.env.JWT_ACCESS_SECRET;
 const REFRESH_TOKEN_TTL_DAYS = Number(process.env.REFRESH_TOKEN_TTL_DAYS) || 7;
 const ACCESS_TOKEN_TTL_MINUTES = Number(process.env.accessTokenTtlMinutes) || 15;
 
+export class AuthError extends Error {
+  statusCode: number;
+
+  constructor(message: string, statusCode = 400) {
+    super(message);
+    this.statusCode = statusCode;
+  }
+}
+
 /** [1] AuthRegister
  * Registers a user with an email, password, and name
  **/
@@ -40,23 +49,23 @@ export async function registerUser(input: RegisterInput): Promise<RegisterRespon
   const sanitizedEmail = validateEmailFormat(input.email);
 
   if (/[^a-zA-Z ]/.test(sanitizedFirstName)) {
-    throw new Error("First name cannot contain special characters or numbers");
+    throw new AuthError("First name cannot contain special characters or numbers");
   }
 
   if (/[^a-zA-Z ]/.test(sanitizedLastName)) {
-    throw new Error("Last name cannot contain special characters or numbers");
+    throw new AuthError("Last name cannot contain special characters or numbers");
   }
 
   const name = `${sanitizedFirstName} ${sanitizedLastName}`;
   if (name.length < 2 || name.length > 20) {
-    throw new Error("Name must be between 2 and 20 characters.");
+    throw new AuthError("Name must be between 2 and 20 characters.");
   }
 
   try {
     await checkEmailAvailable(sanitizedEmail);
     checkPassword(input.password);
   } catch (error) {
-    throw new Error(error.message);
+    throw new AuthError(error.message);
   }
 
   const hashedPassword = await hashPassword(input.password);
@@ -110,14 +119,18 @@ function createAccessToken(user: User): string {
 
 export async function userLogin(input: LoginInput) {
   const user = await UserModel.findOne({ email: input.email });
+  if (!user) {
+    throw new AuthError("Invalid Username or Password");
+  }
+
   const isPassword = await bcrypt.compare(input.password, user.password);
 
-  if (!user || !isPassword) {
-    throw new Error("Invalid Username or Password");
+  if (!isPassword) {
+    throw new AuthError("Invalid Username or Password");
   }
 
   if (!user.emailVerified) {
-    throw new Error("User has not verified email");
+    throw new AuthError("User has not verified email");
   }
 
   const accessToken = createAccessToken(user);
@@ -145,16 +158,16 @@ export async function authRefresh(token: string) {
         { $set: { revoked: Date.now() } }
       );
     }
-    throw new Error("Token is invalid");
+    throw new AuthError("Token is invalid");
   }
 
   if (refreshToken.expiresAt < new Date()) {
-    throw new Error("Refresh Token has expired");
+    throw new AuthError("Refresh Token has expired");
   }
 
   const user = await UserModel.findById(refreshToken.user);
   if (!user) {
-    throw new Error("User not found");
+    throw new AuthError("User not found");
   }
 
   await RefreshTokenModel.findOneAndUpdate({ token }, { $set: { revokedAt: Date.now() } });
@@ -169,11 +182,11 @@ export async function userVerifyEmail(verificationCode: string) {
   const hashedCode = hashCode(verificationCode);
   const user = await UserModel.findOne({ verificationCode: hashedCode });
   if (!user) {
-    throw new Error("Invalid Verification Code");
+    throw new AuthError("Invalid Verification Code");
   }
 
   if (user.verificationCodeExpiry && user.verificationCodeExpiry < new Date()) {
-    throw new Error("Verification code has expired");
+    throw new AuthError("Verification code has expired");
   }
 
   user.verificationCode = undefined;
@@ -212,7 +225,7 @@ export async function resendVerificationCode(email: string) {
   }
 
   if (user.emailVerified) {
-    throw new Error("Email is already verified");
+    throw new AuthError("Email is already verified");
   }
 
   await UserModel.findOneAndUpdate(
@@ -249,7 +262,7 @@ export async function verifyResetCodeService(resetCode: string) {
   });
 
   if (!user) {
-    throw new Error("Invalid or expired reset code");
+    throw new AuthError("Invalid or expired reset code");
   }
 
   return { success: true };
@@ -276,7 +289,7 @@ export async function resendResetCodeService(email: string) {
 
 export async function resetPasswordService(resetCode: string, newPassword: string) {
   if (newPassword.length < 12) {
-    throw new Error("Password must be at least 12 characters");
+    throw new AuthError("Password must be at least 12 characters");
   }
 
   const hashedCode = hashCode(resetCode);
@@ -286,18 +299,18 @@ export async function resetPasswordService(resetCode: string, newPassword: strin
   });
 
   if (!user) {
-    throw new Error("Invalid or expired reset code");
+    throw new AuthError("Invalid or expired reset code");
   }
 
   // Check if new password is same as current
   if (await bcrypt.compare(newPassword, user.password)) {
-    throw new Error("New password must be different from your current password");
+    throw new AuthError("New password must be different from your current password");
   }
 
   try {
     checkPassword(newPassword);
   } catch (error) {
-    throw new Error(error instanceof Error ? error.message : String(error));
+    throw new AuthError(error.message);
   }
 
   const hashedPassword = await hashPassword(newPassword);
@@ -333,7 +346,7 @@ export async function resetPasswordService(resetCode: string, newPassword: strin
 export async function userLogout(userId: string) {
   const user = await UserModel.findById(userId);
   if (!user) {
-    throw new Error("User not found");
+    throw new AuthError("User not found");
   }
 
   // Inactivate all refresh Tokens

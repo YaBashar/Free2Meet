@@ -2,24 +2,25 @@ import validator from "validator";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { UserModel } from "../models/userModel";
+import { AuthError } from "../service/auth.service";
 
 export function checkPassword(password: string): void {
   if (password.length < 8) {
-    throw new Error("password must be longer than 8 characters");
+    throw new AuthError("password must be longer than 8 characters");
   }
 
   if (!(/[a-z]/.test(password) && /[A-Z]/.test(password))) {
-    throw new Error("password must containe upper and lower case characters");
+    throw new AuthError("password must containe upper and lower case characters");
   }
 
   if (!/[^a-zA-Z0-9]/.test(password)) {
-    throw new Error("password must contain a special character");
+    throw new AuthError("password must contain a special character");
   }
 }
 
 export function validateEmailFormat(email: string): string {
   if (typeof email !== "string") {
-    throw new Error("invalid email format");
+    throw new AuthError("invalid email format");
   }
 
   const sanitized = email
@@ -27,7 +28,7 @@ export function validateEmailFormat(email: string): string {
     .toLowerCase()
     .trim();
   if (sanitized.length > 254 || !validator.isEmail(sanitized)) {
-    throw new Error("invalid email format");
+    throw new AuthError("invalid email format");
   }
 
   return sanitized;
@@ -36,7 +37,7 @@ export function validateEmailFormat(email: string): string {
 export async function checkEmailAvailable(email: string): Promise<void> {
   const existingEmail = await UserModel.findOne({ email });
   if (existingEmail) {
-    throw new Error("Account already exists with email");
+    throw new AuthError("Account already exists with email");
   }
 }
 
@@ -49,15 +50,15 @@ export async function checkNewPasswd(
     checkPassword(newPassword);
     for (const passwd of previousPasswds) {
       if (await bcrypt.compare(newPassword, passwd)) {
-        throw new Error("Password has been used before, try a new password");
+        throw new AuthError("Password has been used before, try a new password");
       }
     }
   } catch (error) {
-    throw new Error(error.message);
+    throw new AuthError(error.message);
   }
 
   if (confirmNewPasswd !== newPassword) {
-    throw new Error("Passwords do not match");
+    throw new AuthError("Passwords do not match");
   }
 }
 
