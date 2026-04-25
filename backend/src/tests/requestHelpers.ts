@@ -62,7 +62,6 @@ export async function getToken(
   password: string
 ): Promise<string> {
   const reg = await requestRegister(firstName, lastName, password, email);
-
   expect(reg.status).toBe(201);
   await verifyEmail(email, reg.body.code);
 

@@ -1,31 +1,41 @@
-import { requestAuthLogin, requestAuthRegister, requestDelete, requestEventDetails, requestNewEvent } from '../requestHelpers';
+import { getToken, requestDelete, requestEventDetails, requestNewEvent } from "../requestHelpers";
+import mongoose from "mongoose";
 
 let token: string;
-beforeEach(() => {
-  requestDelete();
-  requestAuthRegister('Mubashir', 'Hussain', 'Abcdefg123$', 'example@gmail.com');
-  const res = requestAuthLogin('example@gmail.com', 'Abcdefg123$');
-  const data = JSON.parse(res.body.toString());
-  token = data.token;
+const MONGO_OPTIONS = { serverSelectionTimeoutMS: 8000 };
+const uniqueEmail = () => `organiser.${Date.now()}.${Math.random().toString(36).slice(2, 8)}@example.com`;
+
+beforeAll(async () => {
+  if (!process.env.MONGODB_TEST_URI) throw new Error("MONGODB_TEST_URI is not set.");
+  if (mongoose.connection.readyState === 0) {
+    await mongoose.connect(process.env.MONGODB_TEST_URI, MONGO_OPTIONS);
+  }
+}, 10000);
+
+beforeEach(async () => {
+  await requestDelete();
+  token = await getToken("Mubashir", "Hussain", uniqueEmail(), "Abcdefg123$");
 });
 
-afterEach(() => {
-  requestDelete();
+afterEach(async () => {
+  await requestDelete();
 });
+
+afterAll(async () => {
+  if (mongoose.connection.readyState !== 0) await mongoose.connection.close();
+}, 10000);
 
 describe('Error Cases', () => {
-  test('Invalid User Token', () => {
-    const res = requestNewEvent('Invalid Token', 'New Event', 'New Description', 'House', '31/08/2025', 10, 14);
-    const data = JSON.parse(res.body.toString());
-    expect(data).toStrictEqual({ error: expect.any(String) });
+  test("Invalid User Token", async () => {
+    const res = await requestNewEvent("Invalid Token", "New Event", "New Description", "House", "31/08/2025", 10, 14);
+    expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(401);
   });
 
-  test('Event already Exists', () => {
-    requestNewEvent(token, 'New Event', 'New Description', 'House', '31/08/2025', 10, 14);
-    const res = requestNewEvent(token, 'Same Event', 'Same Description', 'House', '31/08/2025', 10, 14);
-    const data = JSON.parse(res.body.toString());
-    expect(data).toStrictEqual({ error: expect.any(String) });
+  test("Event already Exists", async () => {
+    await requestNewEvent(token, "New Event", "New Description", "House", "31/08/2025", 10, 14);
+    const res = await requestNewEvent(token, "Same Event", "Same Description", "House", "31/08/2025", 10, 14);
+    expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(400);
   });
 
@@ -34,56 +44,49 @@ describe('Error Cases', () => {
     [11, 15],
     [9, 15],
     [11, 13]
-  ])('Clashing Times', (start, end) => {
-    requestNewEvent(token, 'New Event', 'New Description', 'House', '31/08/2025', 10, 14);
-    const res = requestNewEvent(token, 'Same Event', 'Same Description', 'House', '31/08/2025', start, end);
-    const data = JSON.parse(res.body.toString());
-    expect(data).toStrictEqual({ error: expect.any(String) });
+  ])("Clashing Times", async (start, end) => {
+    await requestNewEvent(token, "New Event", "New Description", "House", "31/08/2025", 10, 14);
+    const res = await requestNewEvent(token, "Same Event", "Same Description", "House", "31/08/2025", start, end);
+    expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(400);
   });
 
   test.each([
     'h', 'ha', 'hab', 'A'.repeat(31)
-  ])('Invalid Title Length', (title) => {
-    const res = requestNewEvent(token, title, 'New Description', 'House', '31/08/2025', 10, 14);
-    const data = JSON.parse(res.body.toString());
-    expect(data).toStrictEqual({ error: expect.any(String) });
+  ])("Invalid Title Length", async (title) => {
+    const res = await requestNewEvent(token, title, "New Description", "House", "31/08/2025", 10, 14);
+    expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(400);
   });
 
   test.each([
     'h', 'ha', 'hab', 'A'.repeat(31)
-  ])('Invalid Description Length', (description) => {
-    const res = requestNewEvent(token, 'New Event', description, 'House', '31/08/2025', 10, 14);
-    const data = JSON.parse(res.body.toString());
-    expect(data).toStrictEqual({ error: expect.any(String) });
+  ])("Invalid Description Length", async (description) => {
+    const res = await requestNewEvent(token, "New Event", description, "House", "31/08/2025", 10, 14);
+    expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(400);
   });
 
-  test('Invalid Time', () => {
-    const res = requestNewEvent(token, 'New Event', 'New Description', 'House', '31/08/2025', 10, 8);
-    const data = JSON.parse(res.body.toString());
-    expect(data).toStrictEqual({ error: expect.any(String) });
+  test("Invalid Time", async () => {
+    const res = await requestNewEvent(token, "New Event", "New Description", "House", "31/08/2025", 10, 8);
+    expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(400);
   });
 });
 
 describe('Success Cases', () => {
-  test('Success', () => {
-    const res = requestNewEvent(token, 'New Event', 'New Description', 'House', '31/08/2025', 10, 14);
-    const data = JSON.parse(res.body.toString());
-    expect(data.eventId).toStrictEqual(expect.any(String));
+  test("Success", async () => {
+    const res = await requestNewEvent(token, "New Event", "New Description", "House", "31/08/2025", 10, 14);
+    expect(res.body.eventId).toStrictEqual(expect.any(String));
     expect(res.statusCode).toStrictEqual(200);
   });
 
-  test('New Event Exists', () => {
-    const res1 = requestNewEvent(token, 'New Event', 'New Description', 'House', '31/08/2025', 10, 14);
-    const data1 = JSON.parse(res1.body.toString());
-    const eventId = data1.eventId;
+  test("New Event Exists", async () => {
+    const res1 = await requestNewEvent(token, "New Event", "New Description", "House", "31/08/2025", 10, 14);
+    const eventId = res1.body.eventId;
 
-    const res2 = requestEventDetails(token, eventId);
-    const data2 = JSON.parse(res2.body.toString());
-    expect(data2.event).toStrictEqual({
+    const res2 = await requestEventDetails(token, eventId);
+    expect(res2.body.event).toStrictEqual({
       id: eventId,
       title: 'New Event',
       description: 'New Description',

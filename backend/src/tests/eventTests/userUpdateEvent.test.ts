@@ -1,19 +1,24 @@
-import { UpdateEvents } from '../../models/interfaces';
-import { requestAuthLogin, requestAuthRegister, requestDelete, requestEventDetails, requestEventUpdate, requestNewEvent } from '../requestHelpers';
+import { getToken, requestDelete, requestEventDetails, requestEventUpdate, requestNewEvent } from "../requestHelpers";
+import mongoose from "mongoose";
 
 let token: string;
 let eventId: string;
-let updatedFields: UpdateEvents;
-beforeEach(() => {
-  requestDelete();
-  requestAuthRegister('Mubashir', 'Hussain', 'Abcdefg123$', 'example@gmail.com');
-  const res = requestAuthLogin('example@gmail.com', 'Abcdefg123$');
-  const data = JSON.parse(res.body.toString());
-  token = data.token;
+let updatedFields: Record<string, unknown>;
+const MONGO_OPTIONS = { serverSelectionTimeoutMS: 8000 };
+const uniqueEmail = () => `organiser.${Date.now()}.${Math.random().toString(36).slice(2, 8)}@example.com`;
 
-  const res1 = requestNewEvent(token, 'New Event', 'New Description', 'House', '31/08/2025', 10, 14);
-  const data1 = JSON.parse(res1.body.toString());
-  eventId = data1.eventId;
+beforeAll(async () => {
+  if (!process.env.MONGODB_TEST_URI) throw new Error("MONGODB_TEST_URI is not set.");
+  if (mongoose.connection.readyState === 0) {
+    await mongoose.connect(process.env.MONGODB_TEST_URI, MONGO_OPTIONS);
+  }
+}, 10000);
+
+beforeEach(async () => {
+  await requestDelete();
+  token = await getToken("Mubashir", "Hussain", uniqueEmail(), "Abcdefg123$");
+  const res1 = await requestNewEvent(token, "New Event", "New Description", "House", "31/08/2025", 10, 14);
+  eventId = res1.body.eventId;
 
   updatedFields = {
     title: 'Different Event',
@@ -25,39 +30,39 @@ beforeEach(() => {
   };
 });
 
-afterEach(() => {
-  requestDelete();
+afterEach(async () => {
+  await requestDelete();
 });
 
+afterAll(async () => {
+  if (mongoose.connection.readyState !== 0) await mongoose.connection.close();
+}, 10000);
+
 describe('Error Cases', () => {
-  test('Invalid UserId Token', () => {
-    const res = requestEventUpdate('InvalidToken', eventId, updatedFields);
-    const data = JSON.parse(res.body.toString());
-    expect(data).toStrictEqual({ error: expect.any(String) });
+  test("Invalid UserId Token", async () => {
+    const res = await requestEventUpdate("InvalidToken", eventId, updatedFields);
+    expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(401);
   });
 
-  test('Invalid EventID', () => {
-    const res = requestEventUpdate(token, 'InvalidEventId', updatedFields);
-    const data = JSON.parse(res.body.toString());
-    expect(data).toStrictEqual({ error: expect.any(String) });
+  test("Invalid EventID", async () => {
+    const res = await requestEventUpdate(token, "InvalidEventId", updatedFields);
+    expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(400);
   });
 });
 
 describe('Success', () => {
-  test('Successful Return type', () => {
-    const res = requestEventUpdate(token, eventId, updatedFields);
-    const data = JSON.parse(res.body.toString());
-    expect(data).toStrictEqual({});
+  test("Successful Return type", async () => {
+    const res = await requestEventUpdate(token, eventId, updatedFields);
+    expect(res.body).toStrictEqual({});
     expect(res.statusCode).toStrictEqual(200);
   });
 
-  test('Successfully Updated', () => {
-    requestEventUpdate(token, eventId, updatedFields);
-    const res = requestEventDetails(token, eventId);
-    const data = JSON.parse(res.body.toString());
-    expect(data.event).toStrictEqual({
+  test("Successfully Updated", async () => {
+    await requestEventUpdate(token, eventId, updatedFields);
+    const res = await requestEventDetails(token, eventId);
+    expect(res.body.event).toStrictEqual({
       id: eventId,
       title: 'Different Event',
       description: 'Different Description',

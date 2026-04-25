@@ -1,82 +1,107 @@
 
-import { requestAttendeeRespond, requestAttendeeSelectAvail, requestAuthLogin, requestAuthRegister, requestDelete, requestEventInvite, requestNewEvent } from '../requestHelpers';
+import {
+  requestAttendeeRespond,
+  requestAttendeeSelectAvail,
+  requestDelete,
+  requestEventInvite,
+  getToken,
+  requestNewEvent,
+} from "../requestHelpers";
+import mongoose from "mongoose";
 
 let organiserToken: string;
 let attendeeToken: string;
 let link: string;
 let eventId: string;
+const MONGO_OPTIONS = { serverSelectionTimeoutMS: 8000 };
+const uniqueEmail = (prefix: string) =>
+  `${prefix}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}@example.com`;
 
-beforeEach(() => {
-  requestDelete();
+beforeAll(async () => {
+  if (!process.env.MONGODB_TEST_URI) {
+    throw new Error(
+      "MONGODB_TEST_URI is not set. Copy backend/.env.example to backend/.env and set MONGODB_URI."
+    );
+  }
+  if (mongoose.connection.readyState === 0) {
+    await mongoose.connect(process.env.MONGODB_TEST_URI, MONGO_OPTIONS);
+  }
+}, 10000);
 
-  requestAuthRegister('Mubashir', 'Hussain', 'Abcdefg123$', 'example@gmail.com');
-  const res = requestAuthLogin('example@gmail.com', 'Abcdefg123$');
-  const data = JSON.parse(res.body.toString());
-  organiserToken = data.token;
+beforeEach(async () => {
+  await requestDelete();
+  const organiserEmail = uniqueEmail("organiser");
+  const attendeeEmail = uniqueEmail("attendee");
 
-  const res1 = requestNewEvent(organiserToken, 'New Event', 'New Description', 'House', '31/08/2025', 10, 14);
-  const data1 = JSON.parse(res1.body.toString());
-  eventId = data1.eventId;
+  organiserToken = await getToken("Mubashir", "Hussain", organiserEmail, "Abcdefg123$");
 
-  const res2 = requestEventInvite(organiserToken, eventId);
-  const data2 = JSON.parse(res2.body.toString());
-  link = data2.link;
+  const newEventRes = await requestNewEvent(
+    organiserToken,
+    "New Event",
+    "New Description",
+    "House",
+    "31/08/2025",
+    10,
+    14
+  );
+  eventId = newEventRes.body.eventId;
 
-  requestAuthRegister('Jonathan', 'Lee', 'Abcnmop.123$', 'jonl@gmail.com');
-  const res3 = requestAuthLogin('jonl@gmail.com', 'Abcnmop.123$');
-  const data3 = JSON.parse(res3.body.toString());
-  attendeeToken = data3.token;
+  const inviteRes = await requestEventInvite(organiserToken, eventId);
+  link = inviteRes.body.link;
+
+  attendeeToken = await getToken("Jonathan", "Lee", attendeeEmail, "Abcnmop.123$");
 });
 
-afterEach(() => {
-  requestDelete();
+afterEach(async () => {
+  await requestDelete();
 });
+
+afterAll(async () => {
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.connection.close();
+  }
+}, 10000);
 
 describe('Error Cases', () => {
-  test('Invalid User ID', () => {
-    requestAttendeeRespond(attendeeToken, link, 'accept');
-    const res = requestAttendeeSelectAvail('invalid', eventId, 10, 12);
-    const data = JSON.parse(res.body.toString());
+  test("Invalid User ID", async () => {
+    await requestAttendeeRespond(attendeeToken, link, "accept");
+    const res = await requestAttendeeSelectAvail("invalid", eventId, 10, 12);
 
-    expect(data).toStrictEqual({ error: expect.any(String) });
+    expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(401);
   });
 
-  test('Invalid Event ID', () => {
-    requestAttendeeRespond(attendeeToken, link, 'accept');
-    const res = requestAttendeeSelectAvail(attendeeToken, 'invalid', 10, 12);
-    const data = JSON.parse(res.body.toString());
+  test("Invalid Event ID", async () => {
+    await requestAttendeeRespond(attendeeToken, link, "accept");
+    const res = await requestAttendeeSelectAvail(attendeeToken, "invalid", 10, 12);
 
-    expect(data).toStrictEqual({ error: expect.any(String) });
+    expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(400);
   });
 
-  test('Invalid Availability', () => {
-    requestAttendeeRespond(attendeeToken, link, 'accept');
-    const res = requestAttendeeSelectAvail(attendeeToken, eventId, 10, 10);
-    const data = JSON.parse(res.body.toString());
+  test("Invalid Availability", async () => {
+    await requestAttendeeRespond(attendeeToken, link, "accept");
+    const res = await requestAttendeeSelectAvail(attendeeToken, eventId, 10, 10);
 
-    expect(data).toStrictEqual({ error: expect.any(String) });
+    expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(400);
   });
 
-  test('Attendee not part of Event', () => {
-    requestAttendeeRespond(attendeeToken, link, 'reject');
-    const res = requestAttendeeSelectAvail(attendeeToken, eventId, 10, 12);
-    const data = JSON.parse(res.body.toString());
+  test("Attendee not part of Event", async () => {
+    await requestAttendeeRespond(attendeeToken, link, "reject");
+    const res = await requestAttendeeSelectAvail(attendeeToken, eventId, 10, 12);
 
-    expect(data).toStrictEqual({ error: expect.any(String) });
+    expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(400);
   });
 });
 
 describe('Success', () => {
-  test('Success', () => {
-    requestAttendeeRespond(attendeeToken, link, 'accept');
-    const res = requestAttendeeSelectAvail(attendeeToken, eventId, 10, 12);
-    const data = JSON.parse(res.body.toString());
+  test("Success", async () => {
+    await requestAttendeeRespond(attendeeToken, link, "accept");
+    const res = await requestAttendeeSelectAvail(attendeeToken, eventId, 10, 12);
 
-    expect(data).toStrictEqual({});
+    expect(res.body).toStrictEqual({});
     expect(res.statusCode).toStrictEqual(200);
   });
 });

@@ -1,37 +1,45 @@
-import { requestDelete, requestAuthRegister, requestAuthLogin, requestNewEvent, requestOrganisedEvents } from '../requestHelpers';
+import { getToken, requestDelete, requestNewEvent, requestOrganisedEvents } from "../requestHelpers";
+import mongoose from "mongoose";
 
 let token: string;
-beforeEach(() => {
-  requestDelete();
-  requestAuthRegister('Mubashir', 'Hussain', 'Abcdefg123$', 'example@gmail.com');
-  const res = requestAuthLogin('example@gmail.com', 'Abcdefg123$');
-  const data = JSON.parse(res.body.toString());
-  token = data.token;
-  requestNewEvent(token, 'New Event', 'New Description', 'House', '31/08/2025', 10, 14);
-  requestNewEvent(token, 'New Event 2', 'New Description 2', 'House 2', '31/08/2026', 11, 14);
+const MONGO_OPTIONS = { serverSelectionTimeoutMS: 8000 };
+const uniqueEmail = () => `organiser.${Date.now()}.${Math.random().toString(36).slice(2, 8)}@example.com`;
+
+beforeAll(async () => {
+  if (!process.env.MONGODB_TEST_URI) throw new Error("MONGODB_TEST_URI is not set.");
+  if (mongoose.connection.readyState === 0) {
+    await mongoose.connect(process.env.MONGODB_TEST_URI, MONGO_OPTIONS);
+  }
+}, 10000);
+
+beforeEach(async () => {
+  await requestDelete();
+  token = await getToken("Mubashir", "Hussain", uniqueEmail(), "Abcdefg123$");
+  await requestNewEvent(token, "New Event", "New Description", "House", "31/08/2025", 10, 14);
+  await requestNewEvent(token, "New Event 2", "New Description 2", "House 2", "31/08/2026", 11, 14);
 });
 
-afterEach(() => {
-  requestDelete();
+afterEach(async () => {
+  await requestDelete();
 });
+
+afterAll(async () => {
+  if (mongoose.connection.readyState !== 0) await mongoose.connection.close();
+}, 10000);
 
 describe('Error', () => {
-  test('Error', () => {
-    const res = requestOrganisedEvents('invalidToken');
-    const data = JSON.parse(res.body.toString());
-
+  test("Error", async () => {
+    const res = await requestOrganisedEvents("invalidToken");
     expect(res.statusCode).toStrictEqual(401);
-    expect(data).toStrictEqual({ error: expect.any(String) });
+    expect(res.body).toStrictEqual({ error: expect.any(String) });
   });
 });
 
 describe('Success Case', () => {
-  test('Success', () => {
-    const res = requestOrganisedEvents(token);
-    const data = JSON.parse(res.body.toString());
-
+  test("Success", async () => {
+    const res = await requestOrganisedEvents(token);
     expect(res.statusCode).toStrictEqual(200);
-    expect(data.events).toStrictEqual([
+    expect(res.body.events).toStrictEqual([
       {
         eventId: expect.any(String),
         title: 'New Event',
