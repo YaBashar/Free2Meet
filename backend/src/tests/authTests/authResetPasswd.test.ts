@@ -70,4 +70,25 @@ describe("POST /auth/reset-password", () => {
     expect(res.statusCode).toStrictEqual(400);
     expect(res.body).toStrictEqual({ error: expect.any(String) });
   });
+
+  it("returns 400 when new password is too short", async () => {
+    const res = await requestResetPassword(resetCode, "Short1!");
+
+    expect(res.statusCode).toStrictEqual(400);
+    expect(res.body).toStrictEqual({ error: "Password must be at least 12 characters" });
+  });
+
+  it("returns 400 when reset code is invalid", async () => {
+    const res = await requestResetPassword("invalid-code", "NewerPassword1234*");
+
+    expect(res.statusCode).toStrictEqual(400);
+    expect(res.body).toStrictEqual({ error: "Invalid or expired reset code" });
+  });
+
+  it("returns 400 when password fails complexity validation", async () => {
+    const res = await requestResetPassword(resetCode, "aaaaaaaaaaaa");
+
+    expect(res.statusCode).toStrictEqual(400);
+    expect(res.body).toStrictEqual({ error: expect.any(String) });
+  });
 });

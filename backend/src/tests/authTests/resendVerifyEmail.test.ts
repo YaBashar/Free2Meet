@@ -1,4 +1,9 @@
-import { requestDelete, requestRegister, requestResendVerifyEmail } from "../requestHelpers";
+import {
+  requestDelete,
+  requestRegister,
+  requestResendVerifyEmail,
+  requestVerifyEmail,
+} from "../requestHelpers";
 import mongoose from "mongoose";
 
 const MONGO_OPTIONS = { serverSelectionTimeoutMS: 8000 };
@@ -41,5 +46,21 @@ describe("Error", () => {
 
     expect(res.statusCode).toStrictEqual(200);
     expect(data.code).toBeUndefined();
+  });
+
+  test("returns 400 when email is already verified", async () => {
+    const registerRes = await requestRegister(
+      "Mubashir",
+      "Hussain",
+      "Abcdefgh123456$",
+      "verified@example.com"
+    );
+
+    await requestVerifyEmail(registerRes.body.code);
+
+    const res = await requestResendVerifyEmail("verified@example.com");
+
+    expect(res.statusCode).toStrictEqual(400);
+    expect(res.body).toStrictEqual({ error: "Email is already verified" });
   });
 });

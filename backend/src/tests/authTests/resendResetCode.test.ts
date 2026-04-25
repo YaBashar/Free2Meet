@@ -37,6 +37,15 @@ beforeAll(async () => {
 }, 10000);
 
 describe("POST /auth/resend-reset-code", () => {
+  it("returns 200 and sends a new code when user exists", async () => {
+    await requestRegister("Mubashir", "Hussain", PASSWORD, EMAIL);
+
+    const res = await requestResendResetCode(EMAIL);
+
+    expect(res.statusCode).toStrictEqual(200);
+    expect(res.body).toStrictEqual({ success: true, code: expect.any(String) });
+  });
+
   it("returns 200 when reset code is resent successfully", async () => {
     await requestRegister("Mubashir", "Hussain", PASSWORD, EMAIL);
     const res = await requestForgot(EMAIL);
