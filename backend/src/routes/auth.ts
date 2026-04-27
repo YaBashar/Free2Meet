@@ -19,3 +19,5 @@ authRouter.post("/verify-email", AuthController.verifyEmail);
 authRouter.post("/resend-verification", AuthController.resendVerifyEmail);
 
 authRouter.post("/logout", requireAuth, AuthController.logout);
+authRouter.delete("/delete-account", requireAuth, AuthController.deleteUserAccount);
+authRouter.post("/reactivate", AuthController.reactivate);

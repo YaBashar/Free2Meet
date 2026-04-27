@@ -33,6 +33,15 @@ export class AuthError extends Error {
   }
 }
 
+function isDocumentNotFoundError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    (error as { name?: string }).name === "DocumentNotFoundError"
+  );
+}
+
 /** [1] AuthRegister
  * Registers a user with an email, password, and name
  **/
@@ -257,7 +266,7 @@ export async function resendVerificationCode(email: string) {
     }
   }
 
-  return process.env.NODE_ENV !== "test" ? { success: true, code } : { success: true };
+  return process.env.NODE_ENV === "test" ? { success: true, code } : { success: true };
 }
 
 export async function forgotPassword(email: string) {
@@ -283,7 +292,7 @@ export async function forgotPassword(email: string) {
     }
   }
 
-  return process.env.NODE_ENV !== "test" ? { success: true, code } : { success: true };
+  return process.env.NODE_ENV === "test" ? { success: true, code } : { success: true };
 }
 
 export async function verifyResetCodeService(resetCode: string) {
@@ -324,7 +333,7 @@ export async function resendResetCodeService(email: string) {
     }
   }
 
-  return process.env.NODE_ENV !== "test" ? { success: true, code } : { success: true };
+  return process.env.NODE_ENV === "test" ? { success: true, code } : { success: true };
 }
 
 export async function resetPasswordService(resetCode: string, newPassword: string) {
@@ -395,4 +404,64 @@ export async function userLogout(userId: string) {
   await RefreshTokenModel.updateMany({ user: userId }, { $set: { revokedAt: new Date() } });
 
   return { success: true };
+}
+
+export async function deleteAccount(userId: string) {
+  // Soft-delete: mark the account as deactivated.
+  // MongoDB TTL index will permanently purge the record after 30 days.
+  const result = await UserModel.updateOne(
+    { _id: userId, deletedAt: null },
+    {
+      $set: {
+        deletedAt: new Date(),
+      },
+    }
+  );
+
+  if (result.matchedCount === 0) {
+    throw new AuthError("User not found", 404);
+  }
+
+  // Revoke all refresh tokens so no further API calls can be made
+  await RefreshTokenModel.deleteMany({ user: userId });
+
+  return { success: true };
+}
+
+export async function reactivateAccount(email: string, password: string) {
+  const normalisedEmail = validateEmailFormat(email);
+
+  const user = await UserModel.findOne({ email: normalisedEmail });
+  if (!user || !user.deletedAt) {
+    throw new AuthError("Invalid credentials", 400);
+  }
+
+  const passwordMatches = await bcrypt.compare(password, user.password);
+  if (!passwordMatches) {
+    throw new AuthError("Invalid credentials", 400);
+  }
+
+  // Restore the account
+  user.deletedAt = null;
+  try {
+    await user.save();
+  } catch (err) {
+    if (isDocumentNotFoundError(err)) {
+      throw new AuthError("Invalid credentials", 400);
+    }
+    throw err;
+  }
+
+  const accessToken = createAccessToken(user);
+  const refreshToken = await createRefreshToken(user);
+
+  return {
+    accessToken,
+    refreshToken,
+    user: {
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+    },
+  };
 }

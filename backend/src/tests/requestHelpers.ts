@@ -55,6 +55,14 @@ export const requestLogout = async (token: string) => {
   return await request(app).post("/auth/logout").set("Authorization", `Bearer ${token}`);
 };
 
+export const requestDeleteAccount = async (token: string) => {
+  return await request(app).delete("/auth/delete-account").set("Authorization", `Bearer ${token}`);
+};
+
+export const requestReactivateAccount = async (email: string, password: string) => {
+  return await request(app).post("/auth/reactivate").send({ email, password });
+};
+
 export async function getToken(
   firstName: string,
   lastName: string,

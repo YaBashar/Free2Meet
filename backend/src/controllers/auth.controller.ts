@@ -10,6 +10,8 @@ import {
   resendVerificationCode,
   userVerifyEmail,
   userLogout,
+  reactivateAccount,
+  deleteAccount,
 } from "../service/auth.service";
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
@@ -123,3 +125,33 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
     next(error);
   }
 };
+
+export const deleteUserAccount = async (req: Request, res: Response, next: NextFunction) => {
+  const userId = req.user!.sub;
+  try {
+    const result = await deleteAccount(userId);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export async function reactivate(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { email, password } = req.body;
+
+    const result = await reactivateAccount(email, password);
+
+    res.status(200).json({
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+      user: {
+        id: result.user.id,
+        name: result.user.name,
+        email: result.user.email,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
