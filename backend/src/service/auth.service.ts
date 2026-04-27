@@ -13,6 +13,12 @@ import "dotenv/config";
 import jwt from "jsonwebtoken";
 import { RefreshTokenModel } from "../models/refreshTokenModel";
 import { JwtPayload } from "../middleware";
+import {
+  sendForgotPasswordEmail,
+  sendOnboardingEmail,
+  sendResendResetCodeEmail,
+  sendResendVerificationEmail,
+} from "./email.service";
 
 const SECRET = process.env.JWT_ACCESS_SECRET;
 const REFRESH_TOKEN_TTL_DAYS = Number(process.env.REFRESH_TOKEN_TTL_DAYS) || 7;
@@ -79,7 +85,17 @@ export async function registerUser(input: RegisterInput): Promise<RegisterRespon
   });
 
   await newUser.save();
-  return { userId: newUser._id.toString(), code };
+
+  // Prevent emails being sent during tests
+  if (process.env.NODE_ENV !== "test") {
+    await sendOnboardingEmail(sanitizedEmail, code).catch((err) => {
+      console.error(`Failed to send invite email to ${sanitizedEmail}:`, err);
+    });
+  }
+
+  return process.env.NODE_ENV === "test"
+    ? { userId: newUser._id.toString(), code }
+    : { userId: newUser._id.toString() };
 }
 
 /** [2] Auth Login
@@ -233,7 +249,15 @@ export async function resendVerificationCode(email: string) {
     { $set: { verificationCode: hashedCode, verificationCodeExpiry: expiry } }
   );
 
-  return { success: true, code };
+  if (process.env.NODE_ENV !== "test") {
+    try {
+      await sendResendVerificationEmail(normalisedEmail, code);
+    } catch (err) {
+      console.error(`Failed to send email to ${normalisedEmail}:`, err);
+    }
+  }
+
+  return process.env.NODE_ENV !== "test" ? { success: true, code } : { success: true };
 }
 
 export async function forgotPassword(email: string) {
@@ -251,7 +275,15 @@ export async function forgotPassword(email: string) {
   user.resetCodeExpiry = expiry;
   await user.save();
 
-  return { success: true, code };
+  if (process.env.NODE_ENV !== "test") {
+    try {
+      await sendForgotPasswordEmail(normalisedEmail, code);
+    } catch (err) {
+      console.error(`Failed to send email to ${normalisedEmail}:`, err);
+    }
+  }
+
+  return process.env.NODE_ENV !== "test" ? { success: true, code } : { success: true };
 }
 
 export async function verifyResetCodeService(resetCode: string) {
@@ -284,7 +316,15 @@ export async function resendResetCodeService(email: string) {
     { $set: { resetCode: hashedCode, resetCodeExpiry: expiry } }
   );
 
-  return { success: true, code };
+  if (process.env.NODE_ENV !== "test") {
+    try {
+      await sendResendResetCodeEmail(normalisedEmail, code);
+    } catch (err) {
+      console.error(`Failed to send email to ${normalisedEmail}:`, err);
+    }
+  }
+
+  return process.env.NODE_ENV !== "test" ? { success: true, code } : { success: true };
 }
 
 export async function resetPasswordService(resetCode: string, newPassword: string) {
