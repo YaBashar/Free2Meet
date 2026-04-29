@@ -8,7 +8,6 @@ import {
   resendVerifLimiter,
   resetCodeLimiter,
   verifyEmailLimiter,
-  authenticatedRouteLimiter,
 } from "../middleware";
 import * as AuthController from "../controllers/auth.controller";
 
@@ -28,6 +27,6 @@ authRouter.post("/reset-password", resetCodeLimiter, AuthController.resetPasswor
 authRouter.post("/verify-email", verifyEmailLimiter, AuthController.verifyEmail);
 authRouter.post("/resend-verification", resendVerifLimiter, AuthController.resendVerifyEmail);
 
-authRouter.post("/logout", authenticatedRouteLimiter, requireAuth, AuthController.logout);
+authRouter.post("/logout", requireAuth, AuthController.logout);
 authRouter.delete("/delete-account", requireAuth, AuthController.deleteUserAccount);
 authRouter.post("/reactivate", loginLimiter, AuthController.reactivate);
