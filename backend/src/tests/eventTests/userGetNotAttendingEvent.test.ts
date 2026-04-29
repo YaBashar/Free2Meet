@@ -1,53 +1,61 @@
-import { requestAttendeeRespond, requestAuthLogin, requestAuthRegister, requestDelete, requestEventInvite, requestNewEvent, requestNotAttendingEvent } from '../requestHelpers';
+import {
+  getToken,
+  requestAttendeeRespond,
+  requestDelete,
+  requestEventInvite,
+  requestNewEvent,
+  requestNotAttendingEvent
+} from "../requestHelpers";
+import mongoose from "mongoose";
 
 let organiserToken: string;
 let attendeeToken: string;
 let link : string;
 let eventId: string;
+const MONGO_OPTIONS = { serverSelectionTimeoutMS: 8000 };
 
-beforeEach(() => {
-  requestDelete();
+beforeAll(async () => {
+  if (!process.env.MONGODB_TEST_URI) throw new Error("MONGODB_TEST_URI is not set.");
+  if (mongoose.connection.readyState === 0) {
+    await mongoose.connect(process.env.MONGODB_TEST_URI, MONGO_OPTIONS);
+  }
+}, 10000);
 
-  requestAuthRegister('Mubashir', 'Hussain', 'Abcdefg123$', 'example@gmail.com');
-  const res = requestAuthLogin('example@gmail.com', 'Abcdefg123$');
-  const data = JSON.parse(res.body.toString());
-  organiserToken = data.token;
+const uniqueEmail = (prefix: string) => `${prefix}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}@example.com`;
 
-  const res1 = requestNewEvent(organiserToken, 'New Event', 'New Description', 'House', '31/08/2025', 10, 14);
-  const data1 = JSON.parse(res1.body.toString());
-  eventId = data1.eventId;
-
-  const res2 = requestEventInvite(organiserToken, eventId);
-  const data2 = JSON.parse(res2.body.toString());
-  link = data2.link;
-
-  requestAuthRegister('Jonathan', 'Lee', 'Abcnmop.123$', 'jonl@gmail.com');
-  const res3 = requestAuthLogin('jonl@gmail.com', 'Abcnmop.123$');
-  const data3 = JSON.parse(res3.body.toString());
-  attendeeToken = data3.token;
+beforeEach(async () => {
+  await requestDelete();
+  organiserToken = await getToken("Mubashir", "Hussain", uniqueEmail("organiser"), "Abcdefg123$");
+  const res1 = await requestNewEvent(organiserToken, "New Event", "New Description", "House", "31/08/2025", 10, 14);
+  eventId = res1.body.eventId;
+  const res2 = await requestEventInvite(organiserToken, eventId);
+  link = res2.body.link;
+  attendeeToken = await getToken("Jonathan", "Lee", uniqueEmail("attendee"), "Abcnmop.123$");
 });
 
-afterEach(() => {
-  requestDelete();
+afterEach(async () => {
+  await requestDelete();
 });
+
+afterAll(async () => {
+  if (mongoose.connection.readyState !== 0) await mongoose.connection.close();
+}, 10000);
 
 describe(('Error'), () => {
-  test('Invalid Event Id', () => {
-    requestAttendeeRespond(attendeeToken, link, 'reject');
-    const res = requestNotAttendingEvent('invalid');
-    const data = JSON.parse(res.body.toString());
+  test("Invalid Event Id", async () => {
+    await requestAttendeeRespond(attendeeToken, link, "reject");
+    const res = await requestNotAttendingEvent("invalid");
     expect(res.statusCode).toStrictEqual(400);
-    expect(data).toStrictEqual({ error: expect.any(String) });
+    expect(res.body).toStrictEqual({ error: expect.any(String) });
   });
 });
 
 describe(('Success'), () => {
-  test('Success', () => {
-    requestAttendeeRespond(attendeeToken, link, 'reject');
-    const res = requestNotAttendingEvent(eventId);
-    const data = JSON.parse(res.body.toString());
+  test("Success", async () => {
+    await requestAttendeeRespond(attendeeToken, link, "reject");
+    const res = await requestNotAttendingEvent(eventId);
     expect(res.statusCode).toStrictEqual(200);
-    expect(data).toStrictEqual([
+    expect(res.body).toStrictEqual([
       {
         name: 'Jonathan Lee',
         declinedAt: expect.any(String)

@@ -1,55 +1,94 @@
-import { requestAuthRegister, requestDelete, requestResetPasswd, requestSetNewPasswd } from '../requestHelpers';
+import mongoose from "mongoose";
+import {
+  requestDelete,
+  requestRegister,
+  requestForgot,
+  requestVerifyResetCode,
+  requestResetPassword,
+} from "../requestHelpers";
 
-let testUserId: string;
-let resetToken: string;
-beforeEach(() => {
-  requestDelete();
+const EMAIL = "example@gmail.com";
+const PASSWORD = "Abcdefgh123456$";
 
-  const res = requestAuthRegister('Mubashir', 'Hussain', 'Abcdefg123$', 'example@gmail.com');
-  const data = JSON.parse(res.body.toString());
-  testUserId = data.userId;
+const MONGO_OPTIONS = { serverSelectionTimeoutMS: 8000 };
 
-  const res1 = requestResetPasswd('example@gmail.com');
-  const data1 = JSON.parse(res1.body.toString());
-  resetToken = data1.resetToken;
+let resetCode: string;
+
+beforeEach(async () => {
+  await requestDelete();
+
+  await requestRegister("Mubashir", "Hussain", PASSWORD, EMAIL);
+  const res = await requestForgot(EMAIL);
+  resetCode = res.body.code;
+
+  const res1 = await requestVerifyResetCode(resetCode);
+  expect(res1.statusCode).toStrictEqual(200);
+  expect(res1.body).toStrictEqual({ success: true });
 });
 
-afterEach(() => {
-  requestDelete();
+afterEach(async () => {
+  await requestDelete();
 });
 
-describe('Success Cases', () => {
-  test('Reset Password Successfully Login', () => {
-    const res = requestSetNewPasswd(testUserId, resetToken, 'new123A*', 'new123A*');
-    const data = JSON.parse(res.body.toString());
+afterAll(async () => {
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.connection.close();
+  }
+}, 10000);
 
-    expect(data).toStrictEqual({ userId: expect.any(String) });
+beforeAll(async () => {
+  if (!process.env.MONGODB_TEST_URI) {
+    throw new Error(
+      "MONGODB_TEST_URI is not set. Copy backend/.env.example to backend/.env and set MONGODB_URI."
+    );
+  }
+  if (mongoose.connection.readyState === 0) {
+    await mongoose.connect(process.env.MONGODB_TEST_URI, MONGO_OPTIONS);
+  }
+}, 10000);
+
+describe("POST /auth/reset-password", () => {
+  it("returns 200 when password is reset successfully", async () => {
+    const res = await requestResetPassword(resetCode, "NewerPassword1234*");
+
     expect(res.statusCode).toStrictEqual(200);
-  });
-});
-
-describe('Error Cases', () => {
-  test('Using Same password again', () => {
-    const res2 = requestSetNewPasswd(testUserId, resetToken, 'Abcdefg123$', 'Abcdefg123$');
-    const data2 = JSON.parse(res2.body.toString());
-
-    expect(data2).toStrictEqual({ error: 'Password has been used before, try a new password' });
-    expect(res2.statusCode).toStrictEqual(400);
-  });
-
-  test('User Id does not exist', () => {
-    const res2 = requestSetNewPasswd('1234', resetToken, 'new123A*', 'new123A*');
-    const data = JSON.parse(res2.body.toString());
-
-    expect(data).toStrictEqual({ error: expect.any(String) });
-    expect(res2.statusCode).toStrictEqual(400);
+    expect(res.body).toStrictEqual({
+      success: true,
+      accessToken: expect.any(String),
+      refreshToken: expect.any(String),
+      user: {
+        id: expect.any(String),
+        name: expect.any(String),
+        email: expect.any(String),
+      },
+    });
   });
 
-  test('Passwords do not match', () => {
-    const res2 = requestSetNewPasswd(testUserId, resetToken, 'new123A*', 'new1234A*');
-    const data = JSON.parse(res2.body.toString());
+  it("returns 400 when using the same password", async () => {
+    const res = await requestResetPassword(resetCode, PASSWORD);
 
-    expect(data).toStrictEqual({ error: expect.any(String) });
-    expect(res2.statusCode).toStrictEqual(400);
+    expect(res.statusCode).toStrictEqual(400);
+    expect(res.body).toStrictEqual({ error: expect.any(String) });
+  });
+
+  it("returns 400 when new password is too short", async () => {
+    const res = await requestResetPassword(resetCode, "Short1!");
+
+    expect(res.statusCode).toStrictEqual(400);
+    expect(res.body).toStrictEqual({ error: "Password must be at least 12 characters" });
+  });
+
+  it("returns 400 when reset code is invalid", async () => {
+    const res = await requestResetPassword("invalid-code", "NewerPassword1234*");
+
+    expect(res.statusCode).toStrictEqual(400);
+    expect(res.body).toStrictEqual({ error: "Invalid or expired reset code" });
+  });
+
+  it("returns 400 when password fails complexity validation", async () => {
+    const res = await requestResetPassword(resetCode, "aaaaaaaaaaaa");
+
+    expect(res.statusCode).toStrictEqual(400);
+    expect(res.body).toStrictEqual({ error: expect.any(String) });
   });
 });

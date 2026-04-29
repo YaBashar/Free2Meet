@@ -3,7 +3,7 @@ import { createEvent, deleteEvent, eventDetails, inviteLink, updateEvent, getOrg
 import { UpdateEvents } from '../models/interfaces';
 
 export const create = async (req: Request, res: Response) => {
-  const userId = (req as any).userId;
+  const userId = req.user?.sub;
   const { title, description, location, date, startTime, endTime } = req.body;
 
   try {
@@ -15,7 +15,7 @@ export const create = async (req: Request, res: Response) => {
 };
 
 export const invite = async (req: Request, res: Response) => {
-  const userId = (req as any).userId;
+  const userId = req.user?.sub;
   const eventId = req.params.eventId as string;
 
   try {
@@ -38,7 +38,7 @@ export const inviteDetails = async (req: Request, res: Response) => {
 };
 
 export const update = async (req: Request, res: Response) => {
-  const userId = (req as any).userId;
+  const userId = req.user?.sub;
   const eventId = req.params.eventId as string;
   const updatedEventFields: UpdateEvents = req.body;
   const { title, description, location, date, startTime, endTime } = updatedEventFields;
@@ -52,7 +52,7 @@ export const update = async (req: Request, res: Response) => {
 };
 
 export const info = async (req: Request, res: Response) => {
-  const userId = (req as any).userId;
+  const userId = req.user?.sub;
   const eventId = req.params.eventId as string;
 
   try {
@@ -64,7 +64,7 @@ export const info = async (req: Request, res: Response) => {
 };
 
 export const remove = async (req: Request, res: Response) => {
-  const userId = (req as any).userId;
+  const userId = req.user?.sub;
   const eventId = req.params.eventId as string;
 
   try {
@@ -76,11 +76,10 @@ export const remove = async (req: Request, res: Response) => {
 };
 
 export const organisedEvents = async (req: Request, res: Response) => {
-  const userId = (req as any).userId;
+  const userId = req.user?.sub;
 
   try {
     const result = await getOrganisedEvents(userId);
-    console.log(result);
     res.status(200).json(result);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -88,7 +87,7 @@ export const organisedEvents = async (req: Request, res: Response) => {
 };
 
 export const allAttendingEventsForUser = async (req: Request, res: Response) => {
-  const userId = (req as any).userId;
+  const userId = req.user?.sub;
 
   try {
     const result = await getAllAttendingEventsForUser(userId);

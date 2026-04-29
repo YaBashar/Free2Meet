@@ -1,68 +1,67 @@
-import axios from '../api/axios';
-import { useAuth } from '../hooks/useAuth';
-import useValidateLoginForm from '../hooks/useValidateLoginForm';
-import FormInput from './FormInput'
-import { useNavigate, useLocation } from 'react-router-dom';
+import axios from "../api/axios";
+import { useAuth } from "../hooks/useAuth";
+import useValidateLoginForm from "../hooks/useValidateLoginForm";
+import FormInput from "./FormInput";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const Login = () => {
-    const LOGIN_URL = '/auth/login'
+  const LOGIN_URL = "/auth/login";
 
-    const navigate = useNavigate();
-    const location = useLocation();
-    const from = location.state?.from?.pathname || "/dashboard";
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || "/dashboard";
 
-    const { password, email, validEmail, validPassword, handleEmailChange, handlePasswordChange } = useValidateLoginForm()
-    const { setAccessToken } = useAuth();
-    
-      const handleSubmit = async (e) => {
-        e.preventDefault();
+  const { password, email, validEmail, validPassword, handleEmailChange, handlePasswordChange } =
+    useValidateLoginForm();
+  const { setAccessToken } = useAuth();
 
-        try {
-            console.log(password)
-            const response = await axios.post(LOGIN_URL, { email, password});
-            const accessToken = response.data.token;
-            setAccessToken(accessToken);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-            navigate(from, { replace: true });
-        } catch (err) {
-            console.log(JSON.stringify(err.response.data.error));
-        }
-      }
- 
-    return (
+    try {
+      console.log(password);
+      const response = await axios.post(LOGIN_URL, { email, password });
+      const accessToken = response.data.token;
+      setAccessToken(accessToken);
 
+      navigate(from, { replace: true });
+    } catch (err) {
+      console.log(JSON.stringify(err.response.data.error));
+    }
+  };
+
+  return (
     <>
-        <h1 className="p-5 mt-5 text-center text-5xl">Login</h1>
+      <h1 className="p-5 mt-5 text-center text-5xl">Login</h1>
 
-        <div className= "flex flex-col justify-around form-container frosted rounded-3xl shadow-2xl backdrop-blur-3xl">
-          <form className=" text-marian-blue" onSubmit = {handleSubmit}>
+      <div className="flex flex-col justify-around form-container frosted rounded-3xl shadow-2xl backdrop-blur-3xl">
+        <form className=" text-marian-blue" onSubmit={handleSubmit}>
+          <div className="flex flex-col p-2">
+            <FormInput
+              label={"Email"}
+              placeholder={"Enter Email"}
+              inputId={"email"}
+              onChange={handleEmailChange}
+              isValid={validEmail}
+            />
+          </div>
 
-            <div className="flex flex-col p-2">
-                <FormInput 
-                  label = {"Email"} 
-                  placeholder = {"Enter Email"} 
-                  inputId = {"email"}
-                  onChange = {handleEmailChange}
-                  isValid = {validEmail}
-                />
-            </div>
+          <div className="flex flex-col p-2">
+            <FormInput
+              label={"Password"}
+              placeholder={"Enter Password"}
+              inputId={"password"}
+              onChange={handlePasswordChange}
+              isValid={validPassword}
+              type={"password"}
+            />
+          </div>
 
-            <div className="flex flex-col p-2">
-                <FormInput 
-                  label = {"Password"} 
-                  placeholder = {"Enter Password"} 
-                  inputId = {"password"}
-                  onChange = {handlePasswordChange}
-                  isValid = {validPassword}
-                  type= {"password"}
-                />
-            </div>
-
-            <button className="button-base">Sign In</button>
-          </form>
-        </div>   
+          <button className="button-base">Sign In</button>
+        </form>
+      </div>
     </>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;

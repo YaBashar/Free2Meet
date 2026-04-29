@@ -1,19 +1,15 @@
+/* eslint-env node */
+/** @type {import('jest').Config} */
+// eslint-disable-next-line no-undef
 module.exports = {
-  preset: 'ts-jest',
-  testEnvironment: 'node',
+  preset: "ts-jest",
+  testEnvironment: "node",
+  testMatch: ["**/src/**/*.test.ts"],
+  moduleFileExtensions: ["ts", "js", "json"],
+  setupFiles: ["./jest.env.setup.cjs"],
+  testTimeout: 30000,
+  // Run suites serially — all tests share a single MongoDB test database so
+  // parallel workers cause deleteMany calls to race across suites.
   maxWorkers: 1,
-
-  transform: {
-    '^.+\\.(ts|tsx|js)$': 'ts-jest'
-  },
-  moduleFileExtensions: ['ts', 'js', 'json'], 
-
-  globals: {
-    'ts-jest': {
-      tsconfig: {
-        resolveJsonModule: true,
-        esModuleInterop: true,
-      },
-    },
-  },
+  transformIgnorePatterns: ["node_modules/(?!(expo-server-sdk)/)"],
 };

@@ -1,100 +1,96 @@
-import FormInput from "./FormInput"
-import axios from '../api/axios';
-import { Link } from 'react-router-dom';
-import { useValidateSignUpForm } from '../hooks/useValidateSignUpForm';
-import { useAuth } from '../hooks/useAuth';
-
+import FormInput from "./FormInput";
+import axios from "../api/axios";
+import { Link } from "react-router-dom";
+import { useValidateSignUpForm } from "../hooks/useValidateSignUpForm";
+import { useAuth } from "../hooks/useAuth";
 
 const Register = () => {
- 
-  const REGISTER_URL = '/auth/register'
-  const {values, valid, handleChange} = useValidateSignUpForm();
-  const {firstName, lastName, password, email} = values;
+  const REGISTER_URL = "/auth/register";
+  const { values, valid, handleChange } = useValidateSignUpForm();
+  const { firstName, lastName, password, email } = values;
 
   const { setUserId } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    try { 
-      const response = await axios.post(REGISTER_URL, { firstName, lastName, password, email});
-      
+    try {
+      const response = await axios.post(REGISTER_URL, { firstName, lastName, password, email });
+
       if (response.status === 200) {
         const recievedUserId = response.data.userId;
         setUserId(recievedUserId);
         alert(`Signed Up Successfully, UserId is ${recievedUserId}`);
-
       } else {
-        alert("Sign Up Failed")
+        alert("Sign Up Failed");
       }
-
     } catch (err) {
       console.log(JSON.stringify(err.response.data.error));
     }
-  }
+  };
 
-  return(
-      <>
+  return (
+    <>
       <h1 className="p-5 text-center text-5xl">Welcome</h1>
-        <div className= "form-container frosted rounded-3xl shadow-2xl backdrop-blur-3xl text-marian-blue">
-          <form className="flex flex-col justify-center" onSubmit = {handleSubmit}>
-
-            <div className="flex flex-1 justify-between w-[455px]">
-              <div className="flex flex-col w-[225px]">           
-                <FormInput 
-                  label = {"First Name"} 
-                  placeholder = {"Enter First Name"} 
-                  name = {"firstName"} 
-                  onChange = {handleChange}
-                  isValid = {valid.firstName}
-                />
-                </div>
-
-              <div className="flex flex-col w-[225px]">
-                <FormInput 
-                  label = {"Last Name"} 
-                  placeholder = {"Enter Last Name"} 
-                  name = {"lastName"}
-                  onChange = {handleChange}
-                  isValid = {valid.lastName}
-                />
-              </div>
+      <div className="form-container frosted rounded-3xl shadow-2xl backdrop-blur-3xl text-marian-blue">
+        <form className="flex flex-col justify-center" onSubmit={handleSubmit}>
+          <div className="flex flex-1 justify-between w-[455px]">
+            <div className="flex flex-col w-[225px]">
+              <FormInput
+                label={"First Name"}
+                placeholder={"Enter First Name"}
+                name={"firstName"}
+                onChange={handleChange}
+                isValid={valid.firstName}
+              />
             </div>
 
-            <div className="flex flex-col mt-2.5">
-                <FormInput 
-                  label = {"Email"} 
-                  placeholder = {"Enter Email"} 
-                  name = {"email"}
-                  onChange = {handleChange}
-                  isValid = {valid.email}
-                />
+            <div className="flex flex-col w-[225px]">
+              <FormInput
+                label={"Last Name"}
+                placeholder={"Enter Last Name"}
+                name={"lastName"}
+                onChange={handleChange}
+                isValid={valid.lastName}
+              />
             </div>
+          </div>
 
-            <div className="flex flex-col mt-2.5">
-                <FormInput 
-                  label = {"password"} 
-                  placeholder = {"Enter Password"} 
-                  name = {"password"}
-                  onChange = {handleChange}
-                  isValid = {valid.password}
-                  type = {"password"}
-                />
+          <div className="flex flex-col mt-2.5">
+            <FormInput
+              label={"Email"}
+              placeholder={"Enter Email"}
+              name={"email"}
+              onChange={handleChange}
+              isValid={valid.email}
+            />
+          </div>
 
-            </div>
+          <div className="flex flex-col mt-2.5">
+            <FormInput
+              label={"password"}
+              placeholder={"Enter Password"}
+              name={"password"}
+              onChange={handleChange}
+              isValid={valid.password}
+              type={"password"}
+            />
+          </div>
 
-            <button className="button-base text-marian-blue">Sign Up</button>
-          </form>
+          <button className="button-base text-marian-blue">Sign Up</button>
+        </form>
 
-          <p className='text-center text-delft-blue p-2'>
-            Already Registered? <br/>
-            <span>
-             <Link to = "/login" className='text-delft-blue underline'>Sign In</Link>
-            </span>
-          </p>
-        </div>   
-      </>
-    )
-}
+        <p className="text-center text-delft-blue p-2">
+          Already Registered? <br />
+          <span>
+            <Link to="/login" className="text-delft-blue underline">
+              Sign In
+            </Link>
+          </span>
+        </p>
+      </div>
+    </>
+  );
+};
 
-export default Register
+export default Register;

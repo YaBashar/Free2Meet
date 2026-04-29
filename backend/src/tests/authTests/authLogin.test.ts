@@ -1,54 +1,66 @@
-import { requestAuthLogin, requestAuthRegister, requestAuthUserDetails, requestDelete } from '../requestHelpers';
+import { requestLogin, requestRegister, requestDelete, verifyEmail } from "../requestHelpers";
 
-beforeEach(() => {
-  requestDelete();
-  requestAuthRegister('Mubashir', 'Hussain', 'Abcdefg123$', 'example@gmail.com');
+import mongoose from "mongoose";
+
+// Allow time for MongoDB connection in beforeAll/afterAll (default 5s is too short)
+
+const MONGO_OPTIONS = { serverSelectionTimeoutMS: 8000 };
+
+beforeEach(async () => {
+  await requestDelete();
+  const res = await requestRegister("Mubashir", "Hussain", "Abcdefg123$", "example@gmail.com");
+  await verifyEmail("example@gmail.com", res.body.code);
 });
 
-afterEach(() => {
-  requestDelete();
+afterEach(async () => {
+  await requestDelete();
 });
 
-describe('Error Cases', () => {
-  test('Email address does not exist', () => {
-    const res = requestAuthLogin('zid2@unsw.edu.au', 'Abcdefg123$');
-    const data = JSON.parse(res.body.toString());
+afterAll(async () => {
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.connection.close();
+  }
+}, 10000);
 
-    expect(data).toStrictEqual({ error: expect.any(String) });
+beforeAll(async () => {
+  if (!process.env.MONGODB_URI) {
+    throw new Error(
+      "MONGODB_TEST_URI is not set. Copy backend/.env.example to backend/.env and set MONGODB_URI."
+    );
+  }
+  if (mongoose.connection.readyState === 0) {
+    await mongoose.connect(process.env.MONGODB_URI, MONGO_OPTIONS);
+  }
+}, 10000);
+
+describe("Error Cases", () => {
+  test("Email address does not exist", async () => {
+    const res = await requestLogin("zid2@unsw.edu.au", "Abcdefg123$");
+
+    expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(400);
   });
 
-  test('Incorrect password', () => {
-    const res = requestAuthLogin('example@gmail.com', 'abcd123');
-    const data = JSON.parse(res.body.toString());
+  test("Incorrect password", async () => {
+    const res = await requestLogin("example@gmail.com", "abcd123");
 
-    expect(data).toStrictEqual({ error: expect.any(String) });
+    expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(400);
   });
 });
 
-describe('Success Cases', () => {
-  test('Logged In Successfully', () => {
-    const res = requestAuthLogin('example@gmail.com', 'Abcdefg123$');
-    const data = JSON.parse(res.body.toString());
-    expect(data).toStrictEqual({ token: expect.any(String) });
-    expect(res.statusCode).toStrictEqual(200);
-  });
-
-  test('Correct User LoggedIn', () => {
-    const res = requestAuthLogin('example@gmail.com', 'Abcdefg123$');
-    const data = JSON.parse(res.body.toString());
-    const token = data.token;
-
-    const res1 = requestAuthUserDetails(token);
-    const data1 = JSON.parse(res1.body.toString());
-
-    expect(data1).toStrictEqual({
+describe("Success Cases", () => {
+  test("Logged In Successfully", async () => {
+    const res = await requestLogin("example@gmail.com", "Abcdefg123$");
+    expect(res.body).toStrictEqual({
+      accessToken: expect.any(String),
+      refreshToken: expect.any(String),
       user: {
-        userId: expect.any(String),
-        name: 'Mubashir Hussain',
-        email: 'example@gmail.com',
-      }
+        id: expect.any(String),
+        name: "Mubashir Hussain",
+        email: "example@gmail.com",
+      },
     });
+    expect(res.statusCode).toStrictEqual(200);
   });
 });

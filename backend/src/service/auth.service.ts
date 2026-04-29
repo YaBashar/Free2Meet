@@ -1,213 +1,467 @@
-import { checkEmail, checkPassword, checkName, hashPassword, checkNewPasswd } from '../utils/authHelper';
-import { UserModel } from '../models/userModel';
+import {
+  validateEmailFormat,
+  checkEmailAvailable,
+  checkPassword,
+  hashPassword,
+} from "../utils/authHelper";
+import { UserModel, User } from "../models/userModel";
+import { hashCode, generateCode } from "../utils/authHelper";
 
-import bcrypt from 'bcrypt';
-import crypto from 'crypto';
-import 'dotenv/config';
-import jwt from 'jsonwebtoken';
-const SECRET = process.env.JWT_SECRET;
-const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
+import bcrypt from "bcrypt";
+import crypto from "crypto";
+import "dotenv/config";
+import jwt from "jsonwebtoken";
+import { RefreshTokenModel } from "../models/refreshTokenModel";
+import { JwtPayload } from "../middleware";
+import {
+  sendForgotPasswordEmail,
+  sendOnboardingEmail,
+  sendResendResetCodeEmail,
+  sendResendVerificationEmail,
+} from "./email.service";
+
+const SECRET = process.env.JWT_ACCESS_SECRET;
+const REFRESH_TOKEN_TTL_DAYS = Number(process.env.REFRESH_TOKEN_TTL_DAYS) || 7;
+const ACCESS_TOKEN_TTL_MINUTES = Number(process.env.accessTokenTtlMinutes) || 15;
+
+export class AuthError extends Error {
+  statusCode: number;
+
+  constructor(message: string, statusCode = 400) {
+    super(message);
+    this.statusCode = statusCode;
+  }
+}
+
+function isDocumentNotFoundError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    (error as { name?: string }).name === "DocumentNotFoundError"
+  );
+}
 
 /** [1] AuthRegister
-  * Registers a user with an email, password, and name
-**/
+ * Registers a user with an email, password, and name
+ **/
 
-async function registerUser(firstName: string, lastName: string, password: string, email: string): Promise<string> {
-  const name = firstName + ' ' + lastName;
+interface RegisterInput {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+}
 
-  try {
-    checkName(name);
-    await checkEmail(email);
-    checkPassword(password);
-  } catch (error) {
-    throw new Error(error.message);
+interface RegisterResponse {
+  userId: string;
+  code?: string;
+}
+
+export async function registerUser(input: RegisterInput): Promise<RegisterResponse> {
+  const sanitizedFirstName = input.firstName.trim();
+  const sanitizedLastName = input.lastName.trim();
+  const sanitizedEmail = validateEmailFormat(input.email);
+
+  if (/[^a-zA-Z ]/.test(sanitizedFirstName)) {
+    throw new AuthError("First name cannot contain special characters or numbers");
   }
 
-  const hashedPassword = await hashPassword(password);
+  if (/[^a-zA-Z ]/.test(sanitizedLastName)) {
+    throw new AuthError("Last name cannot contain special characters or numbers");
+  }
+
+  const name = `${sanitizedFirstName} ${sanitizedLastName}`;
+  if (name.length < 2 || name.length > 20) {
+    throw new AuthError("Name must be between 2 and 20 characters.");
+  }
+
+  try {
+    await checkEmailAvailable(sanitizedEmail);
+    checkPassword(input.password);
+  } catch (error) {
+    throw new AuthError(error.message);
+  }
+
+  const hashedPassword = await hashPassword(input.password);
+  const { code, expiry } = generateCode();
   const newUser = new UserModel({
     name: name,
     password: hashedPassword,
-    email: email,
-    numSuccessfulLogins: 0,
-    numfailedSinceLastLogin: 0,
-    passwordHistory: [hashedPassword],
-    refreshToken: [],
-    resetToken: {
-      token: undefined,
-      expiresAt: -1
-    },
+    email: sanitizedEmail,
+    verificationCode: hashCode(code),
+    verificationCodeExpiry: expiry,
   });
 
   await newUser.save();
-  return newUser._id.toString();
+
+  // Prevent emails being sent during tests
+  if (process.env.NODE_ENV !== "test") {
+    await sendOnboardingEmail(sanitizedEmail, code).catch((err) => {
+      console.error(`Failed to send invite email to ${sanitizedEmail}:`, err);
+    });
+  }
+
+  return process.env.NODE_ENV === "test"
+    ? { userId: newUser._id.toString(), code }
+    : { userId: newUser._id.toString() };
 }
 
 /** [2] Auth Login
-  * Logs in a user
-**/
+ * Logs in a user
+ **/
 
-async function userLogin(email: string, password: string) {
-  const user = await UserModel.findOne({ email: email });
-  const isPassword = await bcrypt.compare(password, user.password);
+interface LoginInput {
+  email: string;
+  password: string;
+}
 
+async function createRefreshToken(user: User): Promise<string> {
+  const token = crypto.randomBytes(64).toString("hex");
+
+  const expiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000);
+
+  await RefreshTokenModel.create({
+    user: user._id.toString(),
+    token,
+    expiresAt,
+  });
+
+  return token;
+}
+
+function createAccessToken(user: User): string {
+  const payload = {
+    sub: user.id,
+    email: user.email,
+    name: user.name,
+  } satisfies JwtPayload;
+
+  return jwt.sign(payload, SECRET, {
+    expiresIn: `${ACCESS_TOKEN_TTL_MINUTES}m`,
+  });
+}
+
+export async function userLogin(input: LoginInput) {
+  const user = await UserModel.findOne({ email: input.email });
   if (!user) {
-    user.numfailedSinceLastLogin++;
-    throw new Error('Email does not exist');
+    throw new AuthError("Invalid Username or Password");
   }
+
+  const isPassword = await bcrypt.compare(input.password, user.password);
 
   if (!isPassword) {
-    user.numfailedSinceLastLogin++;
-    throw new Error('Password is Incorrect');
+    throw new AuthError("Invalid Username or Password");
   }
 
-  user.numfailedSinceLastLogin = 0;
-  user.numSuccessfulLogins++;
+  if (!user.emailVerified) {
+    throw new AuthError("User has not verified email");
+  }
 
-  const accessToken = jwt.sign(
-    { userId: user._id, name: user.name, email: user.email },
-    SECRET,
-    { expiresIn: '10m' });
-
-  const refreshToken = jwt.sign(
-    { userId: user._id, name: user.name, email: user.email },
-    REFRESH_SECRET,
-    { expiresIn: '1d' }
-  );
-
-  user.refreshTokens = [refreshToken];
+  const accessToken = createAccessToken(user);
+  const refreshToken = await createRefreshToken(user);
   await user.save();
-  return { accessToken, refreshToken };
+
+  return {
+    accessToken,
+    refreshToken,
+    user: { id: user._id.toString(), name: user.name, email: user.email },
+  };
 }
 
 /** [3] Auth Refresh
-  * Allows user to stay loggedIn
-**/
-async function authRefresh(refreshToken: string) {
-  const user = await UserModel.findOne({ refreshTokens: { $in: [refreshToken] } });
+ * Allows user to stay loggedIn
+ **/
+export async function authRefresh(token: string) {
+  const refreshToken = await RefreshTokenModel.findOne({ token, revokedAt: null });
+  if (!refreshToken) {
+    // token was invalid possible reuse attack
+    const compromised = await RefreshTokenModel.findOne({ token });
+    if (compromised) {
+      await RefreshTokenModel.updateMany(
+        { user: compromised.user },
+        { $set: { revoked: Date.now() } }
+      );
+    }
+    throw new AuthError("Token is invalid");
+  }
+
+  if (refreshToken.expiresAt < new Date()) {
+    throw new AuthError("Refresh Token has expired");
+  }
+
+  const user = await UserModel.findById(refreshToken.user);
+  if (!user) {
+    throw new AuthError("User not found");
+  }
+
+  await RefreshTokenModel.findOneAndUpdate({ token }, { $set: { revokedAt: Date.now() } });
+
+  const accessToken = createAccessToken(user);
+  const newRefreshToken = await createRefreshToken(user);
+
+  return { accessToken, refreshToken: newRefreshToken };
+}
+
+export async function userVerifyEmail(verificationCode: string) {
+  const hashedCode = hashCode(verificationCode);
+  const user = await UserModel.findOne({ verificationCode: hashedCode });
+  if (!user) {
+    throw new AuthError("Invalid Verification Code");
+  }
+
+  if (user.verificationCodeExpiry && user.verificationCodeExpiry < new Date()) {
+    throw new AuthError("Verification code has expired");
+  }
+
+  user.verificationCode = undefined;
+  user.verificationCodeExpiry = undefined;
+  user.accountExpiresAt = null;
+  user.emailVerified = true;
+  user.updatedAt = new Date();
+
+  await user.save();
+
+  // Return accessToken and refreshToken so user is immediately logged in by the frontend
+  const accessToken = createAccessToken(user);
+  const refreshToken = await createRefreshToken(user);
+
+  return {
+    success: true,
+    accessToken,
+    refreshToken,
+    user: {
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+    },
+  };
+}
+
+export async function resendVerificationCode(email: string) {
+  const normalisedEmail = validateEmailFormat(email);
+  const { code, expiry } = generateCode();
+  const hashedCode = hashCode(code);
+
+  const user = await UserModel.findOne({ email: normalisedEmail });
+  // Silently return success if user not found — prevents user enumeration
+  if (!user) {
+    return { success: true };
+  }
+
+  if (user.emailVerified) {
+    throw new AuthError("Email is already verified");
+  }
+
+  await UserModel.findOneAndUpdate(
+    { _id: user._id },
+    { $set: { verificationCode: hashedCode, verificationCodeExpiry: expiry } }
+  );
+
+  if (process.env.NODE_ENV !== "test") {
+    try {
+      await sendResendVerificationEmail(normalisedEmail, code);
+    } catch (err) {
+      console.error(`Failed to send email to ${normalisedEmail}:`, err);
+    }
+  }
+
+  return process.env.NODE_ENV === "test" ? { success: true, code } : { success: true };
+}
+
+export async function forgotPassword(email: string) {
+  const normalisedEmail = validateEmailFormat(email);
+  const { code, expiry } = generateCode();
+  const hashedCode = hashCode(code);
+
+  const user = await UserModel.findOne({ email: normalisedEmail });
+  // Silently return success if user not found — prevents user enumeration
+  if (!user) {
+    return { success: true };
+  }
+
+  user.resetCode = hashedCode;
+  user.resetCodeExpiry = expiry;
+  await user.save();
+
+  if (process.env.NODE_ENV !== "test") {
+    try {
+      await sendForgotPasswordEmail(normalisedEmail, code);
+    } catch (err) {
+      console.error(`Failed to send email to ${normalisedEmail}:`, err);
+    }
+  }
+
+  return process.env.NODE_ENV === "test" ? { success: true, code } : { success: true };
+}
+
+export async function verifyResetCodeService(resetCode: string) {
+  const hashedCode = hashCode(resetCode);
+  const user = await UserModel.findOne({
+    resetCode: hashedCode,
+    resetCodeExpiry: { $gt: new Date() }, // Check expiry in one query
+  });
 
   if (!user) {
-    throw new Error('Invalid Refresh token for user');
+    throw new AuthError("Invalid or expired reset code");
+  }
+
+  return { success: true };
+}
+
+export async function resendResetCodeService(email: string) {
+  const normalisedEmail = validateEmailFormat(email);
+  const { code, expiry } = generateCode();
+  const hashedCode = hashCode(code);
+
+  const user = await UserModel.findOne({ email: normalisedEmail });
+  // Silently return success if user not found — prevents user enumeration
+  if (!user) {
+    return { success: true };
+  }
+
+  await UserModel.findOneAndUpdate(
+    { _id: user._id },
+    { $set: { resetCode: hashedCode, resetCodeExpiry: expiry } }
+  );
+
+  if (process.env.NODE_ENV !== "test") {
+    try {
+      await sendResendResetCodeEmail(normalisedEmail, code);
+    } catch (err) {
+      console.error(`Failed to send email to ${normalisedEmail}:`, err);
+    }
+  }
+
+  return process.env.NODE_ENV === "test" ? { success: true, code } : { success: true };
+}
+
+export async function resetPasswordService(resetCode: string, newPassword: string) {
+  if (newPassword.length < 12) {
+    throw new AuthError("Password must be at least 12 characters");
+  }
+
+  const hashedCode = hashCode(resetCode);
+  const user = await UserModel.findOne({
+    resetCode: hashedCode,
+    resetCodeExpiry: { $gt: new Date() },
+  });
+
+  if (!user) {
+    throw new AuthError("Invalid or expired reset code");
+  }
+
+  // Check if new password is same as current
+  if (await bcrypt.compare(newPassword, user.password)) {
+    throw new AuthError("New password must be different from your current password");
   }
 
   try {
-    jwt.verify(refreshToken, REFRESH_SECRET);
+    checkPassword(newPassword);
   } catch (error) {
-    // Delete Expired Refresh Token from User
-    const refreshTokenIndex = user.refreshTokens.findIndex((rfToken) => rfToken === refreshToken);
-    user.refreshTokens.splice(refreshTokenIndex, 1);
-    throw new Error(error.message);
+    throw new AuthError(error.message);
   }
 
-  const accessToken = jwt.sign(
-    { userId: user._id, name: user.name, email: user.email },
-    SECRET,
-    { expiresIn: '10m' });
+  const hashedPassword = await hashPassword(newPassword);
+  user.password = hashedPassword;
+  user.resetCode = undefined;
+  user.resetCodeExpiry = undefined;
+  user.updatedAt = new Date();
 
-  return accessToken;
-}
+  await user.save();
 
-/** [4] Auth Request Reset-Password
-  * Allows user to get a link or code to then reset password
-**/
-async function requestResetPasswd(email:string) {
-  const currUser = await UserModel.findOne({ email: email });
+  // Revoke all existing sessions with old password
+  await RefreshTokenModel.updateMany(
+    { user: user._id.toString() },
+    { $set: { revokedAt: new Date() } }
+  );
 
-  if (!currUser) {
-    throw new Error('Email does not exist');
-  }
-
-  const resetToken = {
-    token: crypto.randomBytes(32).toString('hex'),
-    expiresAt: Date.now() + 10 * 1000 * 60
-  };
-
-  currUser.resetToken = resetToken;
-  await currUser.save();
-  return resetToken.token;
-}
-
-/** [5] Auth Reset-Password
-  * Allows user to reset password
-**/
-async function setResetPassword(userId: string, rsToken: string, newPassword: string, confirmNewPasswd: string) {
-  const currUser = await UserModel.findById(userId);
-
-  if (!currUser) {
-    throw new Error('User with userId does not exist');
-  }
-
-  const resetToken = currUser.resetToken;
-  if (resetToken.token !== rsToken) {
-    throw new Error('Invalid Reset Token');
-  }
-
-  if (resetToken.expiresAt < Date.now()) {
-    throw new Error('Reset token expired');
-  }
-
-  const previousPasswds = currUser.passwordHistory;
-  await checkNewPasswd(previousPasswds, newPassword, confirmNewPasswd);
-  newPassword = await hashPassword(newPassword);
-
-  // invalidate resetToken after setting new password
-  currUser.resetToken = {
-    token: undefined,
-    expiresAt: Date.now()
-  };
-
-  currUser.password = newPassword;
-  currUser.passwordHistory = [newPassword, ...(previousPasswds || [])];
-  await currUser.save();
-  return currUser._id.toString();
-}
-
-async function userDetails(userId: string) {
-  const currUser = await UserModel.findById(userId);
-
-  if (!currUser) {
-    throw new Error('User Id Invalid');
-  }
+  // Return accessToken and refreshToken so user is immediately logged in by the frontend
+  const accessToken = createAccessToken(user);
+  const refreshToken = await createRefreshToken(user);
 
   return {
-    userId: currUser._id,
-    name: currUser.name,
-    email: currUser.email
+    success: true,
+    accessToken,
+    refreshToken,
+    user: {
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+    },
   };
 }
 
-// Allows loggedIn User to change their password
-async function userChangePasswords(userId: string, currentPassword: string, newPassword: string, confirmNewPasswd: string) {
-  const currUser = await UserModel.findById(userId);
-
-  if (!currUser) {
-    throw new Error('User with userId does not exist');
-  }
-
-  if (!bcrypt.compareSync(currentPassword, currUser.password)) {
-    throw new Error('Incorrect current password');
-  }
-
-  const previousPasswds = currUser.passwordHistory;
-  await checkNewPasswd(previousPasswds, newPassword, confirmNewPasswd);
-  newPassword = await hashPassword(newPassword);
-  currUser.password = newPassword;
-  currUser.passwordHistory = [newPassword, ...(previousPasswds || [])];
-  await currUser.save();
-  return currUser._id.toString();
-}
-
-async function userLogout(refreshToken: string, userId: string) {
+export async function userLogout(userId: string) {
   const user = await UserModel.findById(userId);
-
-  let tokens = user.refreshTokens;
-  const tokenIndex = tokens.findIndex((token) => (token === refreshToken));
-  const token = tokens[tokenIndex];
-  if (!token) {
-    throw new Error('Refresh Token does not exist for user');
+  if (!user) {
+    throw new AuthError("User not found");
   }
 
-  tokens = tokens.splice(1, tokenIndex);
-  return {};
+  // Inactivate all refresh Tokens
+  // Client side must delete the access token
+  // Access token expires eventually and cannot regenerate as refreshtokens have been revoked
+  await RefreshTokenModel.updateMany({ user: userId }, { $set: { revokedAt: new Date() } });
+
+  return { success: true };
 }
 
-export { registerUser, userLogin, setResetPassword, requestResetPasswd, authRefresh, userDetails, userLogout, userChangePasswords };
+export async function deleteAccount(userId: string) {
+  // Soft-delete: mark the account as deactivated.
+  // MongoDB TTL index will permanently purge the record after 30 days.
+  const result = await UserModel.updateOne(
+    { _id: userId, deletedAt: null },
+    {
+      $set: {
+        deletedAt: new Date(),
+      },
+    }
+  );
+
+  if (result.matchedCount === 0) {
+    throw new AuthError("User not found", 404);
+  }
+
+  // Revoke all refresh tokens so no further API calls can be made
+  await RefreshTokenModel.deleteMany({ user: userId });
+
+  return { success: true };
+}
+
+export async function reactivateAccount(email: string, password: string) {
+  const normalisedEmail = validateEmailFormat(email);
+
+  const user = await UserModel.findOne({ email: normalisedEmail });
+  if (!user || !user.deletedAt) {
+    throw new AuthError("Invalid credentials", 400);
+  }
+
+  const passwordMatches = await bcrypt.compare(password, user.password);
+  if (!passwordMatches) {
+    throw new AuthError("Invalid credentials", 400);
+  }
+
+  // Restore the account
+  user.deletedAt = null;
+  try {
+    await user.save();
+  } catch (err) {
+    if (isDocumentNotFoundError(err)) {
+      throw new AuthError("Invalid credentials", 400);
+    }
+    throw err;
+  }
+
+  const accessToken = createAccessToken(user);
+  const refreshToken = await createRefreshToken(user);
+
+  return {
+    accessToken,
+    refreshToken,
+    user: {
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+    },
+  };
+}

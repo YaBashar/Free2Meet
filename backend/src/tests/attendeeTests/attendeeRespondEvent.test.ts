@@ -1,79 +1,106 @@
 
-import { requestAttendeeRespond, requestAttendingEvents, requestAuthLogin, requestAuthRegister, requestDeleteEvent, requestDelete, requestEventInvite, requestNewEvent, requestNotAttendingEvent } from '../requestHelpers';
+import {
+  requestAttendeeRespond,
+  requestAttendingEvents,
+  requestDeleteEvent,
+  requestDelete,
+  requestEventInvite,
+  getToken,
+  requestNewEvent,
+  requestNotAttendingEvent,
+} from "../requestHelpers";
+import mongoose from "mongoose";
 
 let organiserToken: string;
 let attendeeToken: string;
 let link : string;
 let eventId: string;
+const MONGO_OPTIONS = { serverSelectionTimeoutMS: 8000 };
+const uniqueEmail = (prefix: string) =>
+  `${prefix}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}@example.com`;
 
-beforeEach(() => {
-  requestDelete();
+beforeAll(async () => {
+  if (!process.env.MONGODB_TEST_URI) {
+    throw new Error(
+      "MONGODB_TEST_URI is not set. Copy backend/.env.example to backend/.env and set MONGODB_URI."
+    );
+  }
+  if (mongoose.connection.readyState === 0) {
+    await mongoose.connect(process.env.MONGODB_TEST_URI, MONGO_OPTIONS);
+  }
+}, 10000);
 
-  requestAuthRegister('Mubashir', 'Hussain', 'Abcdefg123$', 'example@gmail.com');
-  const res = requestAuthLogin('example@gmail.com', 'Abcdefg123$');
-  const data = JSON.parse(res.body.toString());
-  organiserToken = data.token;
+beforeEach(async () => {
+  await requestDelete();
+  const organiserEmail = uniqueEmail("organiser");
+  const attendeeEmail = uniqueEmail("attendee");
 
-  const res1 = requestNewEvent(organiserToken, 'New Event', 'New Description', 'House', '31/08/2025', 10, 14);
-  const data1 = JSON.parse(res1.body.toString());
-  eventId = data1.eventId;
+  organiserToken = await getToken("Mubashir", "Hussain", organiserEmail, "Abcdefg123$");
 
-  const res2 = requestEventInvite(organiserToken, eventId);
-  const data2 = JSON.parse(res2.body.toString());
-  link = data2.link;
+  const newEventRes = await requestNewEvent(
+    organiserToken,
+    "New Event",
+    "New Description",
+    "House",
+    "31/08/2025",
+    10,
+    14
+  );
+  eventId = newEventRes.body.eventId;
 
-  requestAuthRegister('Jonathan', 'Lee', 'Abcnmop.123$', 'jonl@gmail.com');
-  const res3 = requestAuthLogin('jonl@gmail.com', 'Abcnmop.123$');
-  const data3 = JSON.parse(res3.body.toString());
-  attendeeToken = data3.token;
+  const inviteRes = await requestEventInvite(organiserToken, eventId);
+  link = inviteRes.body.link;
+
+  attendeeToken = await getToken("Jonathan", "Lee", attendeeEmail, "Abcnmop.123$");
 });
 
-afterEach(() => {
-  requestDelete();
+afterEach(async () => {
+  await requestDelete();
 });
+
+afterAll(async () => {
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.connection.close();
+  }
+}, 10000);
 
 describe('Error Cases', () => {
-  test('Invalid Token', () => {
-    const res = requestAttendeeRespond('invalid', link, 'accept');
-    const data = JSON.parse(res.body.toString());
+  test("Invalid Token", async () => {
+    const res = await requestAttendeeRespond("invalid", link, "accept");
 
-    expect(data).toStrictEqual({ error: expect.any(String) });
+    expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(401);
   });
 
-  test('Invalid Event Link', () => {
-    const res = requestAttendeeRespond(attendeeToken, 'invalid', 'accept');
-    const data = JSON.parse(res.body.toString());
+  test("Invalid Event Link", async () => {
+    const res = await requestAttendeeRespond(attendeeToken, "invalid", "accept");
 
-    expect(data).toStrictEqual({ error: expect.any(String) });
+    expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(400);
   });
 
-  test('Event does not exist for invite link', () => {
-    requestDeleteEvent(organiserToken, eventId);
-    const res = requestAttendeeRespond(attendeeToken, link, 'accept');
-    const data = JSON.parse(res.body.toString());
+  test("Event does not exist for invite link", async () => {
+    await requestDeleteEvent(organiserToken, eventId);
+    const res = await requestAttendeeRespond(attendeeToken, link, "accept");
 
-    expect(data).toStrictEqual({ error: expect.any(String) });
+    expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(400);
   });
 });
 
 describe('Success', () => {
-  test('Correct Return Type', () => {
-    const res = requestAttendeeRespond(attendeeToken, link, 'accept');
-    const data = JSON.parse(res.body.toString());
+  test("Correct Return Type", async () => {
+    const res = await requestAttendeeRespond(attendeeToken, link, "accept");
 
-    expect(data).toStrictEqual({});
+    expect(res.body).toStrictEqual({});
     expect(res.statusCode).toStrictEqual(200);
   });
 
-  test('Attendee accepted and added to Event', () => {
-    requestAttendeeRespond(attendeeToken, link, 'accept');
-    const res = requestAttendingEvents(attendeeToken);
-    const data = JSON.parse(res.body.toString());
+  test("Attendee accepted and added to Event", async () => {
+    await requestAttendeeRespond(attendeeToken, link, "accept");
+    const res = await requestAttendingEvents(attendeeToken);
     expect(res.statusCode).toStrictEqual(200);
-    expect(data.events).toStrictEqual([
+    expect(res.body.events).toStrictEqual([
       {
         eventId: expect.any(String),
         title: 'New Event',
@@ -87,12 +114,11 @@ describe('Success', () => {
     ]);
   });
 
-  test('Attendee rejected and added to Event', () => {
-    requestAttendeeRespond(attendeeToken, link, 'reject');
-    const res = requestNotAttendingEvent(eventId);
-    const data = JSON.parse(res.body.toString());
+  test("Attendee rejected and added to Event", async () => {
+    await requestAttendeeRespond(attendeeToken, link, "reject");
+    const res = await requestNotAttendingEvent(eventId);
     expect(res.statusCode).toStrictEqual(200);
-    expect(data).toStrictEqual([
+    expect(res.body).toStrictEqual([
       {
         name: 'Jonathan Lee',
         declinedAt: expect.any(String)
