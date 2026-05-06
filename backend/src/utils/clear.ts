@@ -1,7 +1,5 @@
 import { UserModel } from "../models/userModel";
-import { AttendeeModel } from "../models/attendeeModel";
-import { DeclinedModel } from "../models/declinedInviteModel";
-import { EventInviteModel } from "../models/eventInviteModel";
+import { EventParticipantModel } from "../models/eventParticipantModel";
 import { EventModel } from "../models/eventModel";
 import { RefreshTokenModel } from "../models/refreshTokenModel";
 /*
@@ -17,11 +15,9 @@ export async function clear(): Promise<Record<string, never>> {
 
   await Promise.all([
     UserModel.deleteMany({}),
-    AttendeeModel.deleteMany({}),
-    DeclinedModel.deleteMany({}),
-    EventInviteModel.deleteMany({}),
     RefreshTokenModel.deleteMany({}),
     EventModel.deleteMany({}),
+    EventParticipantModel.deleteMany({})
   ]);
 
   return {};
