@@ -1,10 +1,11 @@
-import { getToken, requestDelete, requestEventDetails, requestEventUpdate, requestNewEvent } from "../requestHelpers";
+import { futureDate, getToken, requestDelete, requestEventDetails, requestEventUpdate, requestNewEvent } from "../requestHelpers";
 import mongoose from "mongoose";
 
 let token: string;
 let eventId: string;
 let updatedFields: Record<string, unknown>;
 const MONGO_OPTIONS = { serverSelectionTimeoutMS: 8000 };
+const EVENT_DATE = futureDate();
 const uniqueEmail = () => `organiser.${Date.now()}.${Math.random().toString(36).slice(2, 8)}@example.com`;
 
 beforeAll(async () => {
@@ -17,14 +18,14 @@ beforeAll(async () => {
 beforeEach(async () => {
   await requestDelete();
   token = await getToken("Mubashir", "Hussain", uniqueEmail(), "Abcdefg123$");
-  const res1 = await requestNewEvent(token, "New Event", "New Description", "House", "31/08/2025", 10, 14);
+  const res1 = await requestNewEvent(token, "New Event", "New Description", "House", EVENT_DATE, 10, 14);
   eventId = res1.body.eventId;
 
   updatedFields = {
     title: 'Different Event',
     description: 'Different Description',
     location: 'Different House',
-    date: '31/08/2025',
+    date: EVENT_DATE,
     startTime: 10,
     endTime: 14
   };
@@ -67,7 +68,7 @@ describe('Success', () => {
       title: 'Different Event',
       description: 'Different Description',
       location: 'Different House',
-      date: '31/08/2025',
+      date: EVENT_DATE,
       startTime: 10,
       endTime: 14,
       organiser: 'Mubashir Hussain'

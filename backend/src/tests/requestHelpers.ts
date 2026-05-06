@@ -89,6 +89,15 @@ export async function verifyEmail(email: string, verificationCode: string) {
   expect(updatedUser?.verificationCode).toBe(undefined);
 }
 
+// Date helper — always 1+ years in the future so invite codes never expire during tests
+export const futureDate = (yearsFromNow = 1): string => {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() + yearsFromNow);
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  return `${day}/${month}/${d.getFullYear()}`;
+};
+
 // Events
 export const requestNewEvent = async (
   token: string,
@@ -140,10 +149,11 @@ export const requestEventUpdate = async (
     .send(updatedFields);
 };
 
-export const requestEventInvite = async (token: string, eventId: string) => {
+export const requestEventInvite = async (token: string, eventId: string, inviteeEmail: string) => {
   return await request(app)
     .post(`/events/${eventId}/invite`)
-    .set("Authorization", `Bearer ${token}`);
+    .set("Authorization", `Bearer ${token}`)
+    .send({ inviteeEmail });
 };
 
 export const requestEventInviteDetails = async (inviteLink: string) => {

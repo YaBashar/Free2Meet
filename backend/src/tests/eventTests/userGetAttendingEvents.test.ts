@@ -4,6 +4,7 @@ import {
   requestAttendingEvents,
   requestDelete,
   requestEventInvite,
+  futureDate,
   requestNewEvent
 } from "../requestHelpers";
 import mongoose from "mongoose";
@@ -21,16 +22,18 @@ beforeAll(async () => {
   }
 }, 10000);
 
+const EVENT_DATE = futureDate();
 const uniqueEmail = (prefix: string) => `${prefix}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}@example.com`;
 
 beforeEach(async () => {
   await requestDelete();
   organiserToken = await getToken("Mubashir", "Hussain", uniqueEmail("organiser"), "Abcdefg123$");
-  const res1 = await requestNewEvent(organiserToken, "New Event", "New Description", "House", "31/08/2025", 10, 14);
+  const res1 = await requestNewEvent(organiserToken, "New Event", "New Description", "House", EVENT_DATE, 10, 14);
   eventId = res1.body.eventId;
-  const res2 = await requestEventInvite(organiserToken, eventId);
+  const attendeeEmail = uniqueEmail("attendee");
+  const res2 = await requestEventInvite(organiserToken, eventId, attendeeEmail);
   link = res2.body.link;
-  attendeeToken = await getToken("Jonathan", "Lee", uniqueEmail("attendee"), "Abcnmop.123$");
+  attendeeToken = await getToken("Jonathan", "Lee", attendeeEmail, "Abcnmop.123$");
   await requestAttendeeRespond(attendeeToken, link, "accept");
 });
 
@@ -59,7 +62,7 @@ describe('Success', () => {
       title: 'New Event',
       description: 'New Description',
       location: 'House',
-      date: '31/08/2025',
+      date: EVENT_DATE,
       startTime: 10,
       endTime: 14,
       organiser: 'Mubashir Hussain'

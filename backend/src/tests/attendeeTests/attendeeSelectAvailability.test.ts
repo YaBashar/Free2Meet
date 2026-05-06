@@ -6,6 +6,7 @@ import {
   requestEventInvite,
   getToken,
   requestNewEvent,
+  futureDate,
 } from "../requestHelpers";
 import mongoose from "mongoose";
 
@@ -14,6 +15,7 @@ let attendeeToken: string;
 let link: string;
 let eventId: string;
 const MONGO_OPTIONS = { serverSelectionTimeoutMS: 8000 };
+const EVENT_DATE = futureDate();
 const uniqueEmail = (prefix: string) =>
   `${prefix}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}@example.com`;
 
@@ -40,13 +42,13 @@ beforeEach(async () => {
     "New Event",
     "New Description",
     "House",
-    "31/08/2025",
+    EVENT_DATE,
     10,
     14
   );
   eventId = newEventRes.body.eventId;
 
-  const inviteRes = await requestEventInvite(organiserToken, eventId);
+  const inviteRes = await requestEventInvite(organiserToken, eventId, attendeeEmail);
   link = inviteRes.body.link;
 
   attendeeToken = await getToken("Jonathan", "Lee", attendeeEmail, "Abcnmop.123$");

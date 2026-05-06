@@ -1,10 +1,12 @@
-import { getToken, requestDelete, requestEventInvite, requestNewEvent } from "../requestHelpers";
+import { futureDate, getToken, requestDelete, requestEventInvite, requestNewEvent } from "../requestHelpers";
 import mongoose from "mongoose";
 
 let token: string;
 let eventId: string;
 const MONGO_OPTIONS = { serverSelectionTimeoutMS: 8000 };
 const uniqueEmail = () => `organiser.${Date.now()}.${Math.random().toString(36).slice(2, 8)}@example.com`;
+const inviteeEmail = "invitee@example.com";
+const EVENT_DATE = futureDate();
 
 beforeAll(async () => {
   if (!process.env.MONGODB_TEST_URI) throw new Error("MONGODB_TEST_URI is not set.");
@@ -16,7 +18,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   await requestDelete();
   token = await getToken("Mubashir", "Hussain", uniqueEmail(), "Abcdefg123$");
-  const res1 = await requestNewEvent(token, "New Event", "New Description", "House", "31/08/2025", 10, 14);
+  const res1 = await requestNewEvent(token, "New Event", "New Description", "House", EVENT_DATE, 10, 14);
   eventId = res1.body.eventId;
 });
 
@@ -30,13 +32,13 @@ afterAll(async () => {
 
 describe('Error Cases', () => {
   test("Invalid UserId Token", async () => {
-    const res = await requestEventInvite("InvalidToken", eventId);
+    const res = await requestEventInvite("InvalidToken", eventId, inviteeEmail);
     expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(401);
   });
 
   test("Invalid EventID", async () => {
-    const res = await requestEventInvite(token, "InvalidEventId");
+    const res = await requestEventInvite(token, "InvalidEventId", inviteeEmail);
     expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(400);
   });
@@ -44,7 +46,7 @@ describe('Error Cases', () => {
 
 describe('Success', () => {
   test("Success", async () => {
-    const res = await requestEventInvite(token, eventId);
+    const res = await requestEventInvite(token, eventId, inviteeEmail);
     expect(res.body).toStrictEqual({ link: expect.any(String) });
     expect(res.statusCode).toStrictEqual(200);
   });
