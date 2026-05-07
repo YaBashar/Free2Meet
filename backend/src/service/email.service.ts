@@ -97,6 +97,38 @@ export async function sendForgotPasswordEmail(to: string, resetCode: string): Pr
   });
 }
 
+export async function sendEventInviteEmail(
+  to: string,
+  inviteCode: string,
+  eventTitle: string,
+  organiserName: string
+): Promise<void> {
+  await transporter.sendMail({
+    from: `"Free2Meet" <${process.env.EMAIL_USER}>`,
+    to,
+    subject: `You've been invited to ${eventTitle}`,
+    text: `${organiserName} has invited you to join "${eventTitle}" on Free2Meet.\n\nYour invite code is: ${inviteCode}\n\nTo respond:\n1. Open the Free2Meet app\n2. Enter the invite code above`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+        <h2>You've been invited!</h2>
+        <p><strong>${organiserName}</strong> has invited you to join <strong>${eventTitle}</strong> on Free2Meet.</p>
+        <p>Your invite code is:</p>
+        <div style="font-size: 20px; font-weight: bold; letter-spacing: 4px; padding: 16px; background: #f4f4f4; border-radius: 8px; text-align: center; word-break: break-all;">
+          ${inviteCode}
+        </div>
+        <div style="margin-top: 24px;">
+          <p style="font-weight: bold; margin-bottom: 8px;">To respond to the invite:</p>
+          <ol style="padding-left: 20px; line-height: 1.8;">
+            <li>Open the <strong>Free2Meet</strong> app</li>
+            <li>Enter the invite code above when prompted</li>
+          </ol>
+        </div>
+        <p style="margin-top: 24px; color: #888; font-size: 12px;">If you weren't expecting this invite, you can safely ignore this email.</p>
+      </div>
+    `,
+  });
+}
+
 export async function sendResendResetCodeEmail(to: string, resetCode: string): Promise<void> {
   await transporter.sendMail({
     from: `"Free2Meet" <${process.env.EMAIL_USER}>`,

@@ -6,6 +6,7 @@ import {
   requestDeleteEvent,
   requestEventDetails,
   requestEventInvite,
+  futureDate,
   requestNewEvent
 } from "../requestHelpers";
 import mongoose from "mongoose";
@@ -23,19 +24,27 @@ beforeAll(async () => {
   }
 }, 10000);
 
+const EVENT_DATE = futureDate();
 const uniqueEmail = (prefix: string) => `${prefix}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}@example.com`;
 
 beforeEach(async () => {
   await requestDelete();
   organiserToken = await getToken("Mubashir", "Hussain", uniqueEmail("organiser"), "Abcdefg123$");
-  const res1 = await requestNewEvent(organiserToken, "New Event", "New Description", "House", "31/08/2025", 10, 14);
+  const res1 = await requestNewEvent(organiserToken, "New Event", "New Description", "House", EVENT_DATE, 10, 14);
   eventId = res1.body.eventId;
-  const res2 = await requestEventInvite(organiserToken, eventId);
+
+  const firstAttendeeEmail = uniqueEmail("attendee");
+  const secondAttendeeEmail = uniqueEmail("attendee2");
+
+  const res2 = await requestEventInvite(organiserToken, eventId, firstAttendeeEmail);
   link = res2.body.link;
-  attendeeToken = await getToken("Jonathan", "Lee", uniqueEmail("attendee"), "Abcnmop.123$");
+  const res3 = await requestEventInvite(organiserToken, eventId, secondAttendeeEmail);
+  const secondLink = res3.body.link;
+
+  attendeeToken = await getToken("Jonathan", "Lee", firstAttendeeEmail, "Abcnmop.123$");
   await requestAttendeeRespond(attendeeToken, link, "accept");
-  const secondAttendeeToken = await getToken("Adrian", "Newey", uniqueEmail("attendee2"), "Defgnmop.123$");
-  await requestAttendeeRespond(secondAttendeeToken, link, "accept");
+  const secondAttendeeToken = await getToken("Adrian", "Newey", secondAttendeeEmail, "Defgnmop.123$");
+  await requestAttendeeRespond(secondAttendeeToken, secondLink, "accept");
 });
 
 afterEach(async () => {

@@ -1,9 +1,10 @@
-import { getToken, requestDelete, requestEventDetails, requestNewEvent } from "../requestHelpers";
+import { futureDate, getToken, requestDelete, requestEventDetails, requestNewEvent } from "../requestHelpers";
 import mongoose from "mongoose";
 
 let token: string;
 const MONGO_OPTIONS = { serverSelectionTimeoutMS: 8000 };
 const uniqueEmail = () => `organiser.${Date.now()}.${Math.random().toString(36).slice(2, 8)}@example.com`;
+const EVENT_DATE = futureDate();
 
 beforeAll(async () => {
   if (!process.env.MONGODB_TEST_URI) throw new Error("MONGODB_TEST_URI is not set.");
@@ -27,14 +28,14 @@ afterAll(async () => {
 
 describe('Error Cases', () => {
   test("Invalid User Token", async () => {
-    const res = await requestNewEvent("Invalid Token", "New Event", "New Description", "House", "31/08/2025", 10, 14);
+    const res = await requestNewEvent("Invalid Token", "New Event", "New Description", "House", EVENT_DATE, 10, 14);
     expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(401);
   });
 
   test("Event already Exists", async () => {
-    await requestNewEvent(token, "New Event", "New Description", "House", "31/08/2025", 10, 14);
-    const res = await requestNewEvent(token, "Same Event", "Same Description", "House", "31/08/2025", 10, 14);
+    await requestNewEvent(token, "New Event", "New Description", "House", EVENT_DATE, 10, 14);
+    const res = await requestNewEvent(token, "Same Event", "Same Description", "House", EVENT_DATE, 10, 14);
     expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(400);
   });
@@ -45,8 +46,8 @@ describe('Error Cases', () => {
     [9, 15],
     [11, 13]
   ])("Clashing Times", async (start, end) => {
-    await requestNewEvent(token, "New Event", "New Description", "House", "31/08/2025", 10, 14);
-    const res = await requestNewEvent(token, "Same Event", "Same Description", "House", "31/08/2025", start, end);
+    await requestNewEvent(token, "New Event", "New Description", "House", EVENT_DATE, 10, 14);
+    const res = await requestNewEvent(token, "Same Event", "Same Description", "House", EVENT_DATE, start, end);
     expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(400);
   });
@@ -54,7 +55,7 @@ describe('Error Cases', () => {
   test.each([
     'h', 'ha', 'hab', 'A'.repeat(31)
   ])("Invalid Title Length", async (title) => {
-    const res = await requestNewEvent(token, title, "New Description", "House", "31/08/2025", 10, 14);
+    const res = await requestNewEvent(token, title, "New Description", "House", EVENT_DATE, 10, 14);
     expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(400);
   });
@@ -62,13 +63,13 @@ describe('Error Cases', () => {
   test.each([
     'h', 'ha', 'hab', 'A'.repeat(31)
   ])("Invalid Description Length", async (description) => {
-    const res = await requestNewEvent(token, "New Event", description, "House", "31/08/2025", 10, 14);
+    const res = await requestNewEvent(token, "New Event", description, "House", EVENT_DATE, 10, 14);
     expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(400);
   });
 
   test("Invalid Time", async () => {
-    const res = await requestNewEvent(token, "New Event", "New Description", "House", "31/08/2025", 10, 8);
+    const res = await requestNewEvent(token, "New Event", "New Description", "House", EVENT_DATE, 10, 8);
     expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(400);
   });
@@ -76,13 +77,13 @@ describe('Error Cases', () => {
 
 describe('Success Cases', () => {
   test("Success", async () => {
-    const res = await requestNewEvent(token, "New Event", "New Description", "House", "31/08/2025", 10, 14);
+    const res = await requestNewEvent(token, "New Event", "New Description", "House", EVENT_DATE, 10, 14);
     expect(res.body.eventId).toStrictEqual(expect.any(String));
     expect(res.statusCode).toStrictEqual(200);
   });
 
   test("New Event Exists", async () => {
-    const res1 = await requestNewEvent(token, "New Event", "New Description", "House", "31/08/2025", 10, 14);
+    const res1 = await requestNewEvent(token, "New Event", "New Description", "House", EVENT_DATE, 10, 14);
     const eventId = res1.body.eventId;
 
     const res2 = await requestEventDetails(token, eventId);
@@ -91,7 +92,7 @@ describe('Success Cases', () => {
       title: 'New Event',
       description: 'New Description',
       location: 'House',
-      date: '31/08/2025',
+      date: EVENT_DATE,
       startTime: 10,
       endTime: 14,
       organiser: 'Mubashir Hussain'

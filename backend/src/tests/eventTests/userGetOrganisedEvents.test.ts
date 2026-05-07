@@ -1,8 +1,10 @@
-import { getToken, requestDelete, requestNewEvent, requestOrganisedEvents } from "../requestHelpers";
+import { futureDate, getToken, requestDelete, requestNewEvent, requestOrganisedEvents } from "../requestHelpers";
 import mongoose from "mongoose";
 
 let token: string;
 const MONGO_OPTIONS = { serverSelectionTimeoutMS: 8000 };
+const EVENT_DATE = futureDate();
+const EVENT_DATE_2 = futureDate(2);
 const uniqueEmail = () => `organiser.${Date.now()}.${Math.random().toString(36).slice(2, 8)}@example.com`;
 
 beforeAll(async () => {
@@ -15,8 +17,8 @@ beforeAll(async () => {
 beforeEach(async () => {
   await requestDelete();
   token = await getToken("Mubashir", "Hussain", uniqueEmail(), "Abcdefg123$");
-  await requestNewEvent(token, "New Event", "New Description", "House", "31/08/2025", 10, 14);
-  await requestNewEvent(token, "New Event 2", "New Description 2", "House 2", "31/08/2026", 11, 14);
+  await requestNewEvent(token, "New Event", "New Description", "House", EVENT_DATE, 10, 14);
+  await requestNewEvent(token, "New Event 2", "New Description 2", "House 2", EVENT_DATE_2, 11, 14);
 });
 
 afterEach(async () => {
@@ -45,7 +47,7 @@ describe('Success Case', () => {
         title: 'New Event',
         description: 'New Description',
         location: 'House',
-        date: '31/08/2025',
+        date: EVENT_DATE,
         startTime: 10,
         endTime: 14,
         organiser: 'Mubashir Hussain'
@@ -55,7 +57,7 @@ describe('Success Case', () => {
         title: 'New Event 2',
         description: 'New Description 2',
         location: 'House 2',
-        date: '31/08/2026',
+        date: EVENT_DATE_2,
         startTime: 11,
         endTime: 14,
         organiser: 'Mubashir Hussain'

@@ -1,8 +1,7 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { createEvent, deleteEvent, eventDetails, inviteLink, updateEvent, getOrganisedEvents, getAllAttendingEventsForUser, getInviteDetails, getNotAttending, getAttendeesForEvent } from '../service/event.service';
-import { UpdateEvents } from '../models/interfaces';
 
-export const create = async (req: Request, res: Response) => {
+export const create = async (req: Request, res: Response, next: NextFunction) => {
   const userId = req.user?.sub;
   const { title, description, location, date, startTime, endTime } = req.body;
 
@@ -10,48 +9,48 @@ export const create = async (req: Request, res: Response) => {
     const result = await createEvent(userId, title, description, location, date, startTime, endTime);
     res.status(200).json({ eventId: result });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 };
 
-export const invite = async (req: Request, res: Response) => {
+export const invite = async (req: Request, res: Response, next: NextFunction) => {
   const userId = req.user?.sub;
   const eventId = req.params.eventId as string;
+  const { inviteeEmail } = req.body;
 
   try {
-    const result = await inviteLink(userId, eventId);
+    const result = await inviteLink(userId, eventId, inviteeEmail);
     res.status(200).json({ link: result });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 };
 
-export const inviteDetails = async (req: Request, res: Response) => {
-  const inviteLink = req.params.inviteLink as string;
+export const inviteDetails = async (req: Request, res: Response, next: NextFunction) => {
+  const link = req.params.inviteLink as string;
 
   try {
-    const result = await getInviteDetails(inviteLink);
+    const result = await getInviteDetails(link);
     res.status(200).json({ event: result });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 };
 
-export const update = async (req: Request, res: Response) => {
+export const update = async (req: Request, res: Response, next: NextFunction) => {
   const userId = req.user?.sub;
   const eventId = req.params.eventId as string;
-  const updatedEventFields: UpdateEvents = req.body;
-  const { title, description, location, date, startTime, endTime } = updatedEventFields;
+  const { title, description, location, date, startTime, endTime } = req.body;
 
   try {
     const result = await updateEvent(userId, eventId, title, description, location, date, startTime, endTime);
     res.status(200).json(result);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 };
 
-export const info = async (req: Request, res: Response) => {
+export const info = async (req: Request, res: Response, next: NextFunction) => {
   const userId = req.user?.sub;
   const eventId = req.params.eventId as string;
 
@@ -59,11 +58,11 @@ export const info = async (req: Request, res: Response) => {
     const result = await eventDetails(userId, eventId);
     res.status(200).json({ event: result });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 };
 
-export const remove = async (req: Request, res: Response) => {
+export const remove = async (req: Request, res: Response, next: NextFunction) => {
   const userId = req.user?.sub;
   const eventId = req.params.eventId as string;
 
@@ -71,48 +70,50 @@ export const remove = async (req: Request, res: Response) => {
     const result = await deleteEvent(userId, eventId);
     res.status(200).json(result);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 };
 
-export const organisedEvents = async (req: Request, res: Response) => {
+export const organisedEvents = async (req: Request, res: Response, next: NextFunction) => {
   const userId = req.user?.sub;
 
   try {
     const result = await getOrganisedEvents(userId);
     res.status(200).json(result);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 };
 
-export const allAttendingEventsForUser = async (req: Request, res: Response) => {
+export const allAttendingEventsForUser = async (req: Request, res: Response, next: NextFunction) => {
   const userId = req.user?.sub;
 
   try {
     const result = await getAllAttendingEventsForUser(userId);
     res.status(200).json(result);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 };
 
-export const notAttending = async (req: Request, res: Response) => {
+export const notAttending = async (req: Request, res: Response, next: NextFunction) => {
   const eventId = req.params.eventId as string;
+
   try {
     const result = await getNotAttending(eventId);
     res.status(200).json(result);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 };
 
-export const getEventAttendees = async (req: Request, res: Response) => {
+export const getEventAttendees = async (req: Request, res: Response, next: NextFunction) => {
   const eventId = req.params.eventId as string;
+
   try {
     const result = await getAttendeesForEvent(eventId);
     res.status(200).json(result);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 };
