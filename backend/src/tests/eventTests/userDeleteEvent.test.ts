@@ -13,7 +13,7 @@ import mongoose from "mongoose";
 
 let organiserToken: string;
 let attendeeToken: string;
-let link : string;
+let code : string;
 let eventId: string;
 const MONGO_OPTIONS = { serverSelectionTimeoutMS: 8000 };
 
@@ -30,21 +30,21 @@ const uniqueEmail = (prefix: string) => `${prefix}.${Date.now()}.${Math.random()
 beforeEach(async () => {
   await requestDelete();
   organiserToken = await getToken("Mubashir", "Hussain", uniqueEmail("organiser"), "Abcdefg123$");
-  const res1 = await requestNewEvent(organiserToken, "New Event", "New Description", "House", EVENT_DATE, 10, 14);
+  const res1 = await requestNewEvent(organiserToken, "New Event", "New Description", "House", "single", EVENT_DATE, EVENT_DATE, 10, 14);
   eventId = res1.body.eventId;
 
   const firstAttendeeEmail = uniqueEmail("attendee");
   const secondAttendeeEmail = uniqueEmail("attendee2");
 
   const res2 = await requestEventInvite(organiserToken, eventId, firstAttendeeEmail);
-  link = res2.body.link;
+  code = res2.body.inviteCode;
   const res3 = await requestEventInvite(organiserToken, eventId, secondAttendeeEmail);
-  const secondLink = res3.body.link;
+  const secondCode = res3.body.inviteCode;
 
   attendeeToken = await getToken("Jonathan", "Lee", firstAttendeeEmail, "Abcnmop.123$");
-  await requestAttendeeRespond(attendeeToken, link, "accept");
+  await requestAttendeeRespond(attendeeToken, code, "accept");
   const secondAttendeeToken = await getToken("Adrian", "Newey", secondAttendeeEmail, "Defgnmop.123$");
-  await requestAttendeeRespond(secondAttendeeToken, secondLink, "accept");
+  await requestAttendeeRespond(secondAttendeeToken, secondCode, "accept");
 });
 
 afterEach(async () => {

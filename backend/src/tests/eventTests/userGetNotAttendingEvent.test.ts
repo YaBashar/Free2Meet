@@ -11,7 +11,7 @@ import mongoose from "mongoose";
 
 let organiserToken: string;
 let attendeeToken: string;
-let link : string;
+let code : string;
 let eventId: string;
 const MONGO_OPTIONS = { serverSelectionTimeoutMS: 8000 };
 
@@ -28,11 +28,11 @@ const uniqueEmail = (prefix: string) => `${prefix}.${Date.now()}.${Math.random()
 beforeEach(async () => {
   await requestDelete();
   organiserToken = await getToken("Mubashir", "Hussain", uniqueEmail("organiser"), "Abcdefg123$");
-  const res1 = await requestNewEvent(organiserToken, "New Event", "New Description", "House", EVENT_DATE, 10, 14);
+  const res1 = await requestNewEvent(organiserToken, "New Event", "New Description", "House", "single", EVENT_DATE, EVENT_DATE, 10, 14);
   eventId = res1.body.eventId;
   const attendeeEmail = uniqueEmail("attendee");
   const res2 = await requestEventInvite(organiserToken, eventId, attendeeEmail);
-  link = res2.body.link;
+  code = res2.body.inviteCode;
   attendeeToken = await getToken("Jonathan", "Lee", attendeeEmail, "Abcnmop.123$");
 });
 
@@ -46,7 +46,7 @@ afterAll(async () => {
 
 describe(('Error'), () => {
   test("Invalid Event Id", async () => {
-    await requestAttendeeRespond(attendeeToken, link, "reject");
+    await requestAttendeeRespond(attendeeToken, code, "reject");
     const res = await requestNotAttendingEvent("invalid");
     expect(res.statusCode).toStrictEqual(400);
     expect(res.body).toStrictEqual({ error: expect.any(String) });
@@ -55,7 +55,7 @@ describe(('Error'), () => {
 
 describe(('Success'), () => {
   test("Success", async () => {
-    await requestAttendeeRespond(attendeeToken, link, "reject");
+    await requestAttendeeRespond(attendeeToken, code, "reject");
     const res = await requestNotAttendingEvent(eventId);
     expect(res.statusCode).toStrictEqual(200);
     expect(res.body).toStrictEqual([

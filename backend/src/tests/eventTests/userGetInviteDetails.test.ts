@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 let token: string;
 let eventId: string;
-let link: string;
+let code: string;
 const MONGO_OPTIONS = { serverSelectionTimeoutMS: 8000 };
 const uniqueEmail = () => `organiser.${Date.now()}.${Math.random().toString(36).slice(2, 8)}@example.com`;
 const inviteeEmail = "invitee@example.com";
@@ -19,10 +19,10 @@ beforeAll(async () => {
 beforeEach(async () => {
   await requestDelete();
   token = await getToken("Mubashir", "Hussain", uniqueEmail(), "Abcdefg123$");
-  const res1 = await requestNewEvent(token, "New Event", "New Description", "House", EVENT_DATE, 10, 14);
+  const res1 = await requestNewEvent(token, "New Event", "New Description", "House", "single", EVENT_DATE, EVENT_DATE, 10, 14);
   eventId = res1.body.eventId;
   const res2 = await requestEventInvite(token, eventId, inviteeEmail);
-  link = res2.body.link;
+  code = res2.body.inviteCode;
 });
 
 afterEach(async () => {
@@ -43,16 +43,19 @@ describe('Error Cases', () => {
 
 describe('Success', () => {
   test("Success", async () => {
-    const res = await requestEventInviteDetails(link);
+    const res = await requestEventInviteDetails(code);
     expect(res.body.event).toStrictEqual({
       id: expect.any(String),
       title: 'New Event',
       description: 'New Description',
       location: 'House',
-      date: EVENT_DATE,
+      startDate: EVENT_DATE,
+      endDate: EVENT_DATE,
       startTime: 10,
       endTime: 14,
-      organiser: 'Mubashir Hussain'
+      organiserId: expect.any(String),
+      organiser: 'Mubashir Hussain',
+      eventType: 'single',
     });
 
     expect(res.statusCode).toStrictEqual(200);

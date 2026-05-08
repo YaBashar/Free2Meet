@@ -12,7 +12,7 @@ import mongoose from "mongoose";
 
 let organiserToken: string;
 let attendeeToken: string;
-let link: string;
+let code: string;
 let eventId: string;
 const MONGO_OPTIONS = { serverSelectionTimeoutMS: 8000 };
 const EVENT_DATE = futureDate();
@@ -42,6 +42,8 @@ beforeEach(async () => {
     "New Event",
     "New Description",
     "House",
+    "single",
+    EVENT_DATE,
     EVENT_DATE,
     10,
     14
@@ -49,7 +51,7 @@ beforeEach(async () => {
   eventId = newEventRes.body.eventId;
 
   const inviteRes = await requestEventInvite(organiserToken, eventId, attendeeEmail);
-  link = inviteRes.body.link;
+  code = inviteRes.body.inviteCode;
 
   attendeeToken = await getToken("Jonathan", "Lee", attendeeEmail, "Abcnmop.123$");
 });
@@ -66,7 +68,7 @@ afterAll(async () => {
 
 describe('Error Cases', () => {
   test("Invalid User ID", async () => {
-    await requestAttendeeRespond(attendeeToken, link, "accept");
+    await requestAttendeeRespond(attendeeToken, code, "accept");
     const res = await requestAttendeeSelectAvail("invalid", eventId, 10, 12);
 
     expect(res.body).toStrictEqual({ error: expect.any(String) });
@@ -74,7 +76,7 @@ describe('Error Cases', () => {
   });
 
   test("Invalid Event ID", async () => {
-    await requestAttendeeRespond(attendeeToken, link, "accept");
+    await requestAttendeeRespond(attendeeToken, code, "accept");
     const res = await requestAttendeeSelectAvail(attendeeToken, "invalid", 10, 12);
 
     expect(res.body).toStrictEqual({ error: expect.any(String) });
@@ -82,7 +84,7 @@ describe('Error Cases', () => {
   });
 
   test("Invalid Availability", async () => {
-    await requestAttendeeRespond(attendeeToken, link, "accept");
+    await requestAttendeeRespond(attendeeToken, code, "accept");
     const res = await requestAttendeeSelectAvail(attendeeToken, eventId, 10, 10);
 
     expect(res.body).toStrictEqual({ error: expect.any(String) });
@@ -90,7 +92,7 @@ describe('Error Cases', () => {
   });
 
   test("Attendee not part of Event", async () => {
-    await requestAttendeeRespond(attendeeToken, link, "reject");
+    await requestAttendeeRespond(attendeeToken, code, "reject");
     const res = await requestAttendeeSelectAvail(attendeeToken, eventId, 10, 12);
 
     expect(res.body).toStrictEqual({ error: expect.any(String) });
@@ -100,7 +102,7 @@ describe('Error Cases', () => {
 
 describe('Success', () => {
   test("Success", async () => {
-    await requestAttendeeRespond(attendeeToken, link, "accept");
+    await requestAttendeeRespond(attendeeToken, code, "accept");
     const res = await requestAttendeeSelectAvail(attendeeToken, eventId, 10, 12);
 
     expect(res.body).toStrictEqual({});

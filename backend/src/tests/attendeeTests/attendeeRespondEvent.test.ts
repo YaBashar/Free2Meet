@@ -14,7 +14,7 @@ import mongoose from "mongoose";
 
 let organiserToken: string;
 let attendeeToken: string;
-let link : string;
+let code : string;
 let eventId: string;
 const MONGO_OPTIONS = { serverSelectionTimeoutMS: 8000 };
 const EVENT_DATE = futureDate();
@@ -44,6 +44,8 @@ beforeEach(async () => {
     "New Event",
     "New Description",
     "House",
+    "single",
+    EVENT_DATE,
     EVENT_DATE,
     10,
     14
@@ -51,7 +53,7 @@ beforeEach(async () => {
   eventId = newEventRes.body.eventId;
 
   const inviteRes = await requestEventInvite(organiserToken, eventId, attendeeEmail);
-  link = inviteRes.body.link;
+  code = inviteRes.body.inviteCode;
 
   attendeeToken = await getToken("Jonathan", "Lee", attendeeEmail, "Abcnmop.123$");
 });
@@ -68,7 +70,7 @@ afterAll(async () => {
 
 describe('Error Cases', () => {
   test("Invalid Token", async () => {
-    const res = await requestAttendeeRespond("invalid", link, "accept");
+    const res = await requestAttendeeRespond("invalid", code, "accept");
 
     expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(401);
@@ -83,7 +85,7 @@ describe('Error Cases', () => {
 
   test("Event does not exist for invite link", async () => {
     await requestDeleteEvent(organiserToken, eventId);
-    const res = await requestAttendeeRespond(attendeeToken, link, "accept");
+    const res = await requestAttendeeRespond(attendeeToken, code, "accept");
 
     expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(400);
@@ -92,32 +94,35 @@ describe('Error Cases', () => {
 
 describe('Success', () => {
   test("Correct Return Type", async () => {
-    const res = await requestAttendeeRespond(attendeeToken, link, "accept");
+    const res = await requestAttendeeRespond(attendeeToken, code, "accept");
 
     expect(res.body).toStrictEqual({});
     expect(res.statusCode).toStrictEqual(200);
   });
 
   test("Attendee accepted and added to Event", async () => {
-    await requestAttendeeRespond(attendeeToken, link, "accept");
+    await requestAttendeeRespond(attendeeToken, code, "accept");
     const res = await requestAttendingEvents(attendeeToken);
     expect(res.statusCode).toStrictEqual(200);
     expect(res.body.events).toStrictEqual([
       {
-        eventId: expect.any(String),
+        id: expect.any(String),
         title: 'New Event',
         description: 'New Description',
         location: 'House',
-        date: EVENT_DATE,
+        startDate: EVENT_DATE,
+        endDate: EVENT_DATE,
         startTime: 10,
         endTime: 14,
-        organiser: 'Mubashir Hussain'
+        eventType: 'single',
+        organiser: 'Mubashir Hussain',
+        organiserId: expect.any(String),
       }
     ]);
   });
 
   test("Attendee rejected and added to Event", async () => {
-    await requestAttendeeRespond(attendeeToken, link, "reject");
+    await requestAttendeeRespond(attendeeToken, code, "reject");
     const res = await requestNotAttendingEvent(eventId);
     expect(res.statusCode).toStrictEqual(200);
     expect(res.body).toStrictEqual([

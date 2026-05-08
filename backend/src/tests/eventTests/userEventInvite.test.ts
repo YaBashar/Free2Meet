@@ -18,7 +18,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   await requestDelete();
   token = await getToken("Mubashir", "Hussain", uniqueEmail(), "Abcdefg123$");
-  const res1 = await requestNewEvent(token, "New Event", "New Description", "House", EVENT_DATE, 10, 14);
+  const res1 = await requestNewEvent(token, "New Event", "New Description", "House", "single", EVENT_DATE, EVENT_DATE, 10, 14);
   eventId = res1.body.eventId;
 });
 
@@ -47,7 +47,7 @@ describe('Error Cases', () => {
 describe('Success', () => {
   test("Success", async () => {
     const res = await requestEventInvite(token, eventId, inviteeEmail);
-    expect(res.body).toStrictEqual({ link: expect.any(String) });
+    expect(res.body).toStrictEqual({ inviteCode: expect.any(String) });
     expect(res.statusCode).toStrictEqual(200);
   });
 });

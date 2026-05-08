@@ -18,16 +18,18 @@ beforeAll(async () => {
 beforeEach(async () => {
   await requestDelete();
   token = await getToken("Mubashir", "Hussain", uniqueEmail(), "Abcdefg123$");
-  const res1 = await requestNewEvent(token, "New Event", "New Description", "House", EVENT_DATE, 10, 14);
+  const res1 = await requestNewEvent(token, "New Event", "New Description", "House", "single", EVENT_DATE, EVENT_DATE, 10, 14);
   eventId = res1.body.eventId;
 
   updatedFields = {
     title: 'Different Event',
     description: 'Different Description',
     location: 'Different House',
-    date: EVENT_DATE,
+    eventType: 'single',
+    startDate: EVENT_DATE,
+    endDate: EVENT_DATE,
     startTime: 10,
-    endTime: 14
+    endTime: 14,
   };
 });
 
@@ -68,10 +70,13 @@ describe('Success', () => {
       title: 'Different Event',
       description: 'Different Description',
       location: 'Different House',
-      date: EVENT_DATE,
+      startDate: EVENT_DATE,
+      endDate: EVENT_DATE,
       startTime: 10,
       endTime: 14,
-      organiser: 'Mubashir Hussain'
+      organiserId: expect.any(String),
+      organiser: 'Mubashir Hussain',
+      eventType: 'single',
     });
 
     expect(res.statusCode).toStrictEqual(200);

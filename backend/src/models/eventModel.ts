@@ -1,23 +1,35 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
+export enum EventType {
+  Single = 'single',
+  Multiple = 'multiple',
+  Hybrid = 'hybrid',
+}
+
 export interface Event extends Document {
   title: string;
   description: string;
   location: string;
-  date: string;
+  startDate: string;
+  endDate: string;
   startTime: number;
   endTime: number;
+  organiserId: string;
   organiserName: string;
+  eventType: EventType;
 }
 
 const eventSchema = new Schema({
   title: { type: String, required: true },
   description: { type: String, required: true },
   location: { type: String, required: true },
-  date: { type: String, required: true },
+  startDate: { type: String, required: true },
+  endDate: { type: String, required: true },
   startTime: { type: Number, required: true },
   endTime: { type: Number, required: true },
+  organiserId: { type: String, required: true },
   organiserName: { type: String, required: true },
+  eventType: { type: String, enum: Object.values(EventType), required: true },
 });
 
 export const EventModel = mongoose.model<Event>('Event', eventSchema);
