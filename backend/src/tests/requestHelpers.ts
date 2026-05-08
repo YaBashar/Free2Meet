@@ -93,9 +93,9 @@ export async function verifyEmail(email: string, verificationCode: string) {
 export const futureDate = (yearsFromNow = 1): string => {
   const d = new Date();
   d.setFullYear(d.getFullYear() + yearsFromNow);
-  const day = String(d.getDate()).padStart(2, "0");
   const month = String(d.getMonth() + 1).padStart(2, "0");
-  return `${day}/${month}/${d.getFullYear()}`;
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${month}-${day}`;
 };
 
 // Events
@@ -104,14 +104,16 @@ export const requestNewEvent = async (
   title: string,
   description: string,
   location: string,
-  date: string,
+  eventType: string,
+  startDate: string,
+  endDate: string,
   startTime: number,
   endTime: number
 ) => {
   return await request(app)
     .post("/events/new-event")
     .set("Authorization", `Bearer ${token}`)
-    .send({ title, description, location, date, startTime, endTime });
+    .send({ title, description, location, eventType, startDate, endDate, startTime, endTime });
 };
 
 export const requestDeleteEvent = async (token: string, eventId: string) => {
