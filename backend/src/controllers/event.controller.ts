@@ -3,10 +3,10 @@ import { createEvent, deleteEvent, eventDetails, inviteLink, updateEvent, getOrg
 
 export const create = async (req: Request, res: Response, next: NextFunction) => {
   const userId = req.user?.sub;
-  const { title, description, location, date, startTime, endTime } = req.body;
+  const { title, description, location, eventType, startDate, endDate, startTime, endTime } = req.body;
 
   try {
-    const result = await createEvent(userId, title, description, location, date, startTime, endTime);
+    const result = await createEvent(userId, title, description, location, startDate, endDate, startTime, endTime, eventType);
     res.status(200).json({ eventId: result });
   } catch (error) {
     next(error);
@@ -20,7 +20,7 @@ export const invite = async (req: Request, res: Response, next: NextFunction) =>
 
   try {
     const result = await inviteLink(userId, eventId, inviteeEmail);
-    res.status(200).json({ link: result });
+    res.status(200).json(result);
   } catch (error) {
     next(error);
   }
@@ -40,10 +40,10 @@ export const inviteDetails = async (req: Request, res: Response, next: NextFunct
 export const update = async (req: Request, res: Response, next: NextFunction) => {
   const userId = req.user?.sub;
   const eventId = req.params.eventId as string;
-  const { title, description, location, date, startTime, endTime } = req.body;
+  const { title, description, location, eventType, startDate, endDate, startTime, endTime } = req.body;
 
   try {
-    const result = await updateEvent(userId, eventId, title, description, location, date, startTime, endTime);
+    const result = await updateEvent(userId, eventId, title, description, location, startDate, endDate, startTime, endTime, eventType);
     res.status(200).json(result);
   } catch (error) {
     next(error);
