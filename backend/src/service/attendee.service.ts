@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 import { EventParticipantModel } from "../models/eventParticipantModel";
-import { EventModel } from "../models/eventModel";
+import { EventModel, EventType } from "../models/eventModel";
 import { UserModel } from "../models/userModel";
+import { EventError } from "./event.service";
 
 export class AttendeeError extends Error {
   statusCode: number;
@@ -48,8 +49,6 @@ export async function attendeeRespond(
 
   if (action === "accept") {
     pendingRecord.status = "Accepted";
-    pendingRecord.startAvailable = -1;
-    pendingRecord.endAvailable = -1;
   } else if (action === "reject") {
     pendingRecord.status = "Declined";
   }
@@ -61,16 +60,21 @@ export async function attendeeRespond(
 export async function attendeeSelectAvailability(
   userId: string,
   eventId: string,
-  startTime: number,
-  endTime: number
+  date: string,
+  startAvailable: number,
+  endAvailable: number
 ) {
-  if (endTime <= startTime) {
-    throw new AttendeeError("Invalid Availability Block");
-  }
-
   if (!mongoose.isValidObjectId(eventId)) {
     throw new AttendeeError("Invalid Event Id");
   }
+
+  const event = await EventModel.findById(eventId);
+  if (!event) {
+    throw new EventError("Event not found", 404);
+  }
+
+  const eventStart = event.startTime;
+  const eventEnd = event.endTime;
 
   const attendee = await EventParticipantModel.findOne({
     userId,
@@ -82,8 +86,43 @@ export async function attendeeSelectAvailability(
     throw new AttendeeError("Attendee with userId is not part of this Event");
   }
 
-  attendee.startAvailable = startTime;
-  attendee.endAvailable = endTime;
+  if (isNaN(new Date(date).getTime())) {
+    throw new AttendeeError("Invalid date format");
+  }
+
+  if (event.eventType === EventType.HYBRID) {
+    throw new AttendeeError("Hybrid events must be locked to a date before selecting availability", 400);
+  }
+
+  if (event.eventType === EventType.SINGLE) {
+    if (date !== event.startDate) {
+      throw new AttendeeError("Invalid date", 400);
+    }
+  } else {
+    if (date < event.startDate || date > event.endDate) {
+      throw new AttendeeError("Date is outside event range", 400);
+    }
+  }
+
+  if (startAvailable >= endAvailable) {
+    throw new AttendeeError("Invalid selection", 400);
+  }
+
+  if (startAvailable < eventStart || endAvailable > eventEnd) {
+    throw new AttendeeError("Invalid availability", 400);
+  }
+
+  const existingIndex = attendee.availability.findIndex((a) => a.date === date);
+  if (existingIndex >= 0) {
+    // Update — overwrite the existing entry for this date
+    const existing = attendee.availability[existingIndex];
+    existing.date = date;
+    existing.startAvailable = startAvailable;
+    existing.endAvailable = endAvailable;
+  } else {
+    // Insert — first time setting availability for this date
+    attendee.availability.push({ date, startAvailable, endAvailable });
+  }
 
   await attendee.save();
   return {};
