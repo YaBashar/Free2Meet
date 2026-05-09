@@ -1,10 +1,12 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document } from "mongoose";
 
-export enum EventType {
-  Single = 'single',
-  Multiple = 'multiple',
-  Hybrid = 'hybrid',
-}
+export const EventType = {
+  SINGLE: "SINGLE_DAY", 
+  MULTIPLE: "MULTI_DAY",
+  HYBRID: "HYBRID",
+}  as const;
+
+export type EventType = (typeof EventType)[keyof typeof EventType]
 
 export interface Event extends Document {
   title: string;
@@ -29,7 +31,7 @@ const eventSchema = new Schema({
   endTime: { type: Number, required: true },
   organiserId: { type: String, required: true },
   organiserName: { type: String, required: true },
-  eventType: { type: String, enum: Object.values(EventType), required: true },
+  eventType: { type: String, enum: ["SINGLE_DAY", "MULTI_DAY", "HYBRID"], required: true },
 });
 
-export const EventModel = mongoose.model<Event>('Event', eventSchema);
+export const EventModel = mongoose.model<Event>("Event", eventSchema);
