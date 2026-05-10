@@ -128,6 +128,53 @@ export async function attendeeSelectAvailability(
   return {};
 }
 
+
+export async function attendeeDayPreference(
+  userId: string,
+  eventId: string,
+  preferredDates: string[]
+) {
+  if (!mongoose.isValidObjectId(eventId)) {
+    throw new AttendeeError("Invalid Event Id");
+  }
+
+  const event = await EventModel.findById(eventId);
+  if (!event) {
+    throw new EventError("Event not found", 404);
+  }
+
+  if (event.eventType !== EventType.HYBRID) {
+    throw new AttendeeError("Day preference is only valid for hybrid events", 400);
+  }
+
+  const validatedDates: string[] = [];
+  for (const item of preferredDates) {
+    if (isNaN(new Date(item).getTime())) {
+      throw new AttendeeError("Invalid date format");
+    }
+    if (item < event.startDate || item > event.endDate) {
+      throw new AttendeeError("Date is outside event range", 400);
+    }
+    validatedDates.push(item);
+  }
+
+  const uniqueDates = [...new Set(validatedDates)];
+
+  const attendee = await EventParticipantModel.findOne({
+    userId,
+    eventId,
+    status: "Accepted",
+    role: "Attendee",
+  });
+  if (!attendee) {
+    throw new AttendeeError("Attendee with userId is not part of this Event");
+  }
+
+  attendee.preferredDates = uniqueDates;
+  await attendee.save();
+  return {};
+}
+
 export async function attendeeLeaveEvent(userId: string, eventId: string) {
   const user = await UserModel.findById(userId);
   if (!user) {
