@@ -189,3 +189,14 @@ export const requestAttendeeSelectAvail = async (
     .set("Authorization", `Bearer ${token}`)
     .send({ date, startAvailable, endAvailable });
 };
+
+export const requestAttendeeDayPreference = async (
+  token: string,
+  eventId: string,
+  preferredDates: string[]
+) => {
+  return await request(app)
+    .put(`/attendees/day-preference/${eventId}`)
+    .set("Authorization", `Bearer ${token}`)
+    .send({ preferredDates });
+};
