@@ -8,6 +8,7 @@ import {
   requestNotAttendingEvent
 } from "../requestHelpers";
 import mongoose from "mongoose";
+import { EventType } from "../../models/eventModel";
 
 let organiserToken: string;
 let attendeeToken: string;
@@ -28,7 +29,7 @@ const uniqueEmail = (prefix: string) => `${prefix}.${Date.now()}.${Math.random()
 beforeEach(async () => {
   await requestDelete();
   organiserToken = await getToken("Mubashir", "Hussain", uniqueEmail("organiser"), "Abcdefg123$");
-  const res1 = await requestNewEvent(organiserToken, "New Event", "New Description", "House", "single", EVENT_DATE, EVENT_DATE, 10, 14);
+  const res1 = await requestNewEvent(organiserToken, "New Event", "New Description", "House", EventType.SINGLE, EVENT_DATE, EVENT_DATE, 10, 14);
   eventId = res1.body.eventId;
   const attendeeEmail = uniqueEmail("attendee");
   const res2 = await requestEventInvite(organiserToken, eventId, attendeeEmail);
