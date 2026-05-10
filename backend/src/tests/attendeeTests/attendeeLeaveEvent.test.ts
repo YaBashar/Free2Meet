@@ -9,6 +9,7 @@ import {
   futureDate,
 } from "../requestHelpers";
 import mongoose from "mongoose";
+import { EventType } from "../../models/eventModel";
 
 let organiserToken: string;
 let attendeeToken: string;
@@ -42,7 +43,7 @@ beforeEach(async () => {
     "New Event",
     "New Description",
     "House",
-    "single",
+    EventType.SINGLE,
     EVENT_DATE,
     EVENT_DATE,
     10,

@@ -1,3 +1,4 @@
+import { EventType } from "../../models/eventModel";
 import { futureDate, getToken, requestDelete, requestEventDetails, requestNewEvent } from "../requestHelpers";
 import mongoose from "mongoose";
 
@@ -17,7 +18,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   await requestDelete();
   token = await getToken("Mubashir", "Hussain", uniqueEmail(), "Abcdefg123$");
-  const res1 = await requestNewEvent(token, "New Event", "New Description", "House", "single", EVENT_DATE, EVENT_DATE, 10, 14);
+  const res1 = await requestNewEvent(token, "New Event", "New Description", "House", EventType.SINGLE, EVENT_DATE, EVENT_DATE, 10, 14);
   eventId = res1.body.eventId;
 });
 
@@ -57,7 +58,7 @@ describe('Success', () => {
       endTime: 14,
       organiserId: expect.any(String),
       organiser: 'Mubashir Hussain',
-      eventType: 'single',
+      eventType: EventType.SINGLE,
     });
 
     expect(res.statusCode).toStrictEqual(200);

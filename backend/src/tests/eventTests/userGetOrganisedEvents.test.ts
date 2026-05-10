@@ -1,3 +1,4 @@
+import { EventType } from "../../models/eventModel";
 import { futureDate, getToken, requestDelete, requestNewEvent, requestOrganisedEvents } from "../requestHelpers";
 import mongoose from "mongoose";
 
@@ -17,8 +18,8 @@ beforeAll(async () => {
 beforeEach(async () => {
   await requestDelete();
   token = await getToken("Mubashir", "Hussain", uniqueEmail(), "Abcdefg123$");
-  await requestNewEvent(token, "New Event", "New Description", "House", "single", EVENT_DATE, EVENT_DATE, 10, 14);
-  await requestNewEvent(token, "New Event 2", "New Description 2", "House 2", "single", EVENT_DATE_2, EVENT_DATE_2, 11, 14);
+  await requestNewEvent(token, "New Event", "New Description", "House", EventType.SINGLE, EVENT_DATE, EVENT_DATE, 10, 14);
+  await requestNewEvent(token, "New Event 2", "New Description 2", "House 2", EventType.SINGLE, EVENT_DATE_2, EVENT_DATE_2, 11, 14);
 });
 
 afterEach(async () => {
@@ -53,7 +54,7 @@ describe('Success Case', () => {
         endTime: 14,
         organiserId: expect.any(String),
         organiser: 'Mubashir Hussain',
-        eventType: 'single',
+        eventType: EventType.SINGLE,
       },
       {
         id: expect.any(String),
@@ -66,7 +67,7 @@ describe('Success Case', () => {
         endTime: 14,
         organiserId: expect.any(String),
         organiser: 'Mubashir Hussain',
-        eventType: 'single',
+        eventType: EventType.SINGLE,
       }
     ]);
   });

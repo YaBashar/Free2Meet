@@ -8,7 +8,7 @@ export function checkDateConstraints(eventType: EventType, startDate: string, en
     throw new Error('Invalid date format');
   }
 
-  if (eventType === EventType.Single) {
+  if (eventType === EventType.SINGLE) {
     if (startDate !== endDate) {
       throw new Error('Single day events must have the same start and end date');
     }

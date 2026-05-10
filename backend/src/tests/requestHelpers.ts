@@ -180,11 +180,12 @@ export const requestAttendeeLeave = async (token: string, eventId: string) => {
 export const requestAttendeeSelectAvail = async (
   token: string,
   eventId: string,
+  date: string,
   startAvailable: number,
   endAvailable: number
 ) => {
   return await request(app)
     .put(`/attendees/availability/${eventId}`)
     .set("Authorization", `Bearer ${token}`)
-    .send({ startAvailable, endAvailable });
+    .send({ date, startAvailable, endAvailable });
 };
