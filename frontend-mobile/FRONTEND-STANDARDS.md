@@ -180,7 +180,7 @@ const [teeTime, setTeeTime] = useState<EventTime>({
 
 ## Styling and colours
 
-Use Uniwind/Tailwind semantic theme tokens wherever possible:
+Use NativeWind/Tailwind semantic theme tokens wherever possible:
 
 ```text
 bg-background
