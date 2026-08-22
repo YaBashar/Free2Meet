@@ -14,16 +14,19 @@ import {
   Outfit_700Bold,
 } from "@expo-google-fonts/outfit";
 import { PortalHost } from "@rn-primitives/portal";
+import { Image } from "expo-image";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { ThemeProvider } from "expo-router/react-navigation";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useColorScheme } from "nativewind";
+import { cssInterop, useColorScheme } from "nativewind";
 import { useEffect } from "react";
 import { View } from "react-native";
 
 import { NAV_THEME } from "@/lib/theme";
+
+cssInterop(Image, { className: "style" });
 
 SplashScreen.preventAutoHideAsync();
 
