@@ -14,6 +14,7 @@ const MAX_EMAIL_LENGTH = 254;
 const NAME_PATTERN = /^[a-zA-Z ]+$/;
 
 /** The API stores `firstName lastName` as one field limited to 20 characters. */
+/** TODO FIX LATER */
 const MAX_FULL_NAME_LENGTH = 20;
 
 const MIN_PASSWORD_LENGTH = 8;
@@ -141,6 +142,21 @@ export function toFullName({
   lastName,
 }: Pick<SignUpFormValues, "firstName" | "lastName">): string {
   return `${firstName.trim()} ${lastName.trim()}`;
+}
+
+const VERIFICATION_CODE_LENGTH = 6;
+
+/** Returns a message when the verification code is not exactly six digits. */
+export function validateVerificationCode(code: string): string | undefined {
+  if (!code) {
+    return "Verification code is required.";
+  }
+
+  if (!new RegExp(`^\\d{${VERIFICATION_CODE_LENGTH}}$`).test(code)) {
+    return `Enter the ${VERIFICATION_CODE_LENGTH}-digit code from your email.`;
+  }
+
+  return undefined;
 }
 
 /** True when at least one field failed validation. */

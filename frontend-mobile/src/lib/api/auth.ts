@@ -54,3 +54,43 @@ export async function register(payload: RegisterPayload): Promise<RegisterRespon
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
   return apiRequest<LoginResponse>("/auth/login", { method: "POST", body: payload });
 }
+
+export type VerifyEmailPayload = {
+  verificationCode: string;
+};
+
+/** Response for `POST /auth/verify-email`. Signs the member in on success. */
+export type VerifyEmailResponse = LoginResponse & {
+  success: true;
+};
+
+export type ResendVerificationPayload = {
+  email: string;
+};
+
+/** Response for `POST /auth/resend-verification`. */
+export type ResendVerificationResponse = {
+  success: true;
+  code?: string;
+};
+
+/** Confirms the 6-digit code emailed after registration. */
+export async function verifyEmail(payload: VerifyEmailPayload): Promise<VerifyEmailResponse> {
+  return apiRequest<VerifyEmailResponse>("/auth/verify-email", {
+    method: "POST",
+    body: payload,
+  });
+}
+
+/** Sends a fresh verification code when the previous one expired or was lost. */
+export async function resendVerification(
+  payload: ResendVerificationPayload,
+): Promise<ResendVerificationResponse> {
+  return apiRequest<ResendVerificationResponse>("/auth/resend-verification", {
+    method: "POST",
+    body: payload,
+  });
+}
+
+/** Login error returned when the account exists but email is not verified yet. */
+export const UNVERIFIED_EMAIL_ERROR = "User has not verified email";

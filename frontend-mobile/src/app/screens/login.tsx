@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { FormField } from "@/components/ui/form-field";
 import { useThemeColors } from "@/hooks/use-theme-colors";
-import { login } from "@/lib/api/auth";
+import { login, UNVERIFIED_EMAIL_ERROR } from "@/lib/api/auth";
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/auth-context";
 import { hasFieldErrors, validateLoginForm, type LoginFieldErrors } from "@/lib/auth/validation";
@@ -63,6 +63,13 @@ export default function LoginScreen() {
       // navigation transition that unmounts this screen.
       router.replace("/screens/dashboard");
     } catch (error) {
+      const normalizedEmail = email.trim().toLowerCase();
+
+      if (error instanceof ApiError && error.message === UNVERIFIED_EMAIL_ERROR) {
+        router.replace({ pathname: "/screens/verify-email", params: { email: normalizedEmail } });
+        return;
+      }
+
       setRequestError(
         error instanceof ApiError ? error.message : "Something went wrong. Please try again.",
       );

@@ -52,7 +52,6 @@ export default function SignUpScreen() {
   const [fieldErrors, setFieldErrors] = useState<SignUpFieldErrors>({});
   const [requestError, setRequestError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
 
   /** Updates one field without disturbing the others. */
   function handleFieldChange(field: keyof SignUpFormValues, value: string) {
@@ -83,7 +82,7 @@ export default function SignUpScreen() {
         email,
         password: values.password,
       });
-      setRegisteredEmail(email);
+      router.replace({ pathname: "/screens/verify-email", params: { email } });
     } catch (error) {
       setRequestError(
         error instanceof ApiError ? error.message : "Something went wrong. Please try again.",
@@ -91,28 +90,6 @@ export default function SignUpScreen() {
     } finally {
       setIsSubmitting(false);
     }
-  }
-
-  if (registeredEmail) {
-    return (
-      <SafeAreaView className="flex-1 bg-background" edges={["bottom"]}>
-        <Stack.Screen options={{ title: "Check your email", headerBackVisible: false }} />
-        <View className="flex-1 justify-center px-6">
-          <Text className="font-outfit text-base text-muted-foreground">
-            We sent a verification link to {registeredEmail}. Verify your email, then log in to
-            start planning.
-          </Text>
-
-          <Button
-            className="mt-8 h-14 w-full rounded-2xl"
-            onPress={() => router.replace("/screens/login")}
-            size="lg"
-          >
-            Go to Login
-          </Button>
-        </View>
-      </SafeAreaView>
-    );
   }
 
   return (
