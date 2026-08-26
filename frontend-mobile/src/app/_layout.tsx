@@ -22,8 +22,9 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { cssInterop, useColorScheme } from "nativewind";
 import { useEffect } from "react";
-import { View } from "react-native";
+import { Platform, Text, View } from "react-native";
 
+import { AuthProvider } from "@/lib/auth/auth-context";
 import { NAV_THEME } from "@/lib/theme";
 
 cssInterop(Image, { className: "style" });
@@ -55,11 +56,33 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={NAV_THEME[scheme]}>
-      <View className={`flex-1 bg-background ${scheme === "dark" ? "dark" : ""}`}>
-        <StatusBar style={scheme === "dark" ? "light" : "dark"} />
-        <Stack />
-        <PortalHost />
-      </View>
+      <AuthProvider>
+        <View className={`flex-1 bg-background ${scheme === "dark" ? "dark" : ""}`}>
+          <StatusBar style={scheme === "dark" ? "light" : "dark"} />
+          <Stack
+            screenOptions={{
+              headerShadowVisible: false,
+              headerBackButtonDisplayMode: "minimal",
+              headerTitleAlign: "left",
+              headerTitle: ({ children, tintColor }) => (
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    color: tintColor,
+                    fontFamily: "Outfit",
+                    fontSize: Platform.select({ ios: 17, android: 20, default: 18 }),
+                    fontWeight: Platform.OS === "ios" ? "600" : "500",
+                    marginLeft: Platform.select({ android: -8, default: 0 }),
+                  }}
+                >
+                  {children}
+                </Text>
+              ),
+            }}
+          />
+          <PortalHost />
+        </View>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
