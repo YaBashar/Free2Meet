@@ -29,6 +29,10 @@ export type LoginFieldErrors = {
   password?: string;
 };
 
+export type ForgotPasswordFieldErrors = {
+  email?: string;
+};
+
 export type SignUpFormValues = {
   firstName: string;
   lastName: string;
@@ -43,6 +47,16 @@ export type SignUpFieldErrors = {
   fullName?: string;
   email?: string;
   password?: string;
+};
+
+export type ResetPasswordFormValues = {
+  password: string;
+  confirmPassword: string;
+};
+
+export type ResetPasswordFieldErrors = {
+  password?: string;
+  confirmPassword?: string;
 };
 
 /** Returns a message when the email is empty or not a plausible address. */
@@ -136,6 +150,15 @@ export function validateLoginForm(values: LoginFormValues): LoginFieldErrors {
   });
 }
 
+/** Validates the forgot-password email field. */
+export function validateForgotPasswordForm(values: {
+  email: string;
+}): ForgotPasswordFieldErrors {
+  return stripEmptyMessages({
+    email: validateEmail(values.email),
+  });
+}
+
 /** Builds the single name field the register endpoint expects. */
 export function toFullName({
   firstName,
@@ -157,6 +180,22 @@ export function validateVerificationCode(code: string): string | undefined {
   }
 
   return undefined;
+}
+
+/** Validates the reset-password form against the API password rules. */
+export function validateResetPasswordForm(
+  values: ResetPasswordFormValues,
+): ResetPasswordFieldErrors {
+  const password = validatePassword(values.password);
+
+  return stripEmptyMessages({
+    password,
+    confirmPassword: values.confirmPassword
+      ? values.confirmPassword === values.password
+        ? undefined
+        : "Passwords do not match."
+      : "Confirm your password.",
+  });
 }
 
 /** True when at least one field failed validation. */
