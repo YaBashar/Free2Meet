@@ -3,10 +3,11 @@
  *
  * Collects a member's email and password, validates them locally, then calls
  * `POST /auth/login` and stores the returned session. Ported from the web
- * app's Login component. Password reset is not offered here yet.
+ * app's Login component. From here, members can also start the password reset
+ * flow if they no longer know their password.
  */
 
-import { router, Stack } from "expo-router";
+import { router, Stack, type Href } from "expo-router";
 import { useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -27,6 +28,8 @@ import { login, UNVERIFIED_EMAIL_ERROR } from "@/lib/api/auth";
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/auth-context";
 import { hasFieldErrors, validateLoginForm, type LoginFieldErrors } from "@/lib/auth/validation";
+
+const FORGOT_PASSWORD_ROUTE = "/screens/forgot-password" as Href;
 
 /** Email and password form for returning members. */
 export default function LoginScreen() {
@@ -134,6 +137,17 @@ export default function LoginScreen() {
           >
             {isSubmitting ? <ActivityIndicator color={primaryForeground} /> : "Log In"}
           </Button>
+
+          <View className="mt-3 flex-row items-center justify-center">
+            <Button
+              className="h-11"
+              onPress={() => router.push(FORGOT_PASSWORD_ROUTE)}
+              size="sm"
+              variant="link"
+            >
+              Forgot password?
+            </Button>
+          </View>
 
           <View className="mt-4 flex-row items-center justify-center">
             <Text className="font-outfit text-sm text-muted-foreground">New to Free2Meet?</Text>
