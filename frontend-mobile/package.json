@@ -5,6 +5,8 @@
   "dependencies": {
     "@expo-google-fonts/outfit": "^0.4.3",
     "@expo/ui": "~57.0.13",
+    "@expo/vector-icons": "^15.0.2",
+    "@react-native-community/datetimepicker": "9.1.0",
     "@rn-primitives/portal": "^1.5.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -15,6 +17,7 @@
     "expo-glass-effect": "~57.0.1",
     "expo-image": "~57.0.3",
     "expo-linking": "~57.0.7",
+    "expo-location": "~57.0.13",
     "expo-router": "~57.0.16",
     "expo-splash-screen": "~57.0.8",
     "expo-status-bar": "~57.0.1",
@@ -26,13 +29,15 @@
     "react-dom": "19.2.3",
     "react-native": "0.86.2",
     "react-native-gesture-handler": "~2.32.0",
+    "react-native-maps": "1.27.2",
     "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.10.1",
     "tailwind-merge": "^3.6.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "undefined": "expo/vector-icons"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
