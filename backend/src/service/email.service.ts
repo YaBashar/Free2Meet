@@ -107,7 +107,7 @@ export async function sendEventInviteEmail(
     from: `"Free2Meet" <${process.env.EMAIL_USER}>`,
     to,
     subject: `You've been invited to ${eventTitle}`,
-    text: `${organiserName} has invited you to join "${eventTitle}" on Free2Meet.\n\nYour invite code is: ${inviteCode}\n\nTo respond:\n1. Open the Free2Meet app\n2. Enter the invite code above`,
+    text: `${organiserName} has invited you to join "${eventTitle}" on Free2Meet.\n\nYour invite code is: ${inviteCode}\n\nTo join:\n1. Open the Free2Meet app\n2. Enter the invite code above`,
     html: `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
         <h2>You've been invited!</h2>
@@ -117,7 +117,7 @@ export async function sendEventInviteEmail(
           ${inviteCode}
         </div>
         <div style="margin-top: 24px;">
-          <p style="font-weight: bold; margin-bottom: 8px;">To respond to the invite:</p>
+          <p style="font-weight: bold; margin-bottom: 8px;">To join the event:</p>
           <ol style="padding-left: 20px; line-height: 1.8;">
             <li>Open the <strong>Free2Meet</strong> app</li>
             <li>Enter the invite code above when prompted</li>

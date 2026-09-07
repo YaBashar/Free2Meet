@@ -22,7 +22,7 @@ const eventParticipantSchema = new mongoose.Schema({
   availability: [{ date: String, startAvailable: Number, endAvailable: Number }],
   preferredDates: [{ type: String }],
   status: { type: String, enum: ["Pending", "Accepted", "Declined"] },
-  inviteCode: { type: String },
+  inviteCode: { type: String, sparse: true, unique: true },
   inviteCodeExpiry: { type: Date },
   role: { type: String, enum: ["Organiser", "Attendee"] },
 });

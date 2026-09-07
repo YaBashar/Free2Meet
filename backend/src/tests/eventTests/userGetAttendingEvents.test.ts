@@ -1,6 +1,6 @@
 import {
   getToken,
-  requestAttendeeRespond,
+  requestAttendeeJoin,
   requestAttendingEvents,
   requestDelete,
   requestEventInvite,
@@ -35,7 +35,7 @@ beforeEach(async () => {
   const res2 = await requestEventInvite(organiserToken, eventId, attendeeEmail);
   code = res2.body.inviteCode;
   attendeeToken = await getToken("Jonathan", "Lee", attendeeEmail, "Abcnmop.123$");
-  await requestAttendeeRespond(attendeeToken, code, "accept");
+  await requestAttendeeJoin(attendeeToken, code);
 });
 
 afterEach(async () => {

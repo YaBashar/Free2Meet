@@ -1,6 +1,6 @@
 import {
   requestAttendeeLeave,
-  requestAttendeeRespond,
+  requestAttendeeJoin,
   requestAttendingEvents,
   requestDelete,
   requestEventInvite,
@@ -56,7 +56,7 @@ beforeEach(async () => {
 
   attendeeToken = await getToken("Jonathan", "Lee", attendeeEmail, "Abcnmop.123$");
 
-  await requestAttendeeRespond(attendeeToken, code, "accept");
+  await requestAttendeeJoin(attendeeToken, code);
 });
 
 afterEach(async () => {

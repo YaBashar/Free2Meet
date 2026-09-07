@@ -8,7 +8,6 @@ eventRouter.post('/new-event', requireAuth, eventController.create);
 eventRouter.get('/organised-events', requireAuth, eventController.organisedEvents);
 eventRouter.get('/attending-events', requireAuth, eventController.allAttendingEventsForUser);
 eventRouter.post('/:eventId/invite', requireAuth, eventController.invite);
-eventRouter.get('/invite/:inviteLink', eventController.inviteDetails);
 eventRouter.put('/:eventId', requireAuth, eventController.update);
 eventRouter.get('/:eventId', requireAuth, eventController.info);
 eventRouter.get('/:eventId/attending', eventController.getEventAttendees);

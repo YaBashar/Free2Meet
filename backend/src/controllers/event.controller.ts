@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { createEvent, deleteEvent, eventDetails, inviteLink, updateEvent, getOrganisedEvents, getAllAttendingEventsForUser, getInviteDetails, getNotAttending, getAttendeesForEvent } from '../service/event.service';
+import { createEvent, deleteEvent, eventDetails, inviteLink, updateEvent, getOrganisedEvents, getAllAttendingEventsForUser, getNotAttending, getAttendeesForEvent } from '../service/event.service';
 
 export const create = async (req: Request, res: Response, next: NextFunction) => {
   const userId = req.user?.sub;
@@ -21,17 +21,6 @@ export const invite = async (req: Request, res: Response, next: NextFunction) =>
   try {
     const result = await inviteLink(userId, eventId, inviteeEmail);
     res.status(200).json(result);
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const inviteDetails = async (req: Request, res: Response, next: NextFunction) => {
-  const link = req.params.inviteLink as string;
-
-  try {
-    const result = await getInviteDetails(link);
-    res.status(200).json({ event: result });
   } catch (error) {
     next(error);
   }

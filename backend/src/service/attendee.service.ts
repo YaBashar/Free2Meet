@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { EventParticipantModel } from "../models/eventParticipantModel";
 import { EventModel, EventType } from "../models/eventModel";
 import { UserModel } from "../models/userModel";
+import { isValidInviteCode } from "../utils/eventHelper";
 import { EventError } from "./event.service";
 
 export class AttendeeError extends Error {
@@ -14,15 +15,15 @@ export class AttendeeError extends Error {
   }
 }
 
-export async function attendeeRespond(
-  userId: string,
-  inviteCode: string,
-  action: string
-): Promise<object> {
+export async function attendeeJoin(userId: string, inviteCode: string): Promise<object> {
   const user = await UserModel.findById(userId);
 
   if (!user) {
     throw new AttendeeError("Invalid User ID");
+  }
+
+  if (!isValidInviteCode(inviteCode)) {
+    throw new AttendeeError("Invalid Invite Code");
   }
 
   const pendingRecord = await EventParticipantModel.findOne({
@@ -32,28 +33,30 @@ export async function attendeeRespond(
   });
 
   if (!pendingRecord) {
-    throw new AttendeeError("Invalid Invite Link");
+    throw new AttendeeError("Invalid Invite Code");
   }
 
   if (pendingRecord.inviteCodeExpiry && pendingRecord.inviteCodeExpiry < new Date()) {
-    throw new AttendeeError("Invite link has expired", 410);
+    throw new AttendeeError("Invite code has expired", 410);
   }
 
   const event = await EventModel.findById(pendingRecord.eventId);
   if (!event) {
-    throw new AttendeeError("Event does not exist for invite link");
+    throw new AttendeeError("Event does not exist for invite code");
   }
 
   pendingRecord.userId = userId;
   pendingRecord.name = user.name;
-
-  if (action === "accept") {
-    pendingRecord.status = "Accepted";
-  } else if (action === "reject") {
-    pendingRecord.status = "Declined";
-  }
+  pendingRecord.status = "Accepted";
 
   await pendingRecord.save();
+
+  // Drop the share code after use so it cannot be replayed and can be reused later
+  await EventParticipantModel.updateOne(
+    { _id: pendingRecord._id },
+    { $unset: { inviteCode: 1, inviteCodeExpiry: 1 } }
+  );
+
   return {};
 }
 

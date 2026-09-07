@@ -48,7 +48,7 @@ describe('Error Cases', () => {
 describe('Success', () => {
   test("Success", async () => {
     const res = await requestEventInvite(token, eventId, inviteeEmail);
-    expect(res.body).toStrictEqual({ inviteCode: expect.any(String) });
+    expect(res.body).toStrictEqual({ inviteCode: expect.stringMatching(/^\d{6}$/) });
     expect(res.statusCode).toStrictEqual(200);
   });
 });

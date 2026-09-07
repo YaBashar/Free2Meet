@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Brand palette lives only as CSS variables that feed semantic tokens.
+  Screens must use bg-background, text-foreground, text-primary, etc.
+
+  ghost-white #ECEEF9 | lavender #D8DDF3 | vista-blue #8C99D9
+  byzantine-blue #4055BF | marian-blue #2D3C86 | delft-blue #202B60
+*/
+
+@layer base {
+  :root {
+    --background: 231 52% 95%;
+    --foreground: 230 50% 25%;
+    --card: 0 0% 100%;
+    --card-foreground: 230 50% 25%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 230 50% 25%;
+    --primary: 230 50% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 229 53% 90%;
+    --secondary-foreground: 230 50% 25%;
+    --muted: 229 53% 90%;
+    --muted-foreground: 230 50% 35%;
+    --accent: 230 50% 70%;
+    --accent-foreground: 230 50% 25%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 230 50% 25%;
+    --input: 230 50% 25%;
+    --ring: 230 50% 50%;
+    --radius: 0.625rem;
+    --chart-1: 230 50% 50%;
+    --chart-2: 230 50% 70%;
+    --chart-3: 230 50% 35%;
+    --chart-4: 229 53% 90%;
+    --chart-5: 230 50% 25%;
+  }
+
+  .dark:root {
+    --background: 230 50% 50%;
+    --foreground: 0 0% 100%;
+    --card: 230 50% 25%;
+    --card-foreground: 0 0% 100%;
+    --popover: 230 50% 25%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 230 50% 70%;
+    --primary-foreground: 230 50% 25%;
+    --secondary: 230 50% 35%;
+    --secondary-foreground: 231 52% 95%;
+    --muted: 230 50% 35%;
+    --muted-foreground: 229 53% 90%;
+    --accent: 230 50% 35%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 70.9% 59.4%;
+    --border: 230 50% 70%;
+    --input: 230 50% 70%;
+    --ring: 230 50% 70%;
+    --chart-1: 230 50% 70%;
+    --chart-2: 231 52% 95%;
+    --chart-3: 229 53% 90%;
+    --chart-4: 230 50% 35%;
+    --chart-5: 230 50% 25%;
+  }
+}

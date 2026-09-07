@@ -1,6 +1,6 @@
 
 import {
-  requestAttendeeRespond,
+  requestAttendeeJoin,
   requestAttendeeSelectAvail,
   requestDelete,
   requestEventInvite,
@@ -70,7 +70,7 @@ afterAll(async () => {
 
 describe('Error Cases', () => {
   test("Invalid User ID", async () => {
-    await requestAttendeeRespond(attendeeToken, code, "accept");
+    await requestAttendeeJoin(attendeeToken, code);
     const res = await requestAttendeeSelectAvail("invalid", eventId, EVENT_DATE, 10, 12);
 
     expect(res.body).toStrictEqual({ error: expect.any(String) });
@@ -78,7 +78,7 @@ describe('Error Cases', () => {
   });
 
   test("Invalid Event ID", async () => {
-    await requestAttendeeRespond(attendeeToken, code, "accept");
+    await requestAttendeeJoin(attendeeToken, code);
     const res = await requestAttendeeSelectAvail(attendeeToken, "invalid", EVENT_DATE, 10, 12);
 
     expect(res.body).toStrictEqual({ error: expect.any(String) });
@@ -86,7 +86,6 @@ describe('Error Cases', () => {
   });
 
   test("Attendee not part of Event", async () => {
-    await requestAttendeeRespond(attendeeToken, code, "reject");
     const res = await requestAttendeeSelectAvail(attendeeToken, eventId, EVENT_DATE, 10, 12);
 
     expect(res.body).toStrictEqual({ error: expect.any(String) });
@@ -94,7 +93,7 @@ describe('Error Cases', () => {
   });
 
   test("Invalid date format", async () => {
-    await requestAttendeeRespond(attendeeToken, code, "accept");
+    await requestAttendeeJoin(attendeeToken, code);
     const res = await requestAttendeeSelectAvail(attendeeToken, eventId, "not-a-date", 10, 12);
 
     expect(res.body).toStrictEqual({ error: expect.any(String) });
@@ -102,7 +101,7 @@ describe('Error Cases', () => {
   });
 
   test("Date outside event range", async () => {
-    await requestAttendeeRespond(attendeeToken, code, "accept");
+    await requestAttendeeJoin(attendeeToken, code);
     const res = await requestAttendeeSelectAvail(attendeeToken, eventId, PAST_DATE, 10, 12);
 
     expect(res.body).toStrictEqual({ error: expect.any(String) });
@@ -110,7 +109,7 @@ describe('Error Cases', () => {
   });
 
   test("Invalid selection - start equals end", async () => {
-    await requestAttendeeRespond(attendeeToken, code, "accept");
+    await requestAttendeeJoin(attendeeToken, code);
     const res = await requestAttendeeSelectAvail(attendeeToken, eventId, EVENT_DATE, 10, 10);
 
     expect(res.body).toStrictEqual({ error: expect.any(String) });
@@ -118,7 +117,7 @@ describe('Error Cases', () => {
   });
 
   test("Time out of event range - start before event", async () => {
-    await requestAttendeeRespond(attendeeToken, code, "accept");
+    await requestAttendeeJoin(attendeeToken, code);
     const res = await requestAttendeeSelectAvail(attendeeToken, eventId, EVENT_DATE, 9, 12);
 
     expect(res.body).toStrictEqual({ error: expect.any(String) });
@@ -126,7 +125,7 @@ describe('Error Cases', () => {
   });
 
   test("Time out of event range - end after event", async () => {
-    await requestAttendeeRespond(attendeeToken, code, "accept");
+    await requestAttendeeJoin(attendeeToken, code);
     const res = await requestAttendeeSelectAvail(attendeeToken, eventId, EVENT_DATE, 10, 15);
 
     expect(res.body).toStrictEqual({ error: expect.any(String) });
@@ -136,7 +135,7 @@ describe('Error Cases', () => {
 
 describe('Success', () => {
   test("Correct return type", async () => {
-    await requestAttendeeRespond(attendeeToken, code, "accept");
+    await requestAttendeeJoin(attendeeToken, code);
     const res = await requestAttendeeSelectAvail(attendeeToken, eventId, EVENT_DATE, 10, 12);
 
     expect(res.body).toStrictEqual({});
@@ -144,7 +143,7 @@ describe('Success', () => {
   });
 
   test("Updating availability for the same date overwrites the entry", async () => {
-    await requestAttendeeRespond(attendeeToken, code, "accept");
+    await requestAttendeeJoin(attendeeToken, code);
     await requestAttendeeSelectAvail(attendeeToken, eventId, EVENT_DATE, 10, 12);
     const res = await requestAttendeeSelectAvail(attendeeToken, eventId, EVENT_DATE, 11, 14);
 

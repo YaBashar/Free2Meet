@@ -158,17 +158,13 @@ export const requestEventInvite = async (token: string, eventId: string, invitee
     .send({ inviteeEmail });
 };
 
-export const requestEventInviteDetails = async (inviteLink: string) => {
-  return await request(app).get(`/events/invite/${inviteLink}`);
-};
-
 // Attendee
 
-export const requestAttendeeRespond = async (token: string, inviteLink: string, action: string) => {
+export const requestAttendeeJoin = async (token: string, inviteCode: string) => {
   return await request(app)
-    .post("/attendees/respond")
+    .post("/attendees/join")
     .set("Authorization", `Bearer ${token}`)
-    .send({ inviteLink, action });
+    .send({ inviteCode });
 };
 
 export const requestAttendeeLeave = async (token: string, eventId: string) => {
