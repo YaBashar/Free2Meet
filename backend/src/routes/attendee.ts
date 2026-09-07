@@ -4,7 +4,7 @@ import * as attendeeController from "../controllers/attendee.controller";
 
 export const attendeeRouter = express.Router();
 
-attendeeRouter.post("/respond", requireAuth, attendeeController.respond);
+attendeeRouter.post("/join", requireAuth, attendeeController.join);
 attendeeRouter.put("/availability/:eventId", requireAuth, attendeeController.availability);
 attendeeRouter.put("/day-preference/:eventId", requireAuth, attendeeController.dayPreference);
 attendeeRouter.delete("/leave/:eventId", requireAuth, attendeeController.leave);

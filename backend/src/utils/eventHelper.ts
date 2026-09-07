@@ -37,3 +37,8 @@ export function checkEventConstraints(title: string, description: string, startT
   }
 }
 
+/** Invite / share codes are exactly 6 digits (100000–999999). */
+export function isValidInviteCode(code: string): boolean {
+  return /^\d{6}$/.test(code);
+}
+

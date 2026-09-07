@@ -16,6 +16,20 @@ export class EventError extends Error {
   }
 }
 
+const INVITE_CODE_MAX_ATTEMPTS = 10;
+
+/** Cryptographically secure 6-digit share code, unique among all invite codes. */
+async function generateUniqueInviteCode(): Promise<string> {
+  for (let attempt = 0; attempt < INVITE_CODE_MAX_ATTEMPTS; attempt++) {
+    const inviteCode = crypto.randomInt(100000, 1000000).toString();
+    const existing = await EventParticipantModel.findOne({ inviteCode }).select("_id");
+    if (!existing) {
+      return inviteCode;
+    }
+  }
+  throw new EventError("Could not generate a unique invite code", 500);
+}
+
 interface PopulatedEventDoc {
   _id: mongoose.Types.ObjectId;
   title: string;
@@ -80,7 +94,7 @@ export async function createEvent(
     checkDateConstraints(eventType, startDate, endDate);
     checkEventConstraints(title, description, startTime, endTime);
   } catch (error) {
-    throw new EventError(error.message);
+    throw new EventError(error instanceof Error ? error.message : String(error));
   }
 
   const newEvent = new EventModel({
@@ -134,7 +148,7 @@ export async function deleteEvent(userId: string, eventId: string): Promise<obje
     await EventParticipantModel.deleteMany({ eventId });
     await EventModel.findByIdAndDelete(eventId);
   } catch (error) {
-    throw new EventError(error.message);
+    throw new EventError(error instanceof Error ? error.message : String(error));
   }
 
   return {};
@@ -143,7 +157,7 @@ export async function deleteEvent(userId: string, eventId: string): Promise<obje
 export async function inviteLink(
   userId: string,
   eventId: string,
-  inviteeEmail: string
+  inviteeEmail?: string
 ): Promise<object> {
   const user = await UserModel.findById(userId);
   if (!user) {
@@ -168,7 +182,7 @@ export async function inviteLink(
     throw new EventError("User is not the organiser of this event", 403);
   }
 
-  const inviteCode = crypto.randomBytes(32).toString("hex");
+  const inviteCode = await generateUniqueInviteCode();
 
   // Expire at the end of the event's last day — invites for past events are meaningless
   const [year, month, day] = event.endDate.split("-").map(Number);
@@ -184,7 +198,8 @@ export async function inviteLink(
 
   await pendingParticipant.save();
 
-  if (process.env.NODE_ENV !== "test") {
+  // Email is optional — organisers can share the returned code in-app instead
+  if (process.env.NODE_ENV !== "test" && inviteeEmail) {
     try {
       await sendEventInviteEmail(inviteeEmail, inviteCode, event.title, user.name);
     } catch {
@@ -192,23 +207,8 @@ export async function inviteLink(
     }
   }
 
-  return process.env.NODE_ENV === "test" ? { inviteCode } : {};
-}
-
-
-export async function getInviteDetails(inviteCode: string) {
-  const pendingRecord = await EventParticipantModel.findOne({ inviteCode, role: "Attendee" });
-
-  if (!pendingRecord) {
-    throw new EventError("Invalid Invite Link");
-  }
-
-  const event = await EventModel.findById(pendingRecord.eventId);
-  if (!event) {
-    throw new EventError("Event not found");
-  }
-
-  return formatEvent(event as unknown as PopulatedEventDoc & { id: string });
+  // Always return the code so the organiser can share it (email, SMS, in-person)
+  return { inviteCode };
 }
 
 export async function updateEvent(
@@ -241,7 +241,7 @@ export async function updateEvent(
     checkDateConstraints(eventType, startDate, endDate);
     checkEventConstraints(title, description, startTime, endTime);
   } catch (error) {
-    throw new EventError(error.message);
+    throw new EventError(error instanceof Error ? error.message : String(error));
   }
 
   event.title = title;

@@ -2,17 +2,18 @@ import { Request, Response, NextFunction } from "express";
 import {
   attendeeDayPreference,
   AttendeeError,
+  attendeeJoin,
   attendeeLeaveEvent,
-  attendeeRespond,
   attendeeSelectAvailability,
 } from "../service/attendee.service";
 
-export const respond = async (req: Request, res: Response, next: NextFunction) => {
+export const join = async (req: Request, res: Response, next: NextFunction) => {
   const userId = req.user?.sub;
-  const { inviteLink, action } = req.body;
+  // Prefer inviteCode; inviteLink kept for older clients
+  const inviteCode = (req.body.inviteCode ?? req.body.inviteLink) as string;
 
   try {
-    const result = await attendeeRespond(userId, inviteLink, action);
+    const result = await attendeeJoin(userId, inviteCode);
     res.status(200).json(result);
   } catch (error) {
     next(error);
