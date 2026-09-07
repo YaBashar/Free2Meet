@@ -152,3 +152,18 @@ export function formatEventDateForApi(date: Date): string {
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
+
+const INVITE_CODE_LENGTH = 6;
+
+/** Returns a message when the invite code is not exactly six digits. */
+export function validateInviteCode(code: string): string | undefined {
+  if (!code) {
+    return "Invite code is required.";
+  }
+
+  if (!new RegExp(`^\\d{${INVITE_CODE_LENGTH}}$`).test(code)) {
+    return `Enter the ${INVITE_CODE_LENGTH}-digit invite code.`;
+  }
+
+  return undefined;
+}

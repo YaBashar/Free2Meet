@@ -83,3 +83,28 @@ export async function getAttendingEvents(accessToken: string): Promise<Attending
     accessToken,
   });
 }
+
+export type CreateEventInvitePayload = {
+  /** Optional — when omitted, only the shareable invite code is created. */
+  inviteeEmail?: string;
+};
+
+export type CreateEventInviteResponse = {
+  inviteCode: string;
+};
+
+/**
+ * Creates a pending invite for an organised event and returns the 6-digit code.
+ * Callers can copy or share the code; email delivery is optional.
+ */
+export async function createEventInvite(
+  accessToken: string,
+  eventId: string,
+  payload: CreateEventInvitePayload = {},
+): Promise<CreateEventInviteResponse> {
+  return apiRequest<CreateEventInviteResponse>(`/events/${eventId}/invite`, {
+    method: "POST",
+    body: payload,
+    accessToken,
+  });
+}

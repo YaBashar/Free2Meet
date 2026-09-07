@@ -4,9 +4,13 @@
  * Signed-in home with Hosting / Attending tabs. Hosting loads organised
  * events from `GET /events/organised-events` and offers Create Event, which
  * opens the mobile create-event screen (web `EventInputDialog` counterpart).
+ * Join Event opens the invite-code screen to accept an event share code.
+ * Hosting cards can generate an invite via `POST /events/:eventId/invite`
+ * for copy and native share.
  */
 
 import { Ionicons } from "@expo/vector-icons";
+import * as Clipboard from "expo-clipboard";
 import { router, Stack, useFocusEffect, type Href } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import {
@@ -14,6 +18,7 @@ import {
   FlatList,
   Pressable,
   RefreshControl,
+  Share,
   Text,
   View,
 } from "react-native";
@@ -23,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import {
+  createEventInvite,
   getAttendingEvents,
   getOrganisedEvents,
   type EventSummary,
@@ -33,6 +39,7 @@ import { formatApiDateForDisplay, formatMinutesAs12Hour } from "@/lib/events/val
 import { cn } from "@/lib/utils";
 
 const CREATE_EVENT_ROUTE = "/screens/create-event" as Href;
+const JOIN_EVENT_ROUTE = "/screens/join-event" as Href;
 
 type DashboardTab = "hosting" | "attending";
 type LoadMode = "initial" | "refresh";
@@ -162,28 +169,41 @@ export default function DashboardScreen() {
           />
         </View>
 
-        <View className="mt-4 mb-1">
-          <View
-            pointerEvents="none"
-            style={{
-              backgroundColor: "rgba(30, 41, 107, 0.45)",
-              borderRadius: 16,
-              bottom: -5,
-              left: 3,
-              position: "absolute",
-              right: 3,
-              top: 5,
-            }}
-          />
+        <View className="mt-4 mb-1 gap-3">
+          <View>
+            <View
+              pointerEvents="none"
+              style={{
+                backgroundColor: "rgba(30, 41, 107, 0.45)",
+                borderRadius: 16,
+                bottom: -5,
+                left: 3,
+                position: "absolute",
+                right: 3,
+                top: 5,
+              }}
+            />
+            <Button
+              className="h-14 w-full rounded-2xl"
+              onPress={() => router.push(CREATE_EVENT_ROUTE)}
+              size="lg"
+            >
+              <Ionicons color={primaryForeground} name="add" size={24} />
+              <Text className="font-outfit-medium text-base text-primary-foreground">
+                Create Event
+              </Text>
+            </Button>
+          </View>
+
           <Button
-            className="h-14 w-full rounded-2xl"
-            onPress={() => router.push(CREATE_EVENT_ROUTE)}
+            className="h-14 w-full rounded-2xl border-2 border-primary bg-transparent"
+            onPress={() => router.push(JOIN_EVENT_ROUTE)}
             size="lg"
+            textClassName="text-primary"
+            variant="outline"
           >
-            <Ionicons color={primaryForeground} name="add" size={24} />
-            <Text className="font-outfit-medium text-base text-primary-foreground">
-              Create Event
-            </Text>
+            <Ionicons color={primary} name="enter-outline" size={22} />
+            <Text className="font-outfit-medium text-base text-primary">Join Event</Text>
           </Button>
         </View>
 
@@ -215,7 +235,7 @@ export default function DashboardScreen() {
               <Text className="text-center font-outfit text-base text-muted-foreground">
                 {tab === "hosting"
                   ? "No events yet. Create one to get started."
-                  : "You are not attending any events yet."}
+                  : "No events yet. Join one with an invite code."}
               </Text>
             }
             refreshControl={
@@ -226,7 +246,13 @@ export default function DashboardScreen() {
                 tintColor={primary}
               />
             }
-            renderItem={({ item }) => <EventListCard event={item} tab={tab} />}
+            renderItem={({ item }) => (
+              <EventListCard
+                accessToken={session?.accessToken}
+                event={item}
+                tab={tab}
+              />
+            )}
             showsVerticalScrollIndicator={false}
           />
         )}
@@ -275,11 +301,62 @@ function TabButton({ label, selected, onPress }: TabButtonProps) {
 }
 
 type EventListCardProps = {
+  accessToken?: string;
   event: EventSummary;
   tab: DashboardTab;
 };
 
-function EventListCard({ event, tab }: EventListCardProps) {
+/** One event row; hosting rows can generate, copy, and share an invite code. */
+function EventListCard({ accessToken, event, tab }: EventListCardProps) {
+  const { primary, primaryForeground, mutedForeground } = useThemeColors();
+  const [inviteCode, setInviteCode] = useState<string | null>(null);
+  const [isGeneratingInvite, setIsGeneratingInvite] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  /** Fetches a fresh invite code from `POST /events/:eventId/invite`. */
+  async function handleGenerateInvite() {
+    if (!accessToken || isGeneratingInvite) {
+      return;
+    }
+
+    setIsGeneratingInvite(true);
+    setInviteError(null);
+    setCopied(false);
+
+    try {
+      const response = await createEventInvite(accessToken, event.id);
+      setInviteCode(response.inviteCode);
+    } catch (error) {
+      setInviteError(
+        error instanceof ApiError ? error.message : "Could not create an invite code.",
+      );
+    } finally {
+      setIsGeneratingInvite(false);
+    }
+  }
+
+  /** Copies the invite code and briefly shows confirmation. */
+  async function handleCopyInvite() {
+    if (!inviteCode) {
+      return;
+    }
+
+    await Clipboard.setStringAsync(inviteCode);
+    setCopied(true);
+  }
+
+  /** Opens the system share sheet with the invite code message. */
+  async function handleShareInvite() {
+    if (!inviteCode) {
+      return;
+    }
+
+    await Share.share({
+      message: `Join "${event.title}" on Free2Meet with invite code: ${inviteCode}`,
+    });
+  }
+
   return (
     <View className="mb-3 rounded-2xl border border-border bg-card px-4 py-4">
       <View className="flex-row items-start justify-between gap-3">
@@ -290,12 +367,75 @@ function EventListCard({ event, tab }: EventListCardProps) {
           </Text>
           <Text className="font-outfit text-sm text-muted-foreground">{event.location}</Text>
         </View>
-        <View className="rounded-lg bg-primary/10 px-2.5 py-1">
-          <Text className="font-outfit-medium text-xs text-primary">
-            {tab === "hosting" ? "Hosting" : "Attending"}
-          </Text>
+        <View className="items-end gap-2">
+          <View className="rounded-lg bg-primary/10 px-2.5 py-1">
+            <Text className="font-outfit-medium text-xs text-primary">
+              {tab === "hosting" ? "Hosting" : "Attending"}
+            </Text>
+          </View>
+          {tab === "hosting" ? (
+            <Pressable
+              accessibilityLabel="Create invite code"
+              accessibilityRole="button"
+              className="h-9 w-9 items-center justify-center rounded-lg border border-border"
+              disabled={isGeneratingInvite}
+              onPress={() => void handleGenerateInvite()}
+            >
+              {isGeneratingInvite ? (
+                <ActivityIndicator color={primary} size="small" />
+              ) : (
+                <Ionicons color={primary} name="share-outline" size={18} />
+              )}
+            </Pressable>
+          ) : null}
         </View>
       </View>
+
+      {tab === "hosting" && inviteError ? (
+        <FormAlert className="mt-3" message={inviteError} />
+      ) : null}
+
+      {tab === "hosting" && inviteCode ? (
+        <View className="mt-3 gap-3 border-t border-border pt-3">
+          <View className="gap-1">
+            <Text className="font-outfit text-xs text-muted-foreground">Invite code</Text>
+            <Text className="font-outfit-semibold text-2xl tracking-[6px] text-foreground">
+              {inviteCode}
+            </Text>
+          </View>
+          <View className="flex-row gap-2">
+            <Pressable
+              accessibilityLabel="Copy invite code"
+              accessibilityRole="button"
+              className="h-11 flex-1 flex-row items-center justify-center gap-1.5 rounded-xl border border-border"
+              onPress={() => void handleCopyInvite()}
+            >
+              <Ionicons
+                color={copied ? primary : mutedForeground}
+                name={copied ? "checkmark" : "copy-outline"}
+                size={16}
+              />
+              <Text
+                className={cn(
+                  "font-outfit-medium text-sm",
+                  copied ? "text-primary" : "text-muted-foreground",
+                )}
+              >
+                {copied ? "Copied" : "Copy"}
+              </Text>
+            </Pressable>
+            <Pressable
+              accessibilityLabel="Share invite code"
+              accessibilityRole="button"
+              className="h-11 flex-1 flex-row items-center justify-center gap-1.5 rounded-xl bg-primary"
+              onPress={() => void handleShareInvite()}
+            >
+              <Ionicons color={primaryForeground} name="share-social-outline" size={16} />
+              <Text className="font-outfit-medium text-sm text-primary-foreground">Share</Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 }
