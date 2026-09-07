@@ -3,7 +3,7 @@ import { app } from "../../app";
 import {
   getToken,
   requestAttendeeDayPreference,
-  requestAttendeeRespond,
+  requestAttendeeJoin,
   requestDelete,
   requestEventInvite,
   requestNewEvent,
@@ -85,7 +85,7 @@ afterAll(async () => {
 
 describe("Error cases", () => {
   test("Invalid token", async () => {
-    await requestAttendeeRespond(attendeeToken, code, "accept");
+    await requestAttendeeJoin(attendeeToken, code);
     const res = await requestAttendeeDayPreference("invalid", eventId, [DAY_IN_RANGE]);
 
     expect(res.body).toStrictEqual({ error: expect.any(String) });
@@ -93,7 +93,7 @@ describe("Error cases", () => {
   });
 
   test("Invalid event id", async () => {
-    await requestAttendeeRespond(attendeeToken, code, "accept");
+    await requestAttendeeJoin(attendeeToken, code);
     const res = await requestAttendeeDayPreference(attendeeToken, "invalid", [DAY_IN_RANGE]);
 
     expect(res.body).toStrictEqual({ error: expect.any(String) });
@@ -101,7 +101,7 @@ describe("Error cases", () => {
   });
 
   test("preferredDates must be an array", async () => {
-    await requestAttendeeRespond(attendeeToken, code, "accept");
+    await requestAttendeeJoin(attendeeToken, code);
     const res = await request(app)
       .put(`/attendees/day-preference/${eventId}`)
       .set("Authorization", `Bearer ${attendeeToken}`)
@@ -112,7 +112,7 @@ describe("Error cases", () => {
   });
 
   test("preferredDates entries must be strings", async () => {
-    await requestAttendeeRespond(attendeeToken, code, "accept");
+    await requestAttendeeJoin(attendeeToken, code);
     const res = await request(app)
       .put(`/attendees/day-preference/${eventId}`)
       .set("Authorization", `Bearer ${attendeeToken}`)
@@ -123,7 +123,6 @@ describe("Error cases", () => {
   });
 
   test("Attendee not part of event", async () => {
-    await requestAttendeeRespond(attendeeToken, code, "reject");
     const res = await requestAttendeeDayPreference(attendeeToken, eventId, [DAY_IN_RANGE]);
 
     expect(res.body).toStrictEqual({ error: expect.any(String) });
@@ -131,7 +130,7 @@ describe("Error cases", () => {
   });
 
   test("Invalid date format", async () => {
-    await requestAttendeeRespond(attendeeToken, code, "accept");
+    await requestAttendeeJoin(attendeeToken, code);
     const res = await requestAttendeeDayPreference(attendeeToken, eventId, ["not-a-date"]);
 
     expect(res.body).toStrictEqual({ error: expect.any(String) });
@@ -139,7 +138,7 @@ describe("Error cases", () => {
   });
 
   test("Date outside event range", async () => {
-    await requestAttendeeRespond(attendeeToken, code, "accept");
+    await requestAttendeeJoin(attendeeToken, code);
     const res = await requestAttendeeDayPreference(attendeeToken, eventId, [PAST_DATE]);
 
     expect(res.body).toStrictEqual({ error: expect.any(String) });
@@ -147,7 +146,7 @@ describe("Error cases", () => {
   });
 
   test("Date after range end", async () => {
-    await requestAttendeeRespond(attendeeToken, code, "accept");
+    await requestAttendeeJoin(attendeeToken, code);
     const res = await requestAttendeeDayPreference(attendeeToken, eventId, [DAY_OUT_OF_RANGE]);
 
     expect(res.body).toStrictEqual({ error: expect.any(String) });
@@ -157,7 +156,7 @@ describe("Error cases", () => {
 
 describe("Success", () => {
   test("Stores preferred days", async () => {
-    await requestAttendeeRespond(attendeeToken, code, "accept");
+    await requestAttendeeJoin(attendeeToken, code);
     const res = await requestAttendeeDayPreference(attendeeToken, eventId, [
       RANGE_START,
       DAY_IN_RANGE,
@@ -168,7 +167,7 @@ describe("Success", () => {
   });
 
   test("Dedupes duplicate dates", async () => {
-    await requestAttendeeRespond(attendeeToken, code, "accept");
+    await requestAttendeeJoin(attendeeToken, code);
     const res = await requestAttendeeDayPreference(attendeeToken, eventId, [
       DAY_IN_RANGE,
       DAY_IN_RANGE,
@@ -211,7 +210,7 @@ describe("Single-day event (non-hybrid)", () => {
   });
 
   test("Day preference rejected for non-hybrid event", async () => {
-    await requestAttendeeRespond(singleAttendeeToken, singleCode, "accept");
+    await requestAttendeeJoin(singleAttendeeToken, singleCode);
     const res = await requestAttendeeDayPreference(singleAttendeeToken, singleEventId, [singleDay]);
 
     expect(res.body).toStrictEqual({ error: expect.any(String) });

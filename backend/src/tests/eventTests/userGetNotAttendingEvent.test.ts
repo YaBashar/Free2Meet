@@ -1,6 +1,5 @@
 import {
   getToken,
-  requestAttendeeRespond,
   requestDelete,
   requestEventInvite,
   requestNewEvent,
@@ -9,10 +8,9 @@ import {
 } from "../requestHelpers";
 import mongoose from "mongoose";
 import { EventType } from "../../models/eventModel";
+import { EventParticipantModel } from "../../models/eventParticipantModel";
 
 let organiserToken: string;
-let attendeeToken: string;
-let code : string;
 let eventId: string;
 const MONGO_OPTIONS = { serverSelectionTimeoutMS: 8000 };
 
@@ -32,9 +30,15 @@ beforeEach(async () => {
   const res1 = await requestNewEvent(organiserToken, "New Event", "New Description", "House", EventType.SINGLE, EVENT_DATE, EVENT_DATE, 10, 14);
   eventId = res1.body.eventId;
   const attendeeEmail = uniqueEmail("attendee");
-  const res2 = await requestEventInvite(organiserToken, eventId, attendeeEmail);
-  code = res2.body.inviteCode;
-  attendeeToken = await getToken("Jonathan", "Lee", attendeeEmail, "Abcnmop.123$");
+  await requestEventInvite(organiserToken, eventId, attendeeEmail);
+
+  // Declined attendees are not created via invite codes (joining is acceptance).
+  await EventParticipantModel.create({
+    eventId,
+    name: "Jonathan Lee",
+    role: "Attendee",
+    status: "Declined",
+  });
 });
 
 afterEach(async () => {
@@ -47,7 +51,6 @@ afterAll(async () => {
 
 describe(('Error'), () => {
   test("Invalid Event Id", async () => {
-    await requestAttendeeRespond(attendeeToken, code, "reject");
     const res = await requestNotAttendingEvent("invalid");
     expect(res.statusCode).toStrictEqual(400);
     expect(res.body).toStrictEqual({ error: expect.any(String) });
@@ -56,7 +59,6 @@ describe(('Error'), () => {
 
 describe(('Success'), () => {
   test("Success", async () => {
-    await requestAttendeeRespond(attendeeToken, code, "reject");
     const res = await requestNotAttendingEvent(eventId);
     expect(res.statusCode).toStrictEqual(200);
     expect(res.body).toStrictEqual([

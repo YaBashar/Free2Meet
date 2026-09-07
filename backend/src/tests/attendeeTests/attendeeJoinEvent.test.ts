@@ -1,13 +1,12 @@
 
 import {
-  requestAttendeeRespond,
+  requestAttendeeJoin,
   requestAttendingEvents,
   requestDeleteEvent,
   requestDelete,
   requestEventInvite,
   getToken,
   requestNewEvent,
-  requestNotAttendingEvent,
   futureDate,
 } from "../requestHelpers";
 import mongoose from "mongoose";
@@ -71,22 +70,22 @@ afterAll(async () => {
 
 describe('Error Cases', () => {
   test("Invalid Token", async () => {
-    const res = await requestAttendeeRespond("invalid", code, "accept");
+    const res = await requestAttendeeJoin("invalid", code);
 
     expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(401);
   });
 
-  test("Invalid Event Link", async () => {
-    const res = await requestAttendeeRespond(attendeeToken, "invalid", "accept");
+  test("Invalid Invite Code", async () => {
+    const res = await requestAttendeeJoin(attendeeToken, "invalid");
 
     expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(400);
   });
 
-  test("Event does not exist for invite link", async () => {
+  test("Event does not exist for invite code", async () => {
     await requestDeleteEvent(organiserToken, eventId);
-    const res = await requestAttendeeRespond(attendeeToken, code, "accept");
+    const res = await requestAttendeeJoin(attendeeToken, code);
 
     expect(res.body).toStrictEqual({ error: expect.any(String) });
     expect(res.statusCode).toStrictEqual(400);
@@ -95,14 +94,14 @@ describe('Error Cases', () => {
 
 describe('Success', () => {
   test("Correct Return Type", async () => {
-    const res = await requestAttendeeRespond(attendeeToken, code, "accept");
+    const res = await requestAttendeeJoin(attendeeToken, code);
 
     expect(res.body).toStrictEqual({});
     expect(res.statusCode).toStrictEqual(200);
   });
 
-  test("Attendee accepted and added to Event", async () => {
-    await requestAttendeeRespond(attendeeToken, code, "accept");
+  test("Attendee joined and added to Event", async () => {
+    await requestAttendeeJoin(attendeeToken, code);
     const res = await requestAttendingEvents(attendeeToken);
     expect(res.statusCode).toStrictEqual(200);
     expect(res.body.events).toStrictEqual([
@@ -118,17 +117,6 @@ describe('Success', () => {
         eventType: EventType.SINGLE,
         organiser: 'Mubashir Hussain',
         organiserId: expect.any(String),
-      }
-    ]);
-  });
-
-  test("Attendee rejected and added to Event", async () => {
-    await requestAttendeeRespond(attendeeToken, code, "reject");
-    const res = await requestNotAttendingEvent(eventId);
-    expect(res.statusCode).toStrictEqual(200);
-    expect(res.body).toStrictEqual([
-      {
-        name: 'Jonathan Lee',
       }
     ]);
   });

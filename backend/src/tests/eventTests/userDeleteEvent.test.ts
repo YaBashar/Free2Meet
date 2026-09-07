@@ -1,6 +1,6 @@
 import {
   getToken,
-  requestAttendeeRespond,
+  requestAttendeeJoin,
   requestAttendingEvent,
   requestDelete,
   requestDeleteEvent,
@@ -43,9 +43,9 @@ beforeEach(async () => {
   const secondCode = res3.body.inviteCode;
 
   attendeeToken = await getToken("Jonathan", "Lee", firstAttendeeEmail, "Abcnmop.123$");
-  await requestAttendeeRespond(attendeeToken, code, "accept");
+  await requestAttendeeJoin(attendeeToken, code);
   const secondAttendeeToken = await getToken("Adrian", "Newey", secondAttendeeEmail, "Defgnmop.123$");
-  await requestAttendeeRespond(secondAttendeeToken, secondCode, "accept");
+  await requestAttendeeJoin(secondAttendeeToken, secondCode);
 });
 
 afterEach(async () => {
