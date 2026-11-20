@@ -7,7 +7,7 @@
  */
 
 import { router, Stack } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -36,10 +36,11 @@ export default function JoinEventScreen() {
   const [fieldError, setFieldError] = useState<string | undefined>();
   const [requestError, setRequestError] = useState<string | null>(null);
   const [isJoining, setIsJoining] = useState(false);
+  const isJoiningRef = useRef(false);
 
   /** Validates locally, joins the event, then returns to the dashboard. */
   async function handleJoin(submittedCode = code) {
-    if (isJoining) {
+    if (isJoiningRef.current) {
       return;
     }
 
@@ -56,6 +57,7 @@ export default function JoinEventScreen() {
       return;
     }
 
+    isJoiningRef.current = true;
     setIsJoining(true);
 
     try {
@@ -65,6 +67,8 @@ export default function JoinEventScreen() {
       setRequestError(
         error instanceof ApiError ? error.message : "Something went wrong. Please try again.",
       );
+    } finally {
+      isJoiningRef.current = false;
       setIsJoining(false);
     }
   }
@@ -97,7 +101,9 @@ export default function JoinEventScreen() {
                   setRequestError(null);
                 }
               }}
-              onComplete={handleJoin}
+              onComplete={(value) => {
+                void handleJoin(value);
+              }}
               value={code}
             />
 
@@ -111,7 +117,9 @@ export default function JoinEventScreen() {
           <Button
             className="mt-8 h-14 w-full rounded-2xl"
             disabled={isJoining}
-            onPress={() => handleJoin()}
+            onPress={() => {
+              void handleJoin(code);
+            }}
             size="lg"
           >
             {isJoining ? <ActivityIndicator color={primaryForeground} /> : "Join event"}

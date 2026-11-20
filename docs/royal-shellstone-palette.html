@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Royal Blue &amp; Shellstone — extended palette · Free2Meet</title>
+<style>
+  :root {
+    --text: #1d202b;
+    --text-2: #565b6c;
+    --text-3: #73798c;
+    --text-4: #9ca1b0;
+    --stroke: #dcdee4;
+    --stroke-focus: #3b56b0;
+    --bg: #ffffff;
+    --bg-2: #f6f7f8;
+    --info-bg: #dbe1f5;
+    --info-stroke: #899cdc;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+  main { max-width: 1120px; margin: 0 auto; padding: 40px 28px 64px; display: flex; flex-direction: column; gap: 28px; }
+
+  h1, h2, h3 { margin: 0; font-weight: 600; line-height: 1.25; }
+  h1 { font-size: 24px; }
+  h2 { font-size: 18px; }
+  h3 { font-size: 15px; }
+  p { margin: 0; }
+  .t2 { color: var(--text-2); }
+  .t3 { color: var(--text-3); }
+  .t4 { color: var(--text-4); }
+  .small { font-size: 12px; }
+  .semibold { font-weight: 600; }
+  .num { font-variant-numeric: tabular-nums; }
+  .center { text-align: center; }
+
+  .stack { display: flex; flex-direction: column; }
+  .row { display: flex; align-items: center; }
+  .g2 { gap: 2px; } .g4 { gap: 4px; } .g6 { gap: 6px; } .g8 { gap: 8px; } .g10 { gap: 10px; }
+  .g12 { gap: 12px; } .g16 { gap: 16px; } .g20 { gap: 20px; } .g28 { gap: 28px; }
+
+  .grid { display: grid; }
+  .cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+  hr { border: 0; border-top: 1px solid var(--stroke); margin: 0; }
+
+  .anchor {
+    border-radius: 8px; padding: 40px 24px 28px; min-height: 180px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  }
+  .anchor .name { font-size: 24px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+  .anchor .meta { font-size: 12px; opacity: .9; }
+  .anchor.derived { min-height: 120px; padding: 24px; }
+  .anchor.derived .name { font-size: 18px; }
+
+  .callout {
+    background: var(--info-bg); border: 1px solid var(--info-stroke); border-radius: 8px;
+    padding: 14px 16px; display: flex; flex-direction: column; gap: 4px;
+  }
+  .callout .title { font-weight: 600; }
+
+  .swatch {
+    height: 72px; border-radius: 6px; border: 1px solid var(--stroke);
+    display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px;
+    font-size: 11px; font-weight: 600;
+  }
+  .swatch.anchor-step { outline: 2px solid var(--stroke-focus); outline-offset: 2px; }
+  .swatch.sm { height: 44px; padding-bottom: 4px; font-size: 10px; }
+
+  .pill {
+    display: inline-flex; align-items: center; border-radius: 999px; padding: 2px 9px;
+    font-size: 11px; font-weight: 600; border: 1px solid var(--stroke); color: var(--text-2);
+    background: var(--bg); cursor: default; white-space: nowrap;
+  }
+  .pill.active { background: #15224d; color: #dcc695; border-color: #15224d; }
+  .pill.clickable { cursor: pointer; }
+
+  .chip {
+    border-radius: 6px; border: 1px solid var(--stroke); height: 64px;
+    display: flex; align-items: center; justify-content: space-between; padding: 0 14px;
+  }
+  .chip .aa { font-size: 20px; font-weight: 600; }
+  .chip .ratio { font-size: 12px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--stroke); vertical-align: top; }
+  th { font-weight: 600; color: var(--text-2); font-size: 12px; }
+  tbody tr:nth-child(even) td { background: var(--bg-2); }
+  td .dot { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--stroke); vertical-align: -2px; margin-right: 8px; }
+  td code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color: var(--text-3); }
+
+  .ratio-dark { display: none; }
+  body[data-ramp="dark"] .ratio-light { display: none; }
+  body[data-ramp="dark"] .ratio-dark { display: block; }
+
+  .preview { border-radius: 10px; padding: 16px; }
+  .preview .card { border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+  .preview .logo { width: 22px; height: 22px; border-radius: 6px; }
+  .preview .field { border-radius: 8px; padding: 9px 12px; font-size: 12px; }
+  .preview .btn { flex: 1; text-align: center; font-size: 12px; font-weight: 600; padding: 10px 0; border-radius: 8px; }
+  .preview .badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 3px 9px; font-size: 11px; font-weight: 600; }
+
+  .bridge { border-radius: 10px; overflow: hidden; border: 1px solid var(--stroke); display: grid; grid-template-columns: 1fr 1fr 1fr; height: 96px; }
+  .bridge > div { display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; }
+
+  .print-note { font-size: 12px; color: var(--text-4); }
+
+  @media print {
+    @page { size: A4; margin: 14mm; }
+    body { font-size: 12px; }
+    main { max-width: none; padding: 0; gap: 20px; }
+    .no-print { display: none !important; }
+    .avoid-break { break-inside: avoid; page-break-inside: avoid; }
+    .page-break { break-before: page; page-break-before: always; }
+    .ratio-light, .ratio-dark { display: block !important; }
+    .swatch { height: 56px; }
+    .anchor { min-height: 140px; padding: 28px 20px 20px; }
+    .pill.active { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body data-ramp="light">
+<main id="app"></main>
+
+<script>
+// ---------------------------------------------------------------------------
+// Data — anchors from the yel.creative post, everything else derived from them.
+// Royal Blue = hsl(226, 57%, 19%) · Shellstone = hsl(41, 50%, 72%)
+// ---------------------------------------------------------------------------
+const ROYAL = {
+  name: "Royal",
+  hue: "hue 226° · the brand navy",
+  note: "Anchor sits at 900. 500–600 are the usable mid-tones for links, focus rings and interactive text on light; 300–400 do the same job on dark. 100 is the light-mode selected/highlight fill.",
+  steps: [
+    { step: 50, hex: "#EFF2FB" }, { step: 100, hex: "#DBE1F5" }, { step: 200, hex: "#B7C3EB" },
+    { step: 300, hex: "#899CDC" }, { step: 400, hex: "#5C76CC" }, { step: 500, hex: "#3B56B0" },
+    { step: 600, hex: "#2D448F" }, { step: 700, hex: "#213473" }, { step: 800, hex: "#1B2B5F" },
+    { step: 900, hex: "#15224D", anchor: true }, { step: 950, hex: "#0D1530" },
+  ],
+};
+const SHELL = {
+  name: "Shellstone",
+  hue: "hue 41° · the sand gold",
+  note: "Anchor sits at 300 — it is a fill colour (secondary button, primary button label), not a text colour and not a page. 75 is the light-mode page (an extra step between 50 and 100, because 100 read too heavy as a page and 50 is almost white); 200 the muted/selected fill. Shellstone only carries text from 700 down on light; 300–400 are text/action colours on dark.",
+  steps: [
+    { step: 50, hex: "#FAF7F0" }, { step: 75, hex: "#F7F2E7" }, { step: 100, hex: "#F4ECDD" }, { step: 200, hex: "#E8DABA" },
+    { step: 300, hex: "#DCC695", anchor: true }, { step: 400, hex: "#CDAF70" }, { step: 500, hex: "#BC994E" },
+    { step: 600, hex: "#9B7D3B" }, { step: 700, hex: "#7A622E" }, { step: 800, hex: "#5C4A23" },
+    { step: 900, hex: "#433519" }, { step: 950, hex: "#2C2411" },
+  ],
+};
+const MULBERRY = {
+  name: "Mulberry (bridge / tertiary)",
+  hue: "hue 325° · the hue midpoint between Royal (226°) and Shellstone (41°) on the short side of the wheel",
+  note: "The only colour allowed to draw the eye: badges, avatars, calendar marks, new-item indicators. 600 carries Mulberry 50 text on light; 300 carries Mulberry 950 text on dark. Never a large fill.",
+  steps: [
+    { step: 50, hex: "#F9F1F5" }, { step: 100, hex: "#F1DFEA" }, { step: 200, hex: "#E5C2D7" },
+    { step: 300, hex: "#D49BBC" }, { step: 400, hex: "#C270A0" }, { step: 500, hex: "#B14886" },
+    { step: 600, hex: "#94386E" }, { step: 700, hex: "#792A58" }, { step: 800, hex: "#5E2145" },
+    { step: 900, hex: "#441832" }, { step: 950, hex: "#2D1021" },
+  ],
+};
+const SLATE = {
+  name: "Slate (cool neutrals)",
+  hue: "hue 226° at ~12% saturation · greys tinted toward Royal",
+  note: "Text hierarchy in both modes: 600 is secondary text on light, 400 is secondary text on dark, 500 is placeholder text inside white / Royal 800 fields. 900–950 are dark-mode surfaces if you want something more neutral than Royal itself.",
+  steps: [
+    { step: 0, hex: "#FFFFFF" }, { step: 50, hex: "#F6F7F8" }, { step: 100, hex: "#EEEFF2" },
+    { step: 200, hex: "#DCDEE4" }, { step: 300, hex: "#C0C3CE" }, { step: 400, hex: "#9CA1B0" },
+    { step: 500, hex: "#73798C" }, { step: 600, hex: "#565B6C" }, { step: 700, hex: "#404554" },
+    { step: 800, hex: "#2D313E" }, { step: 900, hex: "#1D202B" }, { step: 950, hex: "#11141C" },
+  ],
+};
+const OAT = {
+  name: "Oat (warm neutrals)",
+  hue: "hue 41° at ~9–30% saturation · greiges tinted toward Shellstone",
+  note: "Light-mode surfaces where Shellstone itself is too coloured: 0 is the card and input-field fill, 200 a disabled/skeleton fill on cards, 300 a divider on white cards. 800–950 are warm near-blacks for imagery overlays.",
+  steps: [
+    { step: 0, hex: "#FFFFFF" }, { step: 50, hex: "#FAF8F5" }, { step: 100, hex: "#F4F1EB" },
+    { step: 200, hex: "#E9E5DD" }, { step: 300, hex: "#D4CFC4" }, { step: 400, hex: "#B3AC9E" },
+    { step: 500, hex: "#8B8474" }, { step: 600, hex: "#6F695D" }, { step: 700, hex: "#534F46" },
+    { step: 800, hex: "#3A3731" }, { step: 900, hex: "#272520" }, { step: 950, hex: "#191815" },
+  ],
+};
+const ACCENTS = [
+  {
+    name: "Jade",
+    derivation: "Sits opposite Mulberry (325° → 152°) so success and tertiary never get confused",
+    role: "Success · “free / available” status",
+    steps: [
+      { step: 100, hex: "#DBF0E6" }, { step: 300, hex: "#8ECCAF" }, { step: 500, hex: "#389469" },
+      { step: 700, hex: "#225D42" }, { step: 900, hex: "#183F2D" },
+    ],
+  },
+  {
+    name: "Amber",
+    derivation: "Shellstone pulled to orange (41° → 32°) and fully saturated so it reads as status, not surface",
+    role: "Warning · highlights on navy",
+    steps: [
+      { step: 100, hex: "#FBE7D0" }, { step: 300, hex: "#F0B775" }, { step: 500, hex: "#E68619" },
+      { step: 700, hex: "#744611" }, { step: 900, hex: "#57350F" },
+    ],
+  },
+  {
+    name: "Brick",
+    derivation: "A true red at 5° — far enough from Mulberry (325°) that errors never read as the tertiary",
+    role: "Error · destructive actions",
+    steps: [
+      { step: 100, hex: "#F9DFDC" }, { step: 300, hex: "#E79992" }, { step: 500, hex: "#C13F33" },
+      { step: 700, hex: "#892D24" }, { step: 900, hex: "#4F1C17" },
+    ],
+  },
+];
+// Bridge candidates that were considered. Mulberry is the one in the tokens.
+const BRIDGES = [
+  { name: "Mulberry", hue: "325°", hex: "#94386E", light: "#D49BBC", chosen: true,
+    why: "Hue midpoint of the two anchors on the short side of the wheel. Reads as regal next to navy and gold without tipping into the blue-purple gradient cliché, and leaves the red band free for errors." },
+  { name: "Garnet", hue: "352°", hex: "#8F323F", light: "#DB949D",
+    why: "Perceptual (OKLCH) midpoint of the anchors. Even more heraldic — navy, gold, garnet — but it competes with the error red, so every destructive state would need a different hue." },
+  { name: "Teal", hue: "177°", hex: "#2D7673", light: "#95D0CD",
+    why: "Midpoint the long way round. Cohesive, but navy + sand + teal is the coastal default; it makes the palette safer, not more distinct." },
+];
+
+// ---------------------------------------------------------------------------
+// WCAG helpers
+// ---------------------------------------------------------------------------
+function channel(c) { const s = c / 255; return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4); }
+function luminance(hex) {
+  const h = hex.replace("#", "");
+  return 0.2126 * channel(parseInt(h.slice(0, 2), 16)) + 0.7152 * channel(parseInt(h.slice(2, 4), 16)) + 0.0722 * channel(parseInt(h.slice(4, 6), 16));
+}
+function contrast(a, b) { const la = luminance(a), lb = luminance(b); const [hi, lo] = la > lb ? [la, lb] : [lb, la]; return (hi + 0.05) / (lo + 0.05); }
+function grade(r) { return r >= 7 ? "AAA" : r >= 4.5 ? "AA" : r >= 3 ? "AA large" : "Fail"; }
+const NAVY = "#15224D", WHITE = "#FFFFFF";
+function textOn(bg) { return contrast(bg, NAVY) >= contrast(bg, WHITE) ? NAVY : WHITE; }
+function hexToRgb(hex) { const h = hex.replace("#", ""); return `${parseInt(h.slice(0,2),16)}, ${parseInt(h.slice(2,4),16)}, ${parseInt(h.slice(4,6),16)}`; }
+const ro = (n) => ROYAL.steps.find((s) => s.step === n).hex;
+const sh = (n) => SHELL.steps.find((s) => s.step === n).hex;
+const mu = (n) => MULBERRY.steps.find((s) => s.step === n).hex;
+const sl = (n) => SLATE.steps.find((s) => s.step === n).hex;
+const oa = (n) => OAT.steps.find((s) => s.step === n).hex;
+const ac = (name, n) => ACCENTS.find((a) => a.name === name).steps.find((s) => s.step === n).hex;
+const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+// ---------------------------------------------------------------------------
+// Renderers
+// ---------------------------------------------------------------------------
+function anchorBlock(title, hex, fg, extraClass = "") {
+  return `<div class="anchor ${extraClass}" style="background:${hex};color:${fg}">
+    <div class="name">${title}</div>
+    <div class="meta">Hex ${hex.toLowerCase()} · RGB ${hexToRgb(hex)}</div>
+  </div>`;
+}
+
+function rampStrip(ramp) {
+  const cells = ramp.steps.map((s) => `
+    <div class="stack g6">
+      <div class="swatch${s.anchor ? " anchor-step" : ""}" style="background:${s.hex};color:${textOn(s.hex)}"><span class="num">${s.step}</span></div>
+      <div class="small t2 center">${s.hex.toUpperCase()}</div>
+      <div class="small t4 center num ratio-light">${contrast(s.hex, WHITE).toFixed(1)}:1</div>
+      <div class="small t4 center num ratio-dark">${contrast(s.hex, NAVY).toFixed(1)}:1</div>
+    </div>`).join("");
+  return `<section class="stack g10 avoid-break">
+    <div class="row g10"><h3>${esc(ramp.name)}</h3><span class="small t3">${esc(ramp.hue)}</span></div>
+    <div class="grid g4" style="grid-template-columns:repeat(${ramp.steps.length},minmax(0,1fr))">${cells}</div>
+    <p class="small t3">${esc(ramp.note)}</p>
+  </section>`;
+}
+
+function accentRamp(a) {
+  const cells = a.steps.map((s) => `
+    <div class="stack g4">
+      <div class="swatch sm" style="background:${s.hex};color:${textOn(s.hex)}"><span>${s.step}</span></div>
+      <div class="small t3 center">${s.hex.toUpperCase()}</div>
+    </div>`).join("");
+  return `<div class="stack g8 avoid-break">
+    <div class="stack g2"><span class="semibold">${esc(a.name)}</span><span class="small t2">${esc(a.role)}</span></div>
+    <div class="grid g4" style="grid-template-columns:repeat(${a.steps.length},minmax(0,1fr))">${cells}</div>
+    <p class="small t4">${esc(a.derivation)}</p>
+  </div>`;
+}
+
+function bridgeCard(b) {
+  return `<div class="stack g8 avoid-break">
+    <div class="bridge">
+      <div style="background:${ro(900)};color:${sh(300)}">Royal</div>
+      <div style="background:${b.hex};color:${textOn(b.hex)}">${esc(b.name)} ${b.hue}</div>
+      <div style="background:${sh(300)};color:${ro(900)}">Shellstone</div>
+    </div>
+    <div class="row g6"><span class="semibold">${esc(b.name)}</span><span class="small t3">${b.hex} · light step ${b.light}</span>${b.chosen ? '<span class="pill active">in tokens</span>' : ""}</div>
+    <p class="small t3">${esc(b.why)}</p>
+  </div>`;
+}
+
+function pairChip(p) {
+  const r = contrast(p.fg, p.bg), g = grade(r);
+  const pass = g === "AAA" || g === "AA";
+  return `<div class="stack g6 avoid-break">
+    <div class="chip" style="background:${p.bg};color:${p.fg}"><span class="aa">Aa</span><span class="ratio num">${r.toFixed(2)}:1</span></div>
+    <div class="row g6"><span class="small semibold">${esc(p.label)}</span><span class="pill${pass ? " active" : ""}">${g}</span></div>
+    <p class="small t3">${esc(p.use)}</p>
+  </div>`;
+}
+
+function roleCell(text) {
+  // "Name · #HEX" -> swatch dot + name + hex
+  const m = /^(.*) · (#[0-9A-Fa-f]{6})$/.exec(text);
+  if (!m) return esc(text);
+  return `<span class="dot" style="background:${m[2]}"></span>${esc(m[1])} <code>${m[2]}</code>`;
+}
+
+function preview(mode) {
+  const t = mode === "light" ? {
+    page: sh(75), surface: oa(0), text: ro(900), muted: sl(600), border: sh(600), field: oa(0),
+    primaryFill: ro(900), primaryText: sh(300), secondaryFill: sh(300), secondaryText: ro(900),
+    tertiaryFill: mu(600), tertiaryText: mu(50),
+    link: ro(600), success: ac("Jade", 700), error: ac("Brick", 700),
+  } : {
+    page: ro(950), surface: ro(900), text: sh(100), muted: sl(400), border: ro(600), field: ro(800),
+    primaryFill: sh(300), primaryText: ro(900), secondaryFill: ro(800), secondaryText: sh(300),
+    tertiaryFill: mu(300), tertiaryText: mu(950),
+    link: sh(400), success: ac("Jade", 300), error: ac("Brick", 300),
+  };
+  return `<div class="preview" style="background:${t.page}">
+    <div class="card" style="background:${t.surface};border:1px solid ${t.border};color:${t.text}">
+      <div class="row g8" style="justify-content:space-between">
+        <div class="row g8"><div class="logo" style="background:${t.primaryFill}"></div><span style="font-size:16px;font-weight:700">Free2Meet</span></div>
+        <span class="badge" style="background:${t.tertiaryFill};color:${t.tertiaryText}">New</span>
+      </div>
+      <div style="font-size:12px;color:${t.muted}">Create an account to see who’s free this week.</div>
+      <div class="field" style="border:1px solid ${t.border};background:${t.field};color:${t.muted}">Email address</div>
+      <div class="field" style="border:1px solid ${t.error};background:${t.field};color:${t.muted}">Password</div>
+      <div style="font-size:11px;color:${t.error};margin-top:-6px">Must be at least 8 characters</div>
+      <div class="row g8" style="margin-top:2px">
+        <div class="btn" style="background:${t.primaryFill};color:${t.primaryText}">Sign up</div>
+        <div class="btn" style="background:${t.secondaryFill};color:${t.secondaryText}">Log in</div>
+      </div>
+      <div class="row" style="justify-content:space-between">
+        <span style="font-size:11px;color:${t.link};font-weight:500">Forgot password?</span>
+        <span style="font-size:11px;color:${t.success};font-weight:600">3 friends free tonight</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+const pairs = [
+  { label: "Shellstone 300 on Royal 900", fg: sh(300), bg: ro(900), use: "Hero pairing · Sign up button (both modes), brand lockup" },
+  { label: "Royal 900 on Shellstone 300", fg: ro(900), bg: sh(300), use: "Inverted · Log in button (both modes)" },
+  { label: "Royal 900 on Shellstone 75", fg: ro(900), bg: sh(75), use: "Body text on the light-mode page" },
+  { label: "Royal 600 on Shellstone 75", fg: ro(600), bg: sh(75), use: "Links and interactive text, light mode" },
+  { label: "Slate 600 on Shellstone 75", fg: sl(600), bg: sh(75), use: "Secondary text, light mode" },
+  { label: "Slate 500 on white", fg: sl(500), bg: oa(0), use: "Placeholder text inside fields — AA large" },
+  { label: "Shellstone 600 on white", fg: sh(600), bg: oa(0), use: "Card / input hairline on white — UI component minimum" },
+  { label: "Mulberry 50 on Mulberry 600", fg: mu(50), bg: mu(600), use: "Tertiary badge / chip, light mode" },
+  { label: "Shellstone 100 on Royal 900", fg: sh(100), bg: ro(900), use: "Primary body text on dark-mode cards" },
+  { label: "Shellstone 400 on Royal 900", fg: sh(400), bg: ro(900), use: "Links and interactive text, dark mode" },
+  { label: "Slate 400 on Royal 900", fg: sl(400), bg: ro(900), use: "Secondary text, dark mode" },
+  { label: "Mulberry 950 on Mulberry 300", fg: mu(950), bg: mu(300), use: "Tertiary badge / chip, dark mode" },
+  { label: "Brick 700 on Shellstone 75", fg: ac("Brick", 700), bg: sh(75), use: "Error text on light" },
+  { label: "Jade 700 on Shellstone 75", fg: ac("Jade", 700), bg: sh(75), use: "Success text on light" },
+  { label: "Amber 700 on Shellstone 75", fg: ac("Amber", 700), bg: sh(75), use: "Warning text on light" },
+  { label: "Amber 500 on Royal 900", fg: ac("Amber", 500), bg: ro(900), use: "Warning / highlight on dark" },
+];
+
+const roleRows = [
+  ["Page background", `Shellstone 75 · ${sh(75)}`, `Royal 950 · ${ro(950)}`],
+  ["Surface / card", `Oat 0 · ${oa(0)}`, `Royal 900 · ${ro(900)}`],
+  ["Primary text", `Royal 900 · ${ro(900)}`, `Shellstone 100 · ${sh(100)}`],
+  ["Secondary text", `Slate 600 · ${sl(600)}`, `Slate 400 · ${sl(400)}`],
+  ["Placeholder / disabled text", `Slate 500 · ${sl(500)}`, `Slate 500 · ${sl(500)}`],
+  ["Border / divider", `Shellstone 600 · ${sh(600)}`, `Royal 600 · ${ro(600)}`],
+  ["Input field", `Oat 0 · ${oa(0)}`, `Royal 800 · ${ro(800)}`],
+  ["Primary action fill", `Royal 900 · ${ro(900)}`, `Shellstone 300 · ${sh(300)}`],
+  ["Primary action label", `Shellstone 300 · ${sh(300)}`, `Royal 900 · ${ro(900)}`],
+  ["Primary action pressed", `Royal 950 · ${ro(950)}`, `Shellstone 400 · ${sh(400)}`],
+  ["Secondary action fill", `Shellstone 300 · ${sh(300)}`, `Royal 800 · ${ro(800)}`],
+  ["Secondary action label", `Royal 900 · ${ro(900)}`, `Shellstone 300 · ${sh(300)}`],
+  ["Secondary action pressed", `Shellstone 400 · ${sh(400)}`, `Royal 700 · ${ro(700)}`],
+  ["Tertiary fill (badges, avatars, marks)", `Mulberry 600 · ${mu(600)}`, `Mulberry 300 · ${mu(300)}`],
+  ["Tertiary label", `Mulberry 50 · ${mu(50)}`, `Mulberry 950 · ${mu(950)}`],
+  ["Tertiary pressed", `Mulberry 700 · ${mu(700)}`, `Mulberry 400 · ${mu(400)}`],
+  ["Muted fill (skeleton, disabled)", `Shellstone 200 · ${sh(200)}`, `Royal 800 · ${ro(800)}`],
+  ["Link / interactive text", `Royal 600 · ${ro(600)}`, `Shellstone 400 · ${sh(400)}`],
+  ["Focus ring", `Royal 500 · ${ro(500)}`, `Shellstone 400 · ${sh(400)}`],
+  ["Selected / highlight fill", `Shellstone 200 · ${sh(200)}`, `Royal 700 · ${ro(700)}`],
+  ["Success", `Jade 700 · ${ac("Jade", 700)}`, `Jade 300 · ${ac("Jade", 300)}`],
+  ["Warning", `Amber 700 · ${ac("Amber", 700)}`, `Amber 500 · ${ac("Amber", 500)}`],
+  ["Error", `Brick 700 · ${ac("Brick", 700)}`, `Brick 300 · ${ac("Brick", 300)}`],
+];
+
+document.getElementById("app").innerHTML = `
+  <header class="stack g8">
+    <h1>Royal Blue &amp; Shellstone — extended palette</h1>
+    <p class="t2">Built out from the two anchors in the yel.creative post (Royal Blue #15224d, Shellstone #dcc695). Full 11-step scales for both, an 11-step scale for the bridge colour (Mulberry), two neutral scales (Slate, cool; Oat, warm), three derived accents for semantic states, and a role map for light and dark mode. Ratios shown are WCAG 2.1 contrast, computed from the hex values.</p>
+    <p class="print-note no-print">To save as PDF: File → Print → “Save as PDF”. Both contrast columns (vs white and vs Royal 900) are printed under each swatch.</p>
+  </header>
+
+  <div class="grid cols-2 g12 avoid-break">
+    ${anchorBlock("Royal Blue", ro(900), sh(300))}
+    ${anchorBlock("Shellstone", sh(300), ro(900))}
+  </div>
+  <div class="grid cols-3 g12 avoid-break">
+    ${anchorBlock("Mulberry", mu(600), mu(50), "derived")}
+    ${anchorBlock("Slate", sl(700), sl(50), "derived")}
+    ${anchorBlock("Oat", oa(300), oa(900), "derived")}
+  </div>
+
+  <div class="callout avoid-break">
+    <div class="title">How the colours relate</div>
+    <p class="t2">Royal and Shellstone sit 175° apart (226° vs 41°) — near-true complements, which is why the pairing feels balanced. Shellstone 300 on Royal 900 measures ${contrast(sh(300), ro(900)).toFixed(1)}:1 — AAA — so the original combination is used as-is for the primary button in both modes. Both anchors are fairly saturated (57% and 50%), so they are used at full strength as the two action fills in both modes rather than being diluted into surfaces; the light-mode page is a Shellstone 75 wash so that those fills have room to stand out. Mulberry sits at the hue midpoint between the two on the short side of the wheel and is kept at the same saturation, so it reads as part of the same family while being the only colour allowed to pull the eye.</p>
+  </div>
+
+  <section class="stack g16">
+    <div class="stack g4">
+      <h2>The bridge colour</h2>
+      <p class="t2">Three candidates for a third colour that sits between the anchors. Each is shown at its light-mode strength between Royal 900 and Shellstone 300. Mulberry is the one wired into the tokens; the other two are recorded so a later round does not re-propose them.</p>
+    </div>
+    <div class="grid cols-3 g20">${BRIDGES.map(bridgeCard).join("")}</div>
+  </section>
+
+  <hr />
+
+  <section class="stack g20 page-break">
+    <div class="row g12">
+      <h2>Full scales</h2>
+      <span class="small t3">ratio under each swatch is against</span>
+      <span class="row g6 no-print">
+        <button type="button" class="pill clickable active" data-mode="light">white</button>
+        <button type="button" class="pill clickable" data-mode="dark">Royal 900</button>
+      </span>
+    </div>
+    ${rampStrip(ROYAL)}
+    ${rampStrip(SHELL)}
+    ${rampStrip(MULBERRY)}
+    <p class="small t4">Outlined swatches are the two original anchor values. Steps follow the 50–950 convention so they map straight onto Tailwind / design-token naming.</p>
+  </section>
+
+  <hr />
+
+  <section class="stack g20 page-break">
+    <div class="stack g4">
+      <h2>Neutrals</h2>
+      <p class="t2">Two neutral scales so greys never look muddy next to either anchor. Slate is tinted toward Royal and does the text hierarchy work in both modes; Oat is tinted toward Shellstone and does light-mode surface work (fields, dividers, skeletons) where Shellstone itself is too coloured.</p>
+    </div>
+    ${rampStrip(SLATE)}
+    ${rampStrip(OAT)}
+  </section>
+
+  <hr />
+
+  <section class="stack g16">
+    <div class="stack g4">
+      <h2>Semantic accents</h2>
+      <p class="t2">Three small scales for status only — Royal, Shellstone and Mulberry stay the brand colours. Because the light-mode page is a gold, the warning colour is pushed to orange and used at its 700 step so it still reads as a warning on sand.</p>
+    </div>
+    <div class="grid cols-3 g20">${ACCENTS.map(accentRamp).join("")}</div>
+  </section>
+
+  <hr />
+
+  <section class="stack g16 page-break">
+    <div class="stack g4">
+      <h2>Key contrast pairs</h2>
+      <p class="t2">The combinations you will actually ship. AA is 4.5:1 for body text; AA large is 3:1 for 18px+ or bold 14px+ and for UI components.</p>
+    </div>
+    <div class="grid cols-4 g16">${pairs.map(pairChip).join("")}</div>
+  </section>
+
+  <hr />
+
+  <section class="stack g16 page-break">
+    <div class="stack g4">
+      <h2>Role map</h2>
+      <p class="t2">Light mode (“Shellstone wash”) uses Royal for text and actions on a pale Shellstone page with white cards, and the Shellstone anchor as the secondary action; dark mode inverts that so Shellstone becomes the action colour on Royal. Mulberry is the tertiary in both. Pressed states are one step along the same scale, never a generic grey.</p>
+    </div>
+    <table>
+      <thead><tr><th>Role</th><th>Light mode</th><th>Dark mode</th></tr></thead>
+      <tbody>${roleRows.map((r) => `<tr><td>${esc(r[0])}</td><td>${roleCell(r[1])}</td><td>${roleCell(r[2])}</td></tr>`).join("")}</tbody>
+    </table>
+    <p class="small t4">Light-mode hairlines clear 3:1 on both surfaces (Shellstone 600 is ${contrast(sh(600), sh(75)).toFixed(1)}:1 on the page and ${contrast(sh(600), oa(0)).toFixed(1)}:1 on white). Dark-mode hairlines (Royal 600 on Royal 950, ${contrast(ro(600), ro(950)).toFixed(1)}:1) are decorative; the Royal 800 field fill against the Royal 950 page carries the field shape.</p>
+  </section>
+
+  <section class="stack g16 avoid-break">
+    <div class="stack g4">
+      <h2>Role map applied</h2>
+      <p class="t2">Same sign-up card in both modes using only the tokens above.</p>
+    </div>
+    <div class="grid cols-2 g16">
+      <div class="stack g8">
+        <span class="small semibold">Light — Shellstone 75 page, white card, Royal 900 / Shellstone 300 CTA, Shellstone 300 / Royal 900 secondary, Mulberry 600 badge</span>
+        ${preview("light")}
+      </div>
+      <div class="stack g8">
+        <span class="small semibold">Dark — Royal surfaces, Shellstone actions and links, Mulberry 300 badge</span>
+        ${preview("dark")}
+      </div>
+    </div>
+  </section>
+`;
+
+document.querySelectorAll("[data-mode]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.body.dataset.ramp = btn.dataset.mode;
+    document.querySelectorAll("[data-mode]").forEach((b) => b.classList.toggle("active", b === btn));
+  });
+});
+</script>
+</body>
+</html>

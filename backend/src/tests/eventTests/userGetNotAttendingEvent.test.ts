@@ -30,7 +30,7 @@ beforeEach(async () => {
   const res1 = await requestNewEvent(organiserToken, "New Event", "New Description", "House", EventType.SINGLE, EVENT_DATE, EVENT_DATE, 10, 14);
   eventId = res1.body.eventId;
   const attendeeEmail = uniqueEmail("attendee");
-  await requestEventInvite(organiserToken, eventId, attendeeEmail);
+  await requestEventInvite(organiserToken, eventId);
 
   // Declined attendees are not created via invite codes (joining is acceptance).
   await EventParticipantModel.create({

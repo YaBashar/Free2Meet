@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { createEvent, deleteEvent, eventDetails, inviteLink, updateEvent, getOrganisedEvents, getAllAttendingEventsForUser, getNotAttending, getAttendeesForEvent } from '../service/event.service';
+import { createEvent, deleteEvent, eventDetails, inviteCode, regenerateInviteCode, updateEvent, getOrganisedEvents, getAllAttendingEventsForUser, getNotAttending, getAttendeesForEvent } from '../service/event.service';
 
 export const create = async (req: Request, res: Response, next: NextFunction) => {
-  const userId = req.user?.sub;
+  const userId = req.user!.sub;
   const { title, description, location, eventType, startDate, endDate, startTime, endTime } = req.body;
 
   try {
@@ -14,12 +14,23 @@ export const create = async (req: Request, res: Response, next: NextFunction) =>
 };
 
 export const invite = async (req: Request, res: Response, next: NextFunction) => {
-  const userId = req.user?.sub;
+  const userId = req.user!.sub;
   const eventId = req.params.eventId as string;
-  const { inviteeEmail } = req.body;
 
   try {
-    const result = await inviteLink(userId, eventId, inviteeEmail);
+    const result = await inviteCode(userId, eventId);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const regenerateInvite = async (req: Request, res: Response, next: NextFunction) => {
+  const userId = req.user!.sub;
+  const eventId = req.params.eventId as string;
+
+  try {
+    const result = await regenerateInviteCode(userId, eventId);
     res.status(200).json(result);
   } catch (error) {
     next(error);
@@ -27,7 +38,7 @@ export const invite = async (req: Request, res: Response, next: NextFunction) =>
 };
 
 export const update = async (req: Request, res: Response, next: NextFunction) => {
-  const userId = req.user?.sub;
+  const userId = req.user!.sub;
   const eventId = req.params.eventId as string;
   const { title, description, location, eventType, startDate, endDate, startTime, endTime } = req.body;
 
@@ -40,7 +51,7 @@ export const update = async (req: Request, res: Response, next: NextFunction) =>
 };
 
 export const info = async (req: Request, res: Response, next: NextFunction) => {
-  const userId = req.user?.sub;
+  const userId = req.user!.sub;
   const eventId = req.params.eventId as string;
 
   try {
@@ -52,7 +63,7 @@ export const info = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 export const remove = async (req: Request, res: Response, next: NextFunction) => {
-  const userId = req.user?.sub;
+  const userId = req.user!.sub;
   const eventId = req.params.eventId as string;
 
   try {
@@ -64,7 +75,7 @@ export const remove = async (req: Request, res: Response, next: NextFunction) =>
 };
 
 export const organisedEvents = async (req: Request, res: Response, next: NextFunction) => {
-  const userId = req.user?.sub;
+  const userId = req.user!.sub;
 
   try {
     const result = await getOrganisedEvents(userId);
@@ -75,7 +86,7 @@ export const organisedEvents = async (req: Request, res: Response, next: NextFun
 };
 
 export const allAttendingEventsForUser = async (req: Request, res: Response, next: NextFunction) => {
-  const userId = req.user?.sub;
+  const userId = req.user!.sub;
 
   try {
     const result = await getAllAttendingEventsForUser(userId);

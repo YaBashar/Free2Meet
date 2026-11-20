@@ -19,6 +19,9 @@ export interface Event extends Document {
   organiserId: string;
   organiserName: string;
   eventType: EventType;
+  /** Reusable group share code; many attendees can redeem until expiry or regenerate. */
+  inviteCode?: string;
+  inviteCodeExpiry?: Date;
 }
 
 const eventSchema = new Schema({
@@ -32,6 +35,8 @@ const eventSchema = new Schema({
   organiserId: { type: String, required: true },
   organiserName: { type: String, required: true },
   eventType: { type: String, enum: ["SINGLE_DAY", "MULTI_DAY", "HYBRID"], required: true },
+  inviteCode: { type: String, sparse: true, unique: true },
+  inviteCodeExpiry: { type: Date },
 });
 
 export const EventModel = mongoose.model<Event>("Event", eventSchema);

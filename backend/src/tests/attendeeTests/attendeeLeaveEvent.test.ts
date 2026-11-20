@@ -51,7 +51,7 @@ beforeEach(async () => {
   );
   eventId = newEventRes.body.eventId;
 
-  const inviteRes = await requestEventInvite(organiserToken, eventId, attendeeEmail);
+  const inviteRes = await requestEventInvite(organiserToken, eventId);
   code = inviteRes.body.inviteCode;
 
   attendeeToken = await getToken("Jonathan", "Lee", attendeeEmail, "Abcnmop.123$");

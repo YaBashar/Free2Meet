@@ -3,7 +3,6 @@ import { checkEventConstraints, checkDateConstraints } from "../utils/eventHelpe
 import { UserModel } from "../models/userModel";
 import { EventModel, EventType } from "../models/eventModel";
 import { EventParticipantModel } from "../models/eventParticipantModel";
-import { sendEventInviteEmail } from "./email.service";
 import mongoose from "mongoose";
 
 export class EventError extends Error {
@@ -17,17 +16,67 @@ export class EventError extends Error {
 }
 
 const INVITE_CODE_MAX_ATTEMPTS = 10;
+/** How long a newly minted invite code remains valid. */
+const INVITE_CODE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
-/** Cryptographically secure 6-digit share code, unique among all invite codes. */
-async function generateUniqueInviteCode(): Promise<string> {
+/** Cryptographically secure 6-digit share code, unique among all event invite codes. */
+async function generateUniqueInviteCode(): Promise<{
+  inviteCode: string;
+  inviteCodeExpiry: Date;
+}> {
   for (let attempt = 0; attempt < INVITE_CODE_MAX_ATTEMPTS; attempt++) {
     const inviteCode = crypto.randomInt(100000, 1000000).toString();
-    const existing = await EventParticipantModel.findOne({ inviteCode }).select("_id");
+    const existing = await EventModel.findOne({ inviteCode }).select("_id");
     if (!existing) {
-      return inviteCode;
+      return {
+        inviteCode,
+        inviteCodeExpiry: new Date(Date.now() + INVITE_CODE_TTL_MS),
+      };
     }
   }
   throw new EventError("Could not generate a unique invite code", 500);
+}
+
+function formatInviteResponse(inviteCode: string, inviteCodeExpiry: Date) {
+  const expired = inviteCodeExpiry < new Date();
+  return {
+    inviteCode,
+    inviteCodeExpiry: inviteCodeExpiry.toISOString(),
+    expired,
+    ...(expired
+      ? {
+          message:
+            "This invite code has expired. Generate a new code to share with attendees.",
+        }
+      : {}),
+  };
+}
+
+async function assertOrganiser(userId: string, eventId: string) {
+  const user = await UserModel.findById(userId);
+  if (!user) {
+    throw new EventError("Invalid User Id");
+  }
+
+  if (!mongoose.isValidObjectId(eventId)) {
+    throw new EventError("Invalid Event Id");
+  }
+
+  const event = await EventModel.findById(eventId);
+  if (!event) {
+    throw new EventError("Invalid Event Id");
+  }
+
+  const organiserRecord = await EventParticipantModel.findOne({
+    eventId: event._id,
+    userId,
+    role: "Organiser",
+  });
+  if (!organiserRecord) {
+    throw new EventError("User is not the organiser of this event", 403);
+  }
+
+  return event;
 }
 
 interface PopulatedEventDoc {
@@ -154,61 +203,42 @@ export async function deleteEvent(userId: string, eventId: string): Promise<obje
   return {};
 }
 
-export async function inviteLink(
-  userId: string,
-  eventId: string,
-  inviteeEmail?: string
-): Promise<object> {
-  const user = await UserModel.findById(userId);
-  if (!user) {
-    throw new EventError("Invalid User Id");
+/**
+ * Returns the event's open single-use share code, creating one if needed.
+ * Reuses an unused pending invite so hosts cannot stack orphan codes.
+ */
+/**
+ * Returns the event's reusable invite code (minting one if none exists yet).
+ * Expired codes are returned with `expired: true` — call regenerateInviteCode for a new one.
+ */
+export async function inviteCode(userId: string, eventId: string): Promise<object> {
+  const event = await assertOrganiser(userId, eventId);
+
+  if (event.inviteCode && event.inviteCodeExpiry) {
+    return formatInviteResponse(event.inviteCode, event.inviteCodeExpiry);
   }
 
-  if (!mongoose.isValidObjectId(eventId)) {
-    throw new EventError("Invalid Event Id");
-  }
+  const { inviteCode: code, inviteCodeExpiry } = await generateUniqueInviteCode();
+  event.inviteCode = code;
+  event.inviteCodeExpiry = inviteCodeExpiry;
+  await event.save();
 
-  const event = await EventModel.findById(eventId);
-  if (!event) {
-    throw new EventError("Invalid Event Id");
-  }
+  return formatInviteResponse(code, inviteCodeExpiry);
+}
 
-  const organiserRecord = await EventParticipantModel.findOne({
-    eventId: event._id,
-    userId,
-    role: "Organiser",
-  });
-  if (!organiserRecord) {
-    throw new EventError("User is not the organiser of this event", 403);
-  }
+/**
+ * Mints a new reusable invite code and invalidates the previous one.
+ * Use after expiry or to revoke a code that was shared too widely.
+ */
+export async function regenerateInviteCode(userId: string, eventId: string): Promise<object> {
+  const event = await assertOrganiser(userId, eventId);
 
-  const inviteCode = await generateUniqueInviteCode();
+  const { inviteCode: code, inviteCodeExpiry } = await generateUniqueInviteCode();
+  event.inviteCode = code;
+  event.inviteCodeExpiry = inviteCodeExpiry;
+  await event.save();
 
-  // Expire at the end of the event's last day — invites for past events are meaningless
-  const [year, month, day] = event.endDate.split("-").map(Number);
-  const inviteCodeExpiry = new Date(year, month - 1, day, 23, 59, 59, 999);
-
-  const pendingParticipant = new EventParticipantModel({
-    eventId: event._id,
-    role: "Attendee",
-    status: "Pending",
-    inviteCode,
-    inviteCodeExpiry,
-  });
-
-  await pendingParticipant.save();
-
-  // Email is optional — organisers can share the returned code in-app instead
-  if (process.env.NODE_ENV !== "test" && inviteeEmail) {
-    try {
-      await sendEventInviteEmail(inviteeEmail, inviteCode, event.title, user.name);
-    } catch {
-      // Email delivery failure does not block invite creation
-    }
-  }
-
-  // Always return the code so the organiser can share it (email, SMS, in-person)
-  return { inviteCode };
+  return formatInviteResponse(code, inviteCodeExpiry);
 }
 
 export async function updateEvent(

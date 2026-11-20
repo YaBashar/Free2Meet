@@ -113,12 +113,9 @@ export const resendResetCode = async (req: Request, res: Response, next: NextFun
 };
 
 export const logout = async (req: Request, res: Response, next: NextFunction) => {
-  const userId = req.user?.sub;
+  const userId = req.user!.sub;
 
   try {
-    if (!userId) {
-      return res.status(401).json({ error: "Authentication Required" });
-    }
     const result = await userLogout(userId);
     return res.status(200).json(result);
   } catch (error) {

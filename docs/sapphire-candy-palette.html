@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sapphire &amp; Candy — extended palette · Free2Meet</title>
+<style>
+  :root {
+    --text: #1b1f29;
+    --text-2: #525b6e;
+    --text-3: #67718a;
+    --text-4: #98a1b3;
+    --stroke: #dde1ea;
+    --stroke-focus: #5a79c1;
+    --bg: #ffffff;
+    --bg-2: #f7f8fb;
+    --info-bg: #eef2fa;
+    --info-stroke: #b1c1e5;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+  main { max-width: 1120px; margin: 0 auto; padding: 40px 28px 64px; display: flex; flex-direction: column; gap: 28px; }
+
+  h1, h2, h3 { margin: 0; font-weight: 600; line-height: 1.25; }
+  h1 { font-size: 24px; }
+  h2 { font-size: 18px; }
+  h3 { font-size: 15px; }
+  p { margin: 0; }
+  .t2 { color: var(--text-2); }
+  .t3 { color: var(--text-3); }
+  .t4 { color: var(--text-4); }
+  .small { font-size: 12px; }
+  .semibold { font-weight: 600; }
+  .num { font-variant-numeric: tabular-nums; }
+  .center { text-align: center; }
+
+  .stack { display: flex; flex-direction: column; }
+  .row { display: flex; align-items: center; }
+  .g2 { gap: 2px; } .g4 { gap: 4px; } .g6 { gap: 6px; } .g8 { gap: 8px; } .g10 { gap: 10px; }
+  .g12 { gap: 12px; } .g16 { gap: 16px; } .g20 { gap: 20px; } .g28 { gap: 28px; }
+
+  .grid { display: grid; }
+  .cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+  hr { border: 0; border-top: 1px solid var(--stroke); margin: 0; }
+
+  .anchor {
+    border-radius: 8px; padding: 40px 24px 28px; min-height: 180px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  }
+  .anchor .name { font-size: 24px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+  .anchor .meta { font-size: 12px; opacity: .9; }
+
+  .callout {
+    background: var(--info-bg); border: 1px solid var(--info-stroke); border-radius: 8px;
+    padding: 14px 16px; display: flex; flex-direction: column; gap: 4px;
+  }
+  .callout .title { font-weight: 600; }
+
+  .swatch {
+    height: 72px; border-radius: 6px; border: 1px solid var(--stroke);
+    display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px;
+    font-size: 11px; font-weight: 600;
+  }
+  .swatch.anchor-step { outline: 2px solid var(--stroke-focus); outline-offset: 2px; }
+  .swatch.sm { height: 44px; padding-bottom: 4px; font-size: 10px; }
+
+  .pill {
+    display: inline-flex; align-items: center; border-radius: 999px; padding: 2px 9px;
+    font-size: 11px; font-weight: 600; border: 1px solid var(--stroke); color: var(--text-2);
+    background: var(--bg); cursor: default; white-space: nowrap;
+  }
+  .pill.active { background: #0d1e42; color: #ebc6ce; border-color: #0d1e42; }
+  .pill.clickable { cursor: pointer; }
+
+  .chip {
+    border-radius: 6px; border: 1px solid var(--stroke); height: 64px;
+    display: flex; align-items: center; justify-content: space-between; padding: 0 14px;
+  }
+  .chip .aa { font-size: 20px; font-weight: 600; }
+  .chip .ratio { font-size: 12px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--stroke); vertical-align: top; }
+  th { font-weight: 600; color: var(--text-2); font-size: 12px; }
+  tbody tr:nth-child(even) td { background: var(--bg-2); }
+  td .dot { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--stroke); vertical-align: -2px; margin-right: 8px; }
+  td code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color: var(--text-3); }
+
+  .ratio-dark { display: none; }
+  body[data-ramp="dark"] .ratio-light { display: none; }
+  body[data-ramp="dark"] .ratio-dark { display: block; }
+
+  .preview { border-radius: 10px; padding: 16px; }
+  .preview .card { border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+  .preview .logo { width: 22px; height: 22px; border-radius: 6px; }
+  .preview .field { border-radius: 8px; padding: 9px 12px; font-size: 12px; }
+  .preview .btn { flex: 1; text-align: center; font-size: 12px; font-weight: 600; padding: 10px 0; border-radius: 8px; }
+
+  .print-note { font-size: 12px; color: var(--text-4); }
+
+  @media print {
+    @page { size: A4; margin: 14mm; }
+    body { font-size: 12px; }
+    main { max-width: none; padding: 0; gap: 20px; }
+    .no-print { display: none !important; }
+    .avoid-break { break-inside: avoid; page-break-inside: avoid; }
+    .page-break { break-before: page; page-break-before: always; }
+    .ratio-light, .ratio-dark { display: block !important; }
+    .swatch { height: 56px; }
+    .anchor { min-height: 140px; padding: 28px 20px 20px; }
+    .pill.active { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body data-ramp="light">
+<main id="app"></main>
+
+<script>
+// ---------------------------------------------------------------------------
+// Data — anchors from the yel.creative post, everything else derived from them.
+// Sapphire ≈ hsl(221, 67%, 16%) · Candy ≈ hsl(347, 48%, 85%)
+// ---------------------------------------------------------------------------
+const SAPPHIRE = {
+  name: "Sapphire",
+  hue: "hue 221° · the brand navy",
+  note: "Anchor sits at 900. 500–600 are the usable mid-tones for links and interactive text on light; 300–400 do the same job on dark.",
+  steps: [
+    { step: 50, hex: "#EEF2FA" }, { step: 100, hex: "#D8E0F2" }, { step: 200, hex: "#B1C1E5" },
+    { step: 300, hex: "#849DD4" }, { step: 400, hex: "#5A79C1" }, { step: 500, hex: "#3B5AA8" },
+    { step: 600, hex: "#2C4688" }, { step: 700, hex: "#213569" }, { step: 800, hex: "#172A55" },
+    { step: 900, hex: "#0D1E42", anchor: true }, { step: 950, hex: "#08132C" },
+  ],
+};
+const CANDY = {
+  name: "Candy",
+  hue: "hue 347° · the dusty pink",
+  note: "Anchor sits at 200 — it is a surface/fill colour, not a text colour. Drop to 600+ when Candy has to carry text on white.",
+  steps: [
+    { step: 50, hex: "#FBF4F6" }, { step: 100, hex: "#F6E6EA" }, { step: 200, hex: "#EBC6CE", anchor: true },
+    { step: 300, hex: "#DFA6B2" }, { step: 400, hex: "#D18697" }, { step: 500, hex: "#C0687D" },
+    { step: 600, hex: "#A64F65" }, { step: 700, hex: "#873E51" }, { step: 800, hex: "#6B3242" },
+    { step: 900, hex: "#4F2632" }, { step: 950, hex: "#331821" },
+  ],
+};
+const SLATE = {
+  name: "Slate (neutrals)",
+  hue: "hue 221° at ~12% saturation · greys tinted toward Sapphire so they never look muddy next to it",
+  note: "0 and 50 are page surfaces in light mode; 900–950 are dark-mode surfaces if you want something softer than Sapphire itself.",
+  steps: [
+    { step: 0, hex: "#FFFFFF" }, { step: 50, hex: "#F7F8FB" }, { step: 100, hex: "#EEF0F5" },
+    { step: 200, hex: "#DDE1EA" }, { step: 300, hex: "#C3C9D6" }, { step: 400, hex: "#98A1B3" },
+    { step: 500, hex: "#67718A" }, { step: 600, hex: "#525B6E" }, { step: 700, hex: "#3D4454" },
+    { step: 800, hex: "#2A2F3C" }, { step: 900, hex: "#1B1F29" }, { step: 950, hex: "#111319" },
+  ],
+};
+const ACCENTS = [
+  {
+    name: "Brass",
+    derivation: "Direct complement of Sapphire (221° → 41°)",
+    role: "Warning · highlights · the one warm metallic note on navy",
+    steps: [
+      { step: 100, hex: "#F8ECD3" }, { step: 300, hex: "#EACB8A" }, { step: 500, hex: "#D9A441" },
+      { step: 700, hex: "#8F6A22" }, { step: 900, hex: "#4D3810" },
+    ],
+  },
+  {
+    name: "Sea glass",
+    derivation: "Direct complement of Candy (347° → 167°)",
+    role: "Success · “free / available” status",
+    steps: [
+      { step: 100, hex: "#D6F0E7" }, { step: 300, hex: "#8FD3BE" }, { step: 500, hex: "#3FA98C" },
+      { step: 700, hex: "#24705B" }, { step: 900, hex: "#123C31" },
+    ],
+  },
+  {
+    name: "Cherry",
+    derivation: "Candy pushed to 8° and saturated so errors never read as pink",
+    role: "Error · destructive actions",
+    steps: [
+      { step: 100, hex: "#FADCD7" }, { step: 300, hex: "#EFA093" }, { step: 500, hex: "#D2452F" },
+      { step: 700, hex: "#8E2B1B" }, { step: 900, hex: "#4E170E" },
+    ],
+  },
+];
+
+// ---------------------------------------------------------------------------
+// WCAG helpers
+// ---------------------------------------------------------------------------
+function channel(c) { const s = c / 255; return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4); }
+function luminance(hex) {
+  const h = hex.replace("#", "");
+  return 0.2126 * channel(parseInt(h.slice(0, 2), 16)) + 0.7152 * channel(parseInt(h.slice(2, 4), 16)) + 0.0722 * channel(parseInt(h.slice(4, 6), 16));
+}
+function contrast(a, b) { const la = luminance(a), lb = luminance(b); const [hi, lo] = la > lb ? [la, lb] : [lb, la]; return (hi + 0.05) / (lo + 0.05); }
+function grade(r) { return r >= 7 ? "AAA" : r >= 4.5 ? "AA" : r >= 3 ? "AA large" : "Fail"; }
+const NAVY = "#0D1E42", WHITE = "#FFFFFF";
+function textOn(bg) { return contrast(bg, NAVY) >= contrast(bg, WHITE) ? NAVY : WHITE; }
+function hexToRgb(hex) { const h = hex.replace("#", ""); return `${parseInt(h.slice(0,2),16)}, ${parseInt(h.slice(2,4),16)}, ${parseInt(h.slice(4,6),16)}`; }
+const sp = (n) => SAPPHIRE.steps.find((s) => s.step === n).hex;
+const cd = (n) => CANDY.steps.find((s) => s.step === n).hex;
+const sl = (n) => SLATE.steps.find((s) => s.step === n).hex;
+const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+// ---------------------------------------------------------------------------
+// Renderers
+// ---------------------------------------------------------------------------
+function anchorBlock(title, hex, fg) {
+  return `<div class="anchor" style="background:${hex};color:${fg}">
+    <div class="name">${title}</div>
+    <div class="meta">Hex ${hex.toLowerCase()} · RGB ${hexToRgb(hex)}</div>
+  </div>`;
+}
+
+function rampStrip(ramp) {
+  const cells = ramp.steps.map((s) => `
+    <div class="stack g6">
+      <div class="swatch${s.anchor ? " anchor-step" : ""}" style="background:${s.hex};color:${textOn(s.hex)}"><span class="num">${s.step}</span></div>
+      <div class="small t2 center">${s.hex.toUpperCase()}</div>
+      <div class="small t4 center num ratio-light">${contrast(s.hex, WHITE).toFixed(1)}:1</div>
+      <div class="small t4 center num ratio-dark">${contrast(s.hex, NAVY).toFixed(1)}:1</div>
+    </div>`).join("");
+  return `<section class="stack g10 avoid-break">
+    <div class="row g10"><h3>${esc(ramp.name)}</h3><span class="small t3">${esc(ramp.hue)}</span></div>
+    <div class="grid g4" style="grid-template-columns:repeat(${ramp.steps.length},minmax(0,1fr))">${cells}</div>
+    <p class="small t3">${esc(ramp.note)}</p>
+  </section>`;
+}
+
+function accentRamp(a) {
+  const cells = a.steps.map((s) => `
+    <div class="stack g4">
+      <div class="swatch sm" style="background:${s.hex};color:${textOn(s.hex)}"><span>${s.step}</span></div>
+      <div class="small t3 center">${s.hex.toUpperCase()}</div>
+    </div>`).join("");
+  return `<div class="stack g8 avoid-break">
+    <div class="stack g2"><span class="semibold">${esc(a.name)}</span><span class="small t2">${esc(a.role)}</span></div>
+    <div class="grid g4" style="grid-template-columns:repeat(${a.steps.length},minmax(0,1fr))">${cells}</div>
+    <p class="small t4">${esc(a.derivation)}</p>
+  </div>`;
+}
+
+function pairChip(p) {
+  const r = contrast(p.fg, p.bg), g = grade(r);
+  const pass = g === "AAA" || g === "AA";
+  return `<div class="stack g6 avoid-break">
+    <div class="chip" style="background:${p.bg};color:${p.fg}"><span class="aa">Aa</span><span class="ratio num">${r.toFixed(2)}:1</span></div>
+    <div class="row g6"><span class="small semibold">${esc(p.label)}</span><span class="pill${pass ? " active" : ""}">${g}</span></div>
+    <p class="small t3">${esc(p.use)}</p>
+  </div>`;
+}
+
+function roleCell(text) {
+  // "Name · #HEX" -> swatch dot + name + hex
+  const m = /^(.*) · (#[0-9A-Fa-f]{6})$/.exec(text);
+  if (!m) return esc(text);
+  return `<span class="dot" style="background:${m[2]}"></span>${esc(m[1])} <code>${m[2]}</code>`;
+}
+
+function preview(mode) {
+  const t = mode === "light" ? {
+    page: sl(50), surface: sl(0), text: sp(900), muted: sl(600), border: sl(200), field: sl(0),
+    primaryFill: sp(900), primaryText: cd(200), secondaryFill: cd(200), secondaryText: sp(900),
+    link: sp(600), success: ACCENTS[1].steps[3].hex, error: ACCENTS[2].steps[2].hex,
+  } : {
+    page: sp(950), surface: sp(900), text: cd(100), muted: sl(400), border: sp(700), field: sp(800),
+    primaryFill: cd(200), primaryText: sp(900), secondaryFill: sp(800), secondaryText: cd(200),
+    link: cd(300), success: ACCENTS[1].steps[1].hex, error: ACCENTS[2].steps[1].hex,
+  };
+  return `<div class="preview" style="background:${t.page}">
+    <div class="card" style="background:${t.surface};border:1px solid ${t.border};color:${t.text}">
+      <div class="row g8"><div class="logo" style="background:${t.primaryFill}"></div><span style="font-size:16px;font-weight:700">Free2Meet</span></div>
+      <div style="font-size:12px;color:${t.muted}">Create an account to see who’s free this week.</div>
+      <div class="field" style="border:1px solid ${t.border};background:${t.field};color:${t.muted}">Email address</div>
+      <div class="field" style="border:1px solid ${t.error};background:${t.field};color:${t.muted}">Password</div>
+      <div style="font-size:11px;color:${t.error};margin-top:-6px">Must be at least 8 characters</div>
+      <div class="row g8" style="margin-top:2px">
+        <div class="btn" style="background:${t.primaryFill};color:${t.primaryText}">Sign up</div>
+        <div class="btn" style="background:${t.secondaryFill};color:${t.secondaryText}">Log in</div>
+      </div>
+      <div class="row" style="justify-content:space-between">
+        <span style="font-size:11px;color:${t.link};font-weight:500">Forgot password?</span>
+        <span style="font-size:11px;color:${t.success};font-weight:600">3 friends free tonight</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+const pairs = [
+  { label: "Candy 200 on Sapphire 900", fg: cd(200), bg: sp(900), use: "Hero pairing · Sign up button (both modes), brand lockup" },
+  { label: "Sapphire 900 on Candy 200", fg: sp(900), bg: cd(200), use: "Inverted · Log in button (both modes)" },
+  { label: "Sapphire 900 on white", fg: sp(900), bg: sl(0), use: "Primary body text, light mode" },
+  { label: "Sapphire 600 on white", fg: sp(600), bg: sl(0), use: "Links and interactive text, light mode" },
+  { label: "Candy 600 on white", fg: cd(600), bg: sl(0), use: "Smallest Candy that passes AA as text on light" },
+  { label: "Candy 500 on white", fg: cd(500), bg: sl(0), use: "Large text / icons only — fails for body copy" },
+  { label: "Candy 100 on Sapphire 900", fg: cd(100), bg: sp(900), use: "Primary body text, dark mode" },
+  { label: "Candy 300 on Sapphire 900", fg: cd(300), bg: sp(900), use: "Links and interactive text, dark mode" },
+  { label: "Slate 400 on Sapphire 900", fg: sl(400), bg: sp(900), use: "Secondary text, dark mode" },
+  { label: "Slate 600 on white", fg: sl(600), bg: sl(0), use: "Secondary text, light mode" },
+  { label: "Brass 500 on Sapphire 900", fg: ACCENTS[0].steps[2].hex, bg: sp(900), use: "Warning / highlight on dark" },
+  { label: "Cherry 500 on white", fg: ACCENTS[2].steps[2].hex, bg: sl(0), use: "Error text on light" },
+];
+
+const roleRows = [
+  ["Page background", `Slate 50 · ${sl(50)}`, `Sapphire 950 · ${sp(950)}`],
+  ["Surface / card", `White · ${sl(0)}`, `Sapphire 900 · ${sp(900)}`],
+  ["Primary text", `Sapphire 900 · ${sp(900)}`, `Candy 100 · ${cd(100)}`],
+  ["Secondary text", `Slate 600 · ${sl(600)}`, `Slate 400 · ${sl(400)}`],
+  ["Placeholder / disabled text", `Slate 500 · ${sl(500)}`, `Slate 500 · ${sl(500)}`],
+  ["Border / divider", `Slate 200 · ${sl(200)}`, `Sapphire 700 · ${sp(700)}`],
+  ["Input field", `White · ${sl(0)}`, `Sapphire 800 · ${sp(800)}`],
+  ["Primary action fill", `Sapphire 900 · ${sp(900)}`, `Candy 200 · ${cd(200)}`],
+  ["Primary action label", `Candy 200 · ${cd(200)}`, `Sapphire 900 · ${sp(900)}`],
+  ["Primary action pressed", `Sapphire 950 · ${sp(950)}`, `Candy 300 · ${cd(300)}`],
+  ["Secondary action fill", `Candy 200 · ${cd(200)}`, `Sapphire 800 · ${sp(800)}`],
+  ["Secondary action label", `Sapphire 900 · ${sp(900)}`, `Candy 200 · ${cd(200)}`],
+  ["Link / interactive text", `Sapphire 600 · ${sp(600)}`, `Candy 300 · ${cd(300)}`],
+  ["Focus ring", `Sapphire 400 · ${sp(400)}`, `Candy 400 · ${cd(400)}`],
+  ["Selected / highlight fill", `Candy 100 · ${cd(100)}`, `Sapphire 800 · ${sp(800)}`],
+  ["Success", `Sea glass 700 · ${ACCENTS[1].steps[3].hex}`, `Sea glass 300 · ${ACCENTS[1].steps[1].hex}`],
+  ["Warning", `Brass 700 · ${ACCENTS[0].steps[3].hex}`, `Brass 500 · ${ACCENTS[0].steps[2].hex}`],
+  ["Error", `Cherry 500 · ${ACCENTS[2].steps[2].hex}`, `Cherry 300 · ${ACCENTS[2].steps[1].hex}`],
+];
+
+document.getElementById("app").innerHTML = `
+  <header class="stack g8">
+    <h1>Sapphire &amp; Candy — extended palette</h1>
+    <p class="t2">Built out from the two anchors in the yel.creative post (Sapphire #0d1e42, Candy #ebc6ce). Full 11-step scales for both, a Sapphire-tinted neutral scale, three derived accents for semantic states, and a role map for light and dark mode. Ratios shown are WCAG 2.1 contrast, computed from the hex values.</p>
+    <p class="print-note no-print">To save as PDF: File → Print → “Save as PDF”. Both contrast columns (vs white and vs Sapphire 900) are printed under each swatch.</p>
+  </header>
+
+  <div class="grid cols-2 g12 avoid-break">
+    ${anchorBlock("Sapphire", sp(900), cd(200))}
+    ${anchorBlock("Candy", cd(200), sp(900))}
+  </div>
+
+  <div class="callout avoid-break">
+    <div class="title">How the two anchors relate</div>
+    <p class="t2">Sapphire and Candy are near-complements (221° vs 347° is a split complement), which is why the pairing feels balanced rather than clashing. Candy 200 on Sapphire 900 measures ${contrast(cd(200), sp(900)).toFixed(1)}:1 — comfortably AAA — so the original combination can be used as-is for buttons and headings. The weak spot is Candy on white: nothing lighter than Candy 600 is readable as text on a light surface, so Candy should be treated as a surface/fill colour in light mode and as a text/accent colour in dark mode.</p>
+  </div>
+
+  <section class="stack g20">
+    <div class="row g12">
+      <h2>Full scales</h2>
+      <span class="small t3">ratio under each swatch is against</span>
+      <span class="row g6 no-print">
+        <button type="button" class="pill clickable active" data-mode="light">white</button>
+        <button type="button" class="pill clickable" data-mode="dark">Sapphire 900</button>
+      </span>
+    </div>
+    ${rampStrip(SAPPHIRE)}
+    ${rampStrip(CANDY)}
+    ${rampStrip(SLATE)}
+    <p class="small t4">Outlined swatches are the two original anchor values. Steps follow the 50–950 convention so they map straight onto Tailwind / design-token naming.</p>
+  </section>
+
+  <hr />
+
+  <section class="stack g16 page-break">
+    <div class="stack g4">
+      <h2>Complementary and semantic accents</h2>
+      <p class="t2">Three small scales derived from the anchors’ hue wheel positions. They exist for status and emphasis only — Sapphire and Candy stay the brand colours.</p>
+    </div>
+    <div class="grid cols-3 g20">${ACCENTS.map(accentRamp).join("")}</div>
+  </section>
+
+  <hr />
+
+  <section class="stack g16">
+    <div class="stack g4">
+      <h2>Key contrast pairs</h2>
+      <p class="t2">The combinations you will actually ship. AA is 4.5:1 for body text; AA large is 3:1 for 18px+ or bold 14px+ and for UI components.</p>
+    </div>
+    <div class="grid cols-4 g16">${pairs.map(pairChip).join("")}</div>
+  </section>
+
+  <hr />
+
+  <section class="stack g16 page-break">
+    <div class="stack g4">
+      <h2>Role map</h2>
+      <p class="t2">Light mode uses Sapphire for text and actions with Candy as the soft surface; dark mode inverts that so Candy becomes the action colour on Sapphire.</p>
+    </div>
+    <table>
+      <thead><tr><th>Role</th><th>Light mode</th><th>Dark mode</th></tr></thead>
+      <tbody>${roleRows.map((r) => `<tr><td>${esc(r[0])}</td><td>${roleCell(r[1])}</td><td>${roleCell(r[2])}</td></tr>`).join("")}</tbody>
+    </table>
+  </section>
+
+  <section class="stack g16 avoid-break">
+    <div class="stack g4">
+      <h2>Role map applied</h2>
+      <p class="t2">Same sign-up card in both modes using only the tokens above.</p>
+    </div>
+    <div class="grid cols-2 g16">
+      <div class="stack g8">
+        <span class="small semibold">Light — white card, Sapphire 900 / Candy 200 CTA, Candy 200 / Sapphire 900 secondary</span>
+        ${preview("light")}
+      </div>
+      <div class="stack g8">
+        <span class="small semibold">Dark — Sapphire surfaces, Candy actions and links</span>
+        ${preview("dark")}
+      </div>
+    </div>
+  </section>
+`;
+
+document.querySelectorAll("[data-mode]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.body.dataset.ramp = btn.dataset.mode;
+    document.querySelectorAll("[data-mode]").forEach((b) => b.classList.toggle("active", b === btn));
+  });
+});
+</script>
+</body>
+</html>

@@ -84,27 +84,40 @@ export async function getAttendingEvents(accessToken: string): Promise<Attending
   });
 }
 
-export type CreateEventInvitePayload = {
-  /** Optional — when omitted, only the shareable invite code is created. */
-  inviteeEmail?: string;
-};
-
 export type CreateEventInviteResponse = {
   inviteCode: string;
+  /** ISO timestamp; codes expire at end of the event's last day. */
+  inviteCodeExpiry: string;
+  expired: boolean;
+  /** Present when `expired` is true — host should regenerate before sharing. */
+  message?: string;
 };
 
 /**
- * Creates a pending invite for an organised event and returns the 6-digit code.
- * Callers can copy or share the code; email delivery is optional.
+ * Returns the event's reusable invite code (creates one if none exists yet).
+ * Does not mint a replacement when expired — call `regenerateEventInvite` instead.
  */
 export async function createEventInvite(
   accessToken: string,
   eventId: string,
-  payload: CreateEventInvitePayload = {},
 ): Promise<CreateEventInviteResponse> {
   return apiRequest<CreateEventInviteResponse>(`/events/${eventId}/invite`, {
     method: "POST",
-    body: payload,
+    body: {},
+    accessToken,
+  });
+}
+
+/**
+ * Mints a new reusable invite code and invalidates the previous one.
+ */
+export async function regenerateEventInvite(
+  accessToken: string,
+  eventId: string,
+): Promise<CreateEventInviteResponse> {
+  return apiRequest<CreateEventInviteResponse>(`/events/${eventId}/invite/regenerate`, {
+    method: "POST",
+    body: {},
     accessToken,
   });
 }

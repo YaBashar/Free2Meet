@@ -37,15 +37,14 @@ beforeEach(async () => {
   const firstAttendeeEmail = uniqueEmail("attendee");
   const secondAttendeeEmail = uniqueEmail("attendee2");
 
-  const res2 = await requestEventInvite(organiserToken, eventId, firstAttendeeEmail);
+  const res2 = await requestEventInvite(organiserToken, eventId);
   code = res2.body.inviteCode;
-  const res3 = await requestEventInvite(organiserToken, eventId, secondAttendeeEmail);
-  const secondCode = res3.body.inviteCode;
 
   attendeeToken = await getToken("Jonathan", "Lee", firstAttendeeEmail, "Abcnmop.123$");
   await requestAttendeeJoin(attendeeToken, code);
+
   const secondAttendeeToken = await getToken("Adrian", "Newey", secondAttendeeEmail, "Defgnmop.123$");
-  await requestAttendeeJoin(secondAttendeeToken, secondCode);
+  await requestAttendeeJoin(secondAttendeeToken, code);
 });
 
 afterEach(async () => {
