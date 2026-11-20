@@ -5,8 +5,9 @@
  * events from `GET /events/organised-events` and offers Create Event, which
  * opens the mobile create-event screen (web `EventInputDialog` counterpart).
  * Join Event opens the invite-code screen to accept an event share code.
- * Hosting cards can generate an invite via `POST /events/:eventId/invite`
- * for copy and native share.
+ * Hosting cards resolve a reusable invite via `POST /events/:eventId/invite`
+ * (same code until expiry or regenerate). After the first fetch, the share
+ * control toggles the invite strip open/closed without another request.
  */
 
 import { Ionicons } from "@expo/vector-icons";
@@ -16,10 +17,13 @@ import { useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  LayoutAnimation,
+  Platform,
   Pressable,
   RefreshControl,
   Share,
   Text,
+  UIManager,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -29,6 +33,7 @@ import { FormAlert } from "@/components/ui/form-alert";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import {
   createEventInvite,
+  regenerateEventInvite,
   getAttendingEvents,
   getOrganisedEvents,
   type EventSummary,
@@ -40,6 +45,10 @@ import { cn } from "@/lib/utils";
 
 const CREATE_EVENT_ROUTE = "/screens/create-event" as Href;
 const JOIN_EVENT_ROUTE = "/screens/join-event" as Href;
+
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 type DashboardTab = "hosting" | "attending";
 type LoadMode = "initial" | "refresh";
@@ -169,8 +178,8 @@ export default function DashboardScreen() {
           />
         </View>
 
-        <View className="mt-4 mb-1 gap-3">
-          <View>
+        <View className="mt-4 mb-1 flex-row gap-3">
+          <View className="flex-1">
             <View
               pointerEvents="none"
               style={{
@@ -184,26 +193,31 @@ export default function DashboardScreen() {
               }}
             />
             <Button
-              className="h-14 w-full rounded-2xl"
+              className="h-14 w-full gap-1.5 rounded-2xl px-3"
               onPress={() => router.push(CREATE_EVENT_ROUTE)}
               size="lg"
             >
-              <Ionicons color={primaryForeground} name="add" size={24} />
-              <Text className="font-outfit-medium text-base text-primary-foreground">
-                Create Event
+              <Ionicons color={primaryForeground} name="add" size={22} />
+              <Text
+                className="shrink font-outfit-medium text-base text-primary-foreground"
+                numberOfLines={1}
+              >
+                Create
               </Text>
             </Button>
           </View>
 
           <Button
-            className="h-14 w-full rounded-2xl border-2 border-primary bg-transparent"
+            className="h-14 flex-1 gap-1.5 rounded-2xl border-2 border-primary bg-transparent px-3"
             onPress={() => router.push(JOIN_EVENT_ROUTE)}
             size="lg"
             textClassName="text-primary"
             variant="outline"
           >
-            <Ionicons color={primary} name="enter-outline" size={22} />
-            <Text className="font-outfit-medium text-base text-primary">Join Event</Text>
+            <Ionicons color={primary} name="enter-outline" size={20} />
+            <Text className="shrink font-outfit-medium text-base text-primary" numberOfLines={1}>
+              Join
+            </Text>
           </Button>
         </View>
 
@@ -310,45 +324,128 @@ type EventListCardProps = {
 function EventListCard({ accessToken, event, tab }: EventListCardProps) {
   const { primary, primaryForeground, mutedForeground } = useThemeColors();
   const [inviteCode, setInviteCode] = useState<string | null>(null);
+  const [inviteExpiryLabel, setInviteExpiryLabel] = useState<string | null>(null);
+  const [inviteExpired, setInviteExpired] = useState(false);
+  const [isInviteExpanded, setIsInviteExpanded] = useState(false);
   const [isGeneratingInvite, setIsGeneratingInvite] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const isGeneratingInviteRef = useRef(false);
 
-  /** Fetches a fresh invite code from `POST /events/:eventId/invite`. */
-  async function handleGenerateInvite() {
-    if (!accessToken || isGeneratingInvite) {
+  function toggleInviteExpanded() {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setIsInviteExpanded((open) => !open);
+  }
+
+  function applyInviteResponse(response: {
+    inviteCode: string;
+    inviteCodeExpiry: string;
+    expired: boolean;
+    message?: string;
+  }) {
+    setInviteCode(response.inviteCode);
+    setInviteExpired(response.expired);
+    setInviteExpiryLabel(formatApiDateForDisplay(response.inviteCodeExpiry.slice(0, 10)));
+    if (response.expired && response.message) {
+      setInviteError(response.message);
+    } else {
+      setInviteError(null);
+    }
+  }
+
+  async function copyInviteToClipboard(code: string) {
+    try {
+      await Clipboard.setStringAsync(code);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
+  }
+
+  /**
+   * Resolves the event's reusable invite from the server, expands the strip,
+   * and copies the code when it is still valid. Collapse never calls this.
+   */
+  async function ensureInviteCode() {
+    if (!accessToken || isGeneratingInviteRef.current) {
       return;
     }
 
+    isGeneratingInviteRef.current = true;
     setIsGeneratingInvite(true);
     setInviteError(null);
-    setCopied(false);
 
     try {
       const response = await createEventInvite(accessToken, event.id);
-      setInviteCode(response.inviteCode);
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      applyInviteResponse(response);
+      setIsInviteExpanded(true);
+      if (!response.expired) {
+        void copyInviteToClipboard(response.inviteCode);
+      } else {
+        setCopied(false);
+      }
     } catch (error) {
       setInviteError(
         error instanceof ApiError ? error.message : "Could not create an invite code.",
       );
     } finally {
+      isGeneratingInviteRef.current = false;
       setIsGeneratingInvite(false);
     }
   }
 
-  /** Copies the invite code and briefly shows confirmation. */
-  async function handleCopyInvite() {
-    if (!inviteCode) {
+  /** Mints a new code (after expiry or to revoke the previous share). */
+  async function handleRegenerateInvite() {
+    if (!accessToken || isGeneratingInviteRef.current) {
       return;
     }
 
-    await Clipboard.setStringAsync(inviteCode);
-    setCopied(true);
+    isGeneratingInviteRef.current = true;
+    setIsGeneratingInvite(true);
+    setInviteError(null);
+
+    try {
+      const response = await regenerateEventInvite(accessToken, event.id);
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      applyInviteResponse(response);
+      setIsInviteExpanded(true);
+      void copyInviteToClipboard(response.inviteCode);
+    } catch (error) {
+      setInviteError(
+        error instanceof ApiError ? error.message : "Could not generate a new invite code.",
+      );
+    } finally {
+      isGeneratingInviteRef.current = false;
+      setIsGeneratingInvite(false);
+    }
+  }
+
+  /**
+   * Share control: once a code exists, toggle expand/collapse locally.
+   * First press (no code yet) fetches from the server.
+   */
+  function handleShareButtonPress() {
+    if (inviteCode) {
+      toggleInviteExpanded();
+      return;
+    }
+
+    void ensureInviteCode();
+  }
+
+  /** Copies the invite code and briefly shows confirmation. */
+  async function handleCopyInvite() {
+    if (!inviteCode || inviteExpired) {
+      return;
+    }
+
+    await copyInviteToClipboard(inviteCode);
   }
 
   /** Opens the system share sheet with the invite code message. */
   async function handleShareInvite() {
-    if (!inviteCode) {
+    if (!inviteCode || inviteExpired) {
       return;
     }
 
@@ -375,16 +472,33 @@ function EventListCard({ accessToken, event, tab }: EventListCardProps) {
           </View>
           {tab === "hosting" ? (
             <Pressable
-              accessibilityLabel="Create invite code"
+              accessibilityLabel={
+                inviteCode
+                  ? isInviteExpanded
+                    ? "Hide invite code"
+                    : "Show invite code"
+                  : "Create invite code"
+              }
               accessibilityRole="button"
+              accessibilityState={{ expanded: inviteCode ? isInviteExpanded : undefined }}
               className="h-9 w-9 items-center justify-center rounded-lg border border-border"
               disabled={isGeneratingInvite}
-              onPress={() => void handleGenerateInvite()}
+              onPress={handleShareButtonPress}
             >
               {isGeneratingInvite ? (
                 <ActivityIndicator color={primary} size="small" />
               ) : (
-                <Ionicons color={primary} name="share-outline" size={18} />
+                <Ionicons
+                  color={primary}
+                  name={
+                    inviteCode
+                      ? isInviteExpanded
+                        ? "chevron-up"
+                        : "chevron-down"
+                      : "share-outline"
+                  }
+                  size={18}
+                />
               )}
             </Pressable>
           ) : null}
@@ -395,45 +509,97 @@ function EventListCard({ accessToken, event, tab }: EventListCardProps) {
         <FormAlert className="mt-3" message={inviteError} />
       ) : null}
 
-      {tab === "hosting" && inviteCode ? (
+      {tab === "hosting" && inviteCode && isInviteExpanded ? (
         <View className="mt-3 gap-3 border-t border-border pt-3">
-          <View className="gap-1">
-            <Text className="font-outfit text-xs text-muted-foreground">Invite code</Text>
-            <Text className="font-outfit-semibold text-2xl tracking-[6px] text-foreground">
-              {inviteCode}
+          <Pressable
+            accessibilityLabel="Hide invite code"
+            accessibilityRole="button"
+            className="flex-row items-center justify-between"
+            onPress={toggleInviteExpanded}
+          >
+            <Text className="font-outfit text-xs text-muted-foreground">
+              {inviteExpired
+                ? "Invite code expired"
+                : inviteExpiryLabel
+                  ? `Reusable · expires ${inviteExpiryLabel}`
+                  : "Reusable invite code"}
             </Text>
-          </View>
-          <View className="flex-row gap-2">
+            <Ionicons color={mutedForeground} name="chevron-up" size={16} />
+          </Pressable>
+          <Text
+            className={cn(
+              "font-outfit-semibold text-2xl tracking-[6px]",
+              inviteExpired ? "text-muted-foreground line-through" : "text-foreground",
+            )}
+          >
+            {inviteCode}
+          </Text>
+          {inviteExpired ? (
             <Pressable
-              accessibilityLabel="Copy invite code"
+              accessibilityLabel="Generate new invite code"
               accessibilityRole="button"
-              className="h-11 flex-1 flex-row items-center justify-center gap-1.5 rounded-xl border border-border"
-              onPress={() => void handleCopyInvite()}
+              className="h-11 flex-row items-center justify-center gap-1.5 rounded-xl bg-primary"
+              disabled={isGeneratingInvite}
+              onPress={() => void handleRegenerateInvite()}
             >
-              <Ionicons
-                color={copied ? primary : mutedForeground}
-                name={copied ? "checkmark" : "copy-outline"}
-                size={16}
-              />
-              <Text
-                className={cn(
-                  "font-outfit-medium text-sm",
-                  copied ? "text-primary" : "text-muted-foreground",
-                )}
+              {isGeneratingInvite ? (
+                <ActivityIndicator color={primaryForeground} size="small" />
+              ) : (
+                <>
+                  <Ionicons color={primaryForeground} name="refresh-outline" size={16} />
+                  <Text className="font-outfit-medium text-sm text-primary-foreground">
+                    Generate new code
+                  </Text>
+                </>
+              )}
+            </Pressable>
+          ) : (
+            <View className="gap-2">
+              <View className="flex-row gap-2">
+                <Pressable
+                  accessibilityLabel="Copy invite code"
+                  accessibilityRole="button"
+                  className="h-11 flex-1 flex-row items-center justify-center gap-1.5 rounded-xl border border-border"
+                  onPress={() => void handleCopyInvite()}
+                >
+                  <Ionicons
+                    color={copied ? primary : mutedForeground}
+                    name={copied ? "checkmark" : "copy-outline"}
+                    size={16}
+                  />
+                  <Text
+                    className={cn(
+                      "font-outfit-medium text-sm",
+                      copied ? "text-primary" : "text-muted-foreground",
+                    )}
+                  >
+                    {copied ? "Copied" : "Copy"}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  accessibilityLabel="Share invite code"
+                  accessibilityRole="button"
+                  className="h-11 flex-1 flex-row items-center justify-center gap-1.5 rounded-xl bg-primary"
+                  onPress={() => void handleShareInvite()}
+                >
+                  <Ionicons color={primaryForeground} name="share-social-outline" size={16} />
+                  <Text className="font-outfit-medium text-sm text-primary-foreground">Share</Text>
+                </Pressable>
+              </View>
+              <Pressable
+                accessibilityLabel="Generate new invite code"
+                accessibilityRole="button"
+                className="h-10 flex-row items-center justify-center gap-1.5"
+                disabled={isGeneratingInvite}
+                onPress={() => void handleRegenerateInvite()}
               >
-                {copied ? "Copied" : "Copy"}
-              </Text>
-            </Pressable>
-            <Pressable
-              accessibilityLabel="Share invite code"
-              accessibilityRole="button"
-              className="h-11 flex-1 flex-row items-center justify-center gap-1.5 rounded-xl bg-primary"
-              onPress={() => void handleShareInvite()}
-            >
-              <Ionicons color={primaryForeground} name="share-social-outline" size={16} />
-              <Text className="font-outfit-medium text-sm text-primary-foreground">Share</Text>
-            </Pressable>
-          </View>
+                <Ionicons color={mutedForeground} name="refresh-outline" size={14} />
+                <Text className="font-outfit text-xs text-muted-foreground">
+                  New code (invalidates current)
+                </Text>
+              </Pressable>
+            </View>
+          )}
         </View>
       ) : null}
     </View>
