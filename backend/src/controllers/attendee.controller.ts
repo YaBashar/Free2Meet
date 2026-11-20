@@ -8,7 +8,7 @@ import {
 } from "../service/attendee.service";
 
 export const join = async (req: Request, res: Response, next: NextFunction) => {
-  const userId = req.user?.sub;
+  const userId = req.user!.sub;
   // Prefer inviteCode; inviteLink kept for older clients
   const inviteCode = (req.body.inviteCode ?? req.body.inviteLink) as string;
 
@@ -21,7 +21,7 @@ export const join = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 export const availability = async (req: Request, res: Response, next: NextFunction) => {
-  const userId = req.user?.sub;
+  const userId = req.user!.sub;
   const eventId = req.params.eventId as string;
   const { date, startAvailable, endAvailable } = req.body;
 
@@ -64,7 +64,7 @@ export const dayPreference = async (req: Request, res: Response, next: NextFunct
 };
 
 export const leave = async (req: Request, res: Response, next: NextFunction) => {
-  const userId = req.user?.sub;
+  const userId = req.user!.sub;
   const eventId = req.params.eventId as string;
 
   try {
