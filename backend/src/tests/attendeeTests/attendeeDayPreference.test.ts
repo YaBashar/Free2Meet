@@ -67,7 +67,7 @@ beforeEach(async () => {
   );
   eventId = newEventRes.body.eventId;
 
-  const inviteRes = await requestEventInvite(organiserToken, eventId, attendeeEmail);
+  const inviteRes = await requestEventInvite(organiserToken, eventId);
   code = inviteRes.body.inviteCode;
 
   attendeeToken = await getToken("Jonathan", "Lee", attendeeEmail, "Abcnmop.123$");
@@ -204,7 +204,7 @@ describe("Single-day event (non-hybrid)", () => {
       17
     );
     singleEventId = created.body.eventId;
-    const inv = await requestEventInvite(organiserTok, singleEventId, attendeeEmail);
+    const inv = await requestEventInvite(organiserTok, singleEventId);
     singleCode = inv.body.inviteCode;
     singleAttendeeToken = await getToken("Att", "endee", attendeeEmail, "Abcnmop.123$");
   });

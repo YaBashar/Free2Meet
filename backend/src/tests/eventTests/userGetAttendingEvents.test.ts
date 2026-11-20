@@ -32,7 +32,7 @@ beforeEach(async () => {
   const res1 = await requestNewEvent(organiserToken, "New Event", "New Description", "House", EventType.SINGLE, EVENT_DATE, EVENT_DATE, 10, 14);
   eventId = res1.body.eventId;
   const attendeeEmail = uniqueEmail("attendee");
-  const res2 = await requestEventInvite(organiserToken, eventId, attendeeEmail);
+  const res2 = await requestEventInvite(organiserToken, eventId);
   code = res2.body.inviteCode;
   attendeeToken = await getToken("Jonathan", "Lee", attendeeEmail, "Abcnmop.123$");
   await requestAttendeeJoin(attendeeToken, code);

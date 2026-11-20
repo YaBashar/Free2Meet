@@ -151,11 +151,18 @@ export const requestEventUpdate = async (
     .send(updatedFields);
 };
 
-export const requestEventInvite = async (token: string, eventId: string, inviteeEmail: string) => {
+export const requestEventInvite = async (token: string, eventId: string) => {
   return await request(app)
     .post(`/events/${eventId}/invite`)
     .set("Authorization", `Bearer ${token}`)
-    .send({ inviteeEmail });
+    .send({});
+};
+
+export const requestRegenerateEventInvite = async (token: string, eventId: string) => {
+  return await request(app)
+    .post(`/events/${eventId}/invite/regenerate`)
+    .set("Authorization", `Bearer ${token}`)
+    .send({});
 };
 
 // Attendee
