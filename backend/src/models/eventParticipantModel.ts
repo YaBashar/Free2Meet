@@ -10,8 +10,6 @@ export interface EventParticipant extends Document {
   availability?: { date: string; startAvailable: number; endAvailable: number }[];
   preferredDates?: string[];
   status: EventParticipantStatus;
-  inviteCode?: string;
-  inviteCodeExpiry?: Date;
   role: "Organiser" | "Attendee";
 }
 
@@ -22,8 +20,6 @@ const eventParticipantSchema = new mongoose.Schema({
   availability: [{ date: String, startAvailable: Number, endAvailable: Number }],
   preferredDates: [{ type: String }],
   status: { type: String, enum: ["Pending", "Accepted", "Declined"] },
-  inviteCode: { type: String, sparse: true, unique: true },
-  inviteCodeExpiry: { type: Date },
   role: { type: String, enum: ["Organiser", "Attendee"] },
 });
 

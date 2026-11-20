@@ -26,36 +26,44 @@ export async function attendeeJoin(userId: string, inviteCode: string): Promise<
     throw new AttendeeError("Invalid Invite Code");
   }
 
-  const pendingRecord = await EventParticipantModel.findOne({
-    inviteCode,
-    status: "Pending",
-    role: "Attendee",
-  });
-
-  if (!pendingRecord) {
+  const event = await EventModel.findOne({ inviteCode });
+  if (!event) {
     throw new AttendeeError("Invalid Invite Code");
   }
 
-  if (pendingRecord.inviteCodeExpiry && pendingRecord.inviteCodeExpiry < new Date()) {
-    throw new AttendeeError("Invite code has expired", 410);
+  if (event.inviteCodeExpiry && event.inviteCodeExpiry < new Date()) {
+    throw new AttendeeError(
+      "Invite code has expired. Ask the host to send a new code.",
+      410
+    );
   }
 
-  const event = await EventModel.findById(pendingRecord.eventId);
-  if (!event) {
-    throw new AttendeeError("Event does not exist for invite code");
+  const alreadyJoined = await EventParticipantModel.findOne({
+    eventId: event._id,
+    userId,
+    role: "Attendee",
+    status: "Accepted",
+  });
+  if (alreadyJoined) {
+    throw new AttendeeError("You have already joined this event");
   }
 
-  pendingRecord.userId = userId;
-  pendingRecord.name = user.name;
-  pendingRecord.status = "Accepted";
+  const organiserSelf = await EventParticipantModel.findOne({
+    eventId: event._id,
+    userId,
+    role: "Organiser",
+  });
+  if (organiserSelf) {
+    throw new AttendeeError("Organisers cannot join their own event as an attendee");
+  }
 
-  await pendingRecord.save();
-
-  // Drop the share code after use so it cannot be replayed and can be reused later
-  await EventParticipantModel.updateOne(
-    { _id: pendingRecord._id },
-    { $unset: { inviteCode: 1, inviteCodeExpiry: 1 } }
-  );
+  await new EventParticipantModel({
+    eventId: event._id,
+    userId,
+    name: user.name,
+    role: "Attendee",
+    status: "Accepted",
+  }).save();
 
   return {};
 }
