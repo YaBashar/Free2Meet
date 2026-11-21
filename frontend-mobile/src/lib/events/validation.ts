@@ -134,17 +134,6 @@ export function hasFieldErrors(errors: CreateEventFieldErrors): boolean {
   return Object.keys(errors).length > 0;
 }
 
-/** Parses validated time `Date`s into minutes-since-midnight for the API. */
-export function parseEventTimes(startTime: Date, endTime: Date): {
-  startTime: number;
-  endTime: number;
-} {
-  return {
-    startTime: dateToMinutesSinceMidnight(startTime),
-    endTime: dateToMinutesSinceMidnight(endTime),
-  };
-}
-
 /** Formats a local calendar date as `YYYY-MM-DD` for the events API. */
 export function formatEventDateForApi(date: Date): string {
   const year = date.getFullYear();

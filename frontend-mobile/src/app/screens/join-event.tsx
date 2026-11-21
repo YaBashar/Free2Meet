@@ -2,130 +2,71 @@
  * Join event screen
  *
  * Collects a 6-digit invite code and joins via `POST /attendees/join`.
- * Entering a join code is the acceptance. Reached from the dashboard
- * Join Event button.
+ * Entering a join code is the acceptance.
  */
 
-import { router, Stack } from "expo-router";
-import { useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
-import { VerificationCodeInput } from "@/components/ui/verification-code-input";
-import { useThemeColors } from "@/hooks/use-theme-colors";
+import { FormField } from "@/components/ui/form-field";
+import { FormScreen } from "@/components/ui/form-screen";
 import { joinEvent } from "@/lib/api/attendees";
-import { ApiError } from "@/lib/api/client";
+import { getErrorMessage } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/auth-context";
 import { validateInviteCode } from "@/lib/events/validation";
 
 /** Joins an event with a 6-digit invite code. */
 export default function JoinEventScreen() {
   const { session } = useAuth();
-  const { primaryForeground } = useThemeColors();
 
   const [code, setCode] = useState("");
-  const [fieldError, setFieldError] = useState<string | undefined>();
+  const [fieldError, setFieldError] = useState<string>();
   const [requestError, setRequestError] = useState<string | null>(null);
   const [isJoining, setIsJoining] = useState(false);
-  const isJoiningRef = useRef(false);
 
   /** Validates locally, joins the event, then returns to the dashboard. */
-  async function handleJoin(submittedCode = code) {
-    if (isJoiningRef.current) {
-      return;
-    }
-
-    const error = validateInviteCode(submittedCode);
+  async function handleJoin() {
+    const error = validateInviteCode(code);
     setFieldError(error);
     setRequestError(null);
 
-    if (error) {
+    if (error || !session) {
       return;
     }
 
-    if (!session) {
-      setRequestError("You need to be signed in to join an event.");
-      return;
-    }
-
-    isJoiningRef.current = true;
     setIsJoining(true);
 
     try {
-      await joinEvent(session.accessToken, { inviteCode: submittedCode });
+      await joinEvent(session.accessToken, { inviteCode: code });
       router.back();
     } catch (error) {
-      setRequestError(
-        error instanceof ApiError ? error.message : "Something went wrong. Please try again.",
-      );
-    } finally {
-      isJoiningRef.current = false;
+      setRequestError(getErrorMessage(error));
       setIsJoining(false);
     }
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={["bottom"]}>
-      <Stack.Screen options={{ title: "Join event" }} />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        className="flex-1 bg-background"
-      >
-        <ScrollView
-          contentContainerClassName="px-6 pb-10 pt-2"
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <Text className="font-outfit text-base text-muted-foreground">
-            Enter the 6-digit invite code you received to join the event.
-          </Text>
+    <FormScreen
+      subtitle="Enter the 6-digit invite code you received to join the event."
+      title="Join event"
+    >
+      <FormField
+        error={fieldError}
+        keyboardType="number-pad"
+        label="Invite code"
+        maxLength={6}
+        onChangeText={setCode}
+        placeholder="123456"
+        value={code}
+      />
 
-          <View className="mt-8 gap-2">
-            <VerificationCodeInput
-              hasError={Boolean(fieldError || requestError)}
-              onChange={(value) => {
-                setCode(value);
-                if (fieldError) {
-                  setFieldError(undefined);
-                }
-                if (requestError) {
-                  setRequestError(null);
-                }
-              }}
-              onComplete={(value) => {
-                void handleJoin(value);
-              }}
-              value={code}
-            />
+      <FormAlert message={requestError} />
 
-            {fieldError ? (
-              <Text className="font-outfit text-xs text-destructive">{fieldError}</Text>
-            ) : null}
-          </View>
-
-          {requestError ? <FormAlert className="mt-4" message={requestError} /> : null}
-
-          <Button
-            className="mt-8 h-14 w-full rounded-2xl"
-            disabled={isJoining}
-            onPress={() => {
-              void handleJoin(code);
-            }}
-            size="lg"
-          >
-            {isJoining ? <ActivityIndicator color={primaryForeground} /> : "Join event"}
-          </Button>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      <Button disabled={isJoining} onPress={handleJoin}>
+        {isJoining ? "Joining…" : "Join event"}
+      </Button>
+    </FormScreen>
   );
 }
