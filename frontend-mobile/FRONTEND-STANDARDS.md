@@ -180,18 +180,22 @@ const [teeTime, setTeeTime] = useState<EventTime>({
 
 ## Styling and colours
 
-Use NativeWind/Tailwind semantic theme tokens wherever possible:
+Style with React Native's `StyleSheet`. Each file declares its own
+`const styles = StyleSheet.create({ ... })` below its components, and takes
+colours and fonts from `src/lib/theme.ts`:
 
-```text
-bg-background
-bg-card
-bg-muted
-text-foreground
-text-muted-foreground
-text-primary
-text-secondary
-text-accent
-border-border
+```tsx
+import { COLORS, FONTS } from "@/lib/theme";
+
+<Text style={styles.subtitle}>Pick a time</Text>
+
+const styles = StyleSheet.create({
+  subtitle: {
+    color: COLORS.mutedForeground,
+    fontFamily: FONTS.regular,
+    fontSize: 16,
+  },
+});
 ```
 
 Do not hard-code project colours in screens or components.
@@ -201,18 +205,15 @@ Do not hard-code project colours in screens or components.
 <Text style={{ color: '#183B61' }} />
 
 // Prefer
-<Text className="text-secondary" />
+<Text style={styles.subtitle} />
 ```
 
-Some native props, including `Ionicons.color` and
-`TextInput.placeholderTextColor`, cannot consume a class name. Obtain those
-colours through `useThemeColors()`:
+Native props that take a colour directly, such as `Ionicons.color` and
+`TextInput.placeholderTextColor`, use the same constants:
 
 ```tsx
-const { mutedForeground, primary } = useThemeColors();
-
-<Ionicons color={primary} name="calendar-outline" size={20} />
-<TextInput placeholderTextColor={mutedForeground} />
+<Ionicons color={COLORS.primary} name="calendar-outline" size={20} />
+<TextInput placeholderTextColor={COLORS.mutedForeground} />
 ```
 
 Only use custom colour values when they represent external branding, image
