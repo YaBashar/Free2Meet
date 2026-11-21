@@ -1,111 +1,68 @@
 /**
  * Button
  *
- * Pressable with shadcn-style `variant` and `size` tokens for NativeWind.
- * Does not own navigation or form submit behaviour — callers pass `onPress`.
+ * Themed `Pressable` in three looks: a filled primary action, an outlined
+ * secondary action, and an inline text link. Callers pass `onPress`.
  */
 
-import { cva, type VariantProps } from "class-variance-authority";
-import type { ReactNode } from "react";
-import { Pressable, Text, type PressableProps } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  type PressableProps,
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
 
-import { cn } from "@/lib/utils";
+import { COLORS, FONTS } from "@/lib/theme";
 
-const buttonVariants = cva(
-  "flex-row items-center justify-center gap-2 rounded-md disabled:opacity-50",
-  {
-    variants: {
-      variant: {
-        default: "bg-primary active:bg-primary/90",
-        destructive: "bg-destructive active:bg-destructive/90",
-        outline:
-          "border border-border bg-background active:bg-accent dark:bg-input/30",
-        secondary: "bg-secondary active:bg-secondary/80",
-        ghost: "active:bg-accent",
-        link: "",
-      },
-      size: {
-        default: "h-10 px-4 py-2 native:h-12 native:px-5",
-        sm: "h-8 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  },
-);
+type ButtonProps = Omit<PressableProps, "children" | "style"> & {
+  children: string;
+  variant?: "primary" | "outline" | "link";
+  style?: StyleProp<ViewStyle>;
+};
 
-const buttonTextVariants = cva("text-sm font-outfit-medium", {
-  variants: {
-    variant: {
-      default: "text-primary-foreground",
-      destructive: "text-white",
-      outline: "text-foreground",
-      secondary: "text-secondary-foreground",
-      ghost: "text-foreground",
-      link: "text-primary underline",
-    },
-    size: {
-      default: "",
-      sm: "",
-      lg: "text-base",
-      icon: "",
-    },
-  },
-  defaultVariants: {
-    variant: "default",
-    size: "default",
-  },
-});
-
-type ButtonProps = PressableProps &
-  VariantProps<typeof buttonVariants> & {
-    children: ReactNode;
-    textClassName?: string;
-  };
-
-/**
- * Renders a themed pressable. String children are wrapped in styled `Text`;
- * pass custom nodes when you need icons or multi-line content.
- */
-function Button({
-  className,
-  variant,
-  size,
-  children,
-  textClassName,
-  disabled,
-  ...props
-}: ButtonProps) {
+/** Renders a themed pressable with a text label. */
+function Button({ children, variant = "primary", disabled, style, ...props }: ButtonProps) {
   return (
     <Pressable
       accessibilityRole="button"
-      className={cn(
-        disabled && "opacity-50",
-        buttonVariants({ variant, size }),
-        className,
-      )}
       disabled={disabled}
+      style={[styles.base, styles[variant], disabled && styles.disabled, style]}
       {...props}
     >
-      {typeof children === "string" ? (
-        <Text
-          className={cn(
-            buttonTextVariants({ variant, size }),
-            textClassName,
-          )}
-        >
-          {children}
-        </Text>
-      ) : (
-        children
-      )}
+      <Text style={[styles.text, variant === "primary" && styles.primaryText]}>{children}</Text>
     </Pressable>
   );
 }
 
-export { Button, buttonTextVariants, buttonVariants };
-export type { ButtonProps };
+const styles = StyleSheet.create({
+  base: {
+    alignItems: "center",
+    borderRadius: 12,
+    padding: 14,
+  },
+  primary: {
+    backgroundColor: COLORS.primary,
+  },
+  outline: {
+    borderColor: COLORS.primary,
+    borderWidth: 1,
+  },
+  link: {
+    padding: 8,
+  },
+  disabled: {
+    opacity: 0.5,
+  },
+  text: {
+    color: COLORS.primary,
+    fontFamily: FONTS.medium,
+    fontSize: 16,
+  },
+  primaryText: {
+    color: COLORS.primaryForeground,
+  },
+});
+
+export { Button };

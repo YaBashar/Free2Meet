@@ -1,68 +1,62 @@
 /**
  * FormField
  *
- * Pairs a label, themed input, and validation message so forms stay
- * consistent, and owns the show/hide toggle for password fields. Validation
- * itself belongs to the screen.
+ * Pairs a label, themed text input, and validation message so forms stay
+ * consistent. Validation itself belongs to the screen.
  */
 
-import { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { StyleSheet, Text, TextInput, View, type TextInputProps } from "react-native";
 
-import { Input, type InputProps } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { COLORS, FONTS } from "@/lib/theme";
 
-type FormFieldProps = InputProps & {
+type FormFieldProps = TextInputProps & {
   label: string;
-  /** Validation message shown under the field. Also styles the error border. */
+  /** Validation message shown under the field. */
   error?: string;
 };
 
 /** Renders a labelled text field with its validation message. */
-function FormField({
-  label,
-  error,
-  secureTextEntry = false,
-  className,
-  ...props
-}: FormFieldProps) {
-  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-
+function FormField({ label, error, ...props }: FormFieldProps) {
   return (
-    <View className="gap-1.5">
-      <Text className="font-outfit-medium text-sm text-foreground">{label}</Text>
-
-      <View>
-        <Input
-          accessibilityLabel={label}
-          // Leave room for the reveal toggle so long passwords stay readable.
-          className={cn(secureTextEntry && "pr-20", className)}
-          hasError={Boolean(error)}
-          secureTextEntry={secureTextEntry && !isPasswordVisible}
-          {...props}
-        />
-
-        {secureTextEntry ? (
-          <Pressable
-            accessibilityLabel={isPasswordVisible ? "Hide password" : "Show password"}
-            accessibilityRole="button"
-            accessibilityState={{ selected: isPasswordVisible }}
-            className="absolute bottom-0 right-1 top-0 justify-center px-3"
-            onPress={() => setIsPasswordVisible((visible) => !visible)}
-          >
-            <Text className="font-outfit-medium text-sm text-primary">
-              {isPasswordVisible ? "Hide" : "Show"}
-            </Text>
-          </Pressable>
-        ) : null}
-      </View>
-
-      {error ? (
-        <Text className="font-outfit text-xs text-destructive">{error}</Text>
-      ) : null}
+    <View style={styles.container}>
+      <Text style={styles.label}>{label}</Text>
+      <TextInput
+        accessibilityLabel={label}
+        placeholderTextColor={COLORS.mutedForeground}
+        style={[styles.input, error ? styles.inputError : null]}
+        {...props}
+      />
+      {error ? <Text style={styles.error}>{error}</Text> : null}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    gap: 6,
+  },
+  label: {
+    color: COLORS.foreground,
+    fontFamily: FONTS.medium,
+  },
+  input: {
+    backgroundColor: COLORS.card,
+    borderColor: COLORS.border,
+    borderRadius: 12,
+    borderWidth: 1,
+    color: COLORS.foreground,
+    fontFamily: FONTS.regular,
+    fontSize: 16,
+    padding: 12,
+  },
+  inputError: {
+    borderColor: COLORS.destructive,
+  },
+  error: {
+    color: COLORS.destructive,
+    fontFamily: FONTS.regular,
+  },
+});
 
 export { FormField };
 export type { FormFieldProps };
