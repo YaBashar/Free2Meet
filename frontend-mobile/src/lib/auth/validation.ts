@@ -29,10 +29,6 @@ export type LoginFieldErrors = {
   password?: string;
 };
 
-export type ForgotPasswordFieldErrors = {
-  email?: string;
-};
-
 export type SignUpFormValues = {
   firstName: string;
   lastName: string;
@@ -147,15 +143,6 @@ export function validateLoginForm(values: LoginFormValues): LoginFieldErrors {
   return stripEmptyMessages({
     email: validateEmail(values.email),
     password: values.password ? undefined : "Password is required.",
-  });
-}
-
-/** Validates the forgot-password email field. */
-export function validateForgotPasswordForm(values: {
-  email: string;
-}): ForgotPasswordFieldErrors {
-  return stripEmptyMessages({
-    email: validateEmail(values.email),
   });
 }
 
