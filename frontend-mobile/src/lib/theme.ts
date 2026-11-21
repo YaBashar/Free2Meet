@@ -1,121 +1,51 @@
 /**
- * Navigation and semantic colour theme
+ * App theme
  *
- * Owns the light/dark colour values that NativeWind CSS variables, React
- * Navigation, and `useThemeColors()` share. Does not apply styles to screens.
+ * Owns the colour palette, font families, and React Navigation theme shared by
+ * every screen's `StyleSheet`. Does not apply styles itself.
  */
 
-import { DarkTheme, DefaultTheme, type Theme } from "expo-router/react-navigation";
-
-export type ThemeMode = "light" | "dark";
-
-export type ThemeColors = {
-  background: string;
-  foreground: string;
-  card: string;
-  cardForeground: string;
-  popover: string;
-  popoverForeground: string;
-  primary: string;
-  primaryForeground: string;
-  secondary: string;
-  secondaryForeground: string;
-  muted: string;
-  mutedForeground: string;
-  accent: string;
-  accentForeground: string;
-  destructive: string;
-  border: string;
-  input: string;
-  ring: string;
-  radius: string;
-  chart1: string;
-  chart2: string;
-  chart3: string;
-  chart4: string;
-  chart5: string;
-};
+import { Outfit_400Regular, Outfit_500Medium, Outfit_700Bold } from "@expo-google-fonts/outfit";
+import { DefaultTheme, type Theme } from "expo-router/react-navigation";
 
 /**
- * Semantic colours mapped from the web palette (marian / delft / byzantine).
- * Screens should consume these through Tailwind tokens or `useThemeColors()`.
+ * Semantic colours built from the brand palette:
+ * ghost-white #ECEEF9 | lavender #D8DDF3 | byzantine-blue #4055BF
+ * marian-blue #2D3C86 | delft-blue #202B60
  */
-export const THEME: Record<ThemeMode, ThemeColors> = {
-  light: {
-    background: "hsl(231 52% 95%)",
-    foreground: "hsl(230 50% 25%)",
-    card: "hsl(0 0% 100%)",
-    cardForeground: "hsl(230 50% 25%)",
-    popover: "hsl(0 0% 100%)",
-    popoverForeground: "hsl(230 50% 25%)",
-    primary: "hsl(230 50% 50%)",
-    primaryForeground: "hsl(0 0% 100%)",
-    secondary: "hsl(229 53% 90%)",
-    secondaryForeground: "hsl(230 50% 25%)",
-    muted: "hsl(229 53% 90%)",
-    mutedForeground: "hsl(230 50% 35%)",
-    accent: "hsl(230 50% 70%)",
-    accentForeground: "hsl(230 50% 25%)",
-    destructive: "hsl(0 84.2% 60.2%)",
-    border: "hsl(230 50% 25%)",
-    input: "hsl(230 50% 25%)",
-    ring: "hsl(230 50% 50%)",
-    radius: "0.625rem",
-    chart1: "hsl(230 50% 50%)",
-    chart2: "hsl(230 50% 70%)",
-    chart3: "hsl(230 50% 35%)",
-    chart4: "hsl(229 53% 90%)",
-    chart5: "hsl(230 50% 25%)",
-  },
-  dark: {
-    background: "hsl(230 50% 50%)",
-    foreground: "hsl(0 0% 100%)",
-    card: "hsl(230 50% 25%)",
-    cardForeground: "hsl(0 0% 100%)",
-    popover: "hsl(230 50% 25%)",
-    popoverForeground: "hsl(0 0% 100%)",
-    primary: "hsl(230 50% 70%)",
-    primaryForeground: "hsl(230 50% 25%)",
-    secondary: "hsl(230 50% 35%)",
-    secondaryForeground: "hsl(231 52% 95%)",
-    muted: "hsl(230 50% 35%)",
-    mutedForeground: "hsl(229 53% 90%)",
-    accent: "hsl(230 50% 35%)",
-    accentForeground: "hsl(0 0% 100%)",
-    destructive: "hsl(0 70.9% 59.4%)",
-    border: "hsl(230 50% 70%)",
-    input: "hsl(230 50% 70%)",
-    ring: "hsl(230 50% 70%)",
-    radius: "0.625rem",
-    chart1: "hsl(230 50% 70%)",
-    chart2: "hsl(231 52% 95%)",
-    chart3: "hsl(229 53% 90%)",
-    chart4: "hsl(230 50% 35%)",
-    chart5: "hsl(230 50% 25%)",
-  },
+export const COLORS = {
+  background: "#ECEEF9",
+  foreground: "#202B60",
+  card: "#FFFFFF",
+  primary: "#4055BF",
+  primaryForeground: "#FFFFFF",
+  mutedForeground: "#2D3C86",
+  border: "#202B60",
+  destructive: "#EF4444",
+} as const;
+
+/** Outfit font family names for `fontFamily`. */
+export const FONTS = {
+  regular: "Outfit_400Regular",
+  medium: "Outfit_500Medium",
+  bold: "Outfit_700Bold",
+} as const;
+
+/** Font files keyed by their `FONTS` name, loaded by `useFonts` in the root layout. */
+export const FONT_ASSETS = {
+  [FONTS.regular]: Outfit_400Regular,
+  [FONTS.medium]: Outfit_500Medium,
+  [FONTS.bold]: Outfit_700Bold,
 };
 
-export const NAV_THEME: Record<ThemeMode, Theme> = {
-  light: {
-    ...DefaultTheme,
-    colors: {
-      background: THEME.light.background,
-      border: THEME.light.border,
-      card: THEME.light.background,
-      notification: THEME.light.destructive,
-      primary: THEME.light.primary,
-      text: THEME.light.foreground,
-    },
-  },
-  dark: {
-    ...DarkTheme,
-    colors: {
-      background: THEME.dark.background,
-      border: THEME.dark.border,
-      card: THEME.dark.background,
-      notification: THEME.dark.destructive,
-      primary: THEME.dark.primary,
-      text: THEME.dark.foreground,
-    },
+export const NAV_THEME: Theme = {
+  ...DefaultTheme,
+  colors: {
+    background: COLORS.background,
+    border: COLORS.border,
+    card: COLORS.background,
+    notification: COLORS.destructive,
+    primary: COLORS.primary,
+    text: COLORS.foreground,
   },
 };
