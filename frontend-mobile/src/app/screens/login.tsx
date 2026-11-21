@@ -2,40 +2,25 @@
  * Login screen
  *
  * Collects a member's email and password, validates them locally, then calls
- * `POST /auth/login` and stores the returned session. Ported from the web
- * app's Login component. From here, members can also start the password reset
- * flow if they no longer know their password.
+ * `POST /auth/login` and stores the returned session. Members can also start
+ * the password reset flow from here.
  */
 
-import { router, Stack, type Href } from "expo-router";
-import { useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { FormField } from "@/components/ui/form-field";
-import { useThemeColors } from "@/hooks/use-theme-colors";
+import { FormScreen } from "@/components/ui/form-screen";
 import { login, UNVERIFIED_EMAIL_ERROR } from "@/lib/api/auth";
-import { ApiError } from "@/lib/api/client";
+import { getErrorMessage } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/auth-context";
 import { hasFieldErrors, validateLoginForm, type LoginFieldErrors } from "@/lib/auth/validation";
-
-const FORGOT_PASSWORD_ROUTE = "/screens/forgot-password" as Href;
 
 /** Email and password form for returning members. */
 export default function LoginScreen() {
   const { signIn } = useAuth();
-  const { primaryForeground } = useThemeColors();
-  const passwordInput = useRef<TextInput>(null);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,10 +30,6 @@ export default function LoginScreen() {
 
   /** Validates the form, then signs the member in and opens the dashboard. */
   async function handleSubmit() {
-    if (isSubmitting) {
-      return;
-    }
-
     const errors = validateLoginForm({ email, password });
     setFieldErrors(errors);
     setRequestError(null);
@@ -57,111 +38,58 @@ export default function LoginScreen() {
       return;
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
     setIsSubmitting(true);
 
     try {
-      const session = await login({ email: email.trim().toLowerCase(), password });
-      signIn(session);
-      // Stays submitting so the button cannot fire again during the
-      // navigation transition that unmounts this screen.
+      signIn(await login({ email: normalizedEmail, password }));
       router.replace("/screens/dashboard");
     } catch (error) {
-      const normalizedEmail = email.trim().toLowerCase();
-
-      if (error instanceof ApiError && error.message === UNVERIFIED_EMAIL_ERROR) {
+      if (getErrorMessage(error) === UNVERIFIED_EMAIL_ERROR) {
         router.replace({ pathname: "/screens/verify-email", params: { email: normalizedEmail } });
         return;
       }
 
-      setRequestError(
-        error instanceof ApiError ? error.message : "Something went wrong. Please try again.",
-      );
+      setRequestError(getErrorMessage(error));
       setIsSubmitting(false);
     }
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={["bottom"]}>
-      <Stack.Screen options={{ title: "Welcome back" }} />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        className="flex-1 bg-background"
-      >
-        <ScrollView
-          contentContainerClassName="px-6 pb-10 pt-2"
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <Text className="font-outfit text-base text-muted-foreground">
-            Log in to pick times that work for you and your friends.
-          </Text>
+    <FormScreen
+      subtitle="Log in to pick times that work for you and your friends."
+      title="Welcome back"
+    >
+      <FormField
+        autoCapitalize="none"
+        error={fieldErrors.email}
+        keyboardType="email-address"
+        label="Email"
+        onChangeText={setEmail}
+        placeholder="you@example.com"
+        value={email}
+      />
+      <FormField
+        autoCapitalize="none"
+        error={fieldErrors.password}
+        label="Password"
+        onChangeText={setPassword}
+        placeholder="Enter your password"
+        secureTextEntry
+        value={password}
+      />
 
-          <View className="mt-8 gap-4">
-            <FormField
-              autoCapitalize="none"
-              autoComplete="email"
-              autoCorrect={false}
-              error={fieldErrors.email}
-              keyboardType="email-address"
-              label="Email"
-              onChangeText={setEmail}
-              onSubmitEditing={() => passwordInput.current?.focus()}
-              placeholder="you@example.com"
-              returnKeyType="next"
-              value={email}
-            />
+      <FormAlert message={requestError} />
 
-            <FormField
-              autoCapitalize="none"
-              autoComplete="current-password"
-              autoCorrect={false}
-              error={fieldErrors.password}
-              label="Password"
-              onChangeText={setPassword}
-              onSubmitEditing={handleSubmit}
-              placeholder="Enter your password"
-              ref={passwordInput}
-              returnKeyType="go"
-              secureTextEntry
-              value={password}
-            />
-          </View>
-
-          {requestError ? <FormAlert className="mt-4" message={requestError} /> : null}
-
-          <Button
-            className="mt-8 h-14 w-full rounded-2xl"
-            disabled={isSubmitting}
-            onPress={handleSubmit}
-            size="lg"
-          >
-            {isSubmitting ? <ActivityIndicator color={primaryForeground} /> : "Log In"}
-          </Button>
-
-          <View className="mt-3 flex-row items-center justify-center">
-            <Button
-              className="h-11"
-              onPress={() => router.push(FORGOT_PASSWORD_ROUTE)}
-              size="sm"
-              variant="link"
-            >
-              Forgot password?
-            </Button>
-          </View>
-
-          <View className="mt-4 flex-row items-center justify-center">
-            <Text className="font-outfit text-sm text-muted-foreground">New to Free2Meet?</Text>
-            <Button
-              className="h-11"
-              onPress={() => router.replace("/screens/signup")}
-              size="sm"
-              variant="link"
-            >
-              Sign up
-            </Button>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      <Button disabled={isSubmitting} onPress={handleSubmit}>
+        {isSubmitting ? "Logging in…" : "Log In"}
+      </Button>
+      <Button onPress={() => router.push("/screens/forgot-password")} variant="link">
+        Forgot password?
+      </Button>
+      <Button onPress={() => router.replace("/screens/signup")} variant="link">
+        New to Free2Meet? Sign up
+      </Button>
+    </FormScreen>
   );
 }

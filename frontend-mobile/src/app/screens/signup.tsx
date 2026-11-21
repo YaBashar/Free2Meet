@@ -2,69 +2,41 @@
  * Sign up screen
  *
  * Collects a new member's name, email, and password, validates them locally,
- * then calls `POST /auth/register`. Ported from the web app's Register
- * component. Registration only creates the account: the API emails a
- * verification code, and login is refused until that email is verified, so
- * this screen confirms the next step rather than signing the member in.
+ * then calls `POST /auth/register`. Login is refused until the emailed
+ * verification code is entered, so success moves on to verify-email rather
+ * than signing the member in.
  */
 
-import { router, Stack } from "expo-router";
-import { useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
+import { useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { FormField } from "@/components/ui/form-field";
-import { useThemeColors } from "@/hooks/use-theme-colors";
+import { FormScreen } from "@/components/ui/form-screen";
 import { register } from "@/lib/api/auth";
-import { ApiError } from "@/lib/api/client";
+import { getErrorMessage } from "@/lib/api/client";
 import {
   hasFieldErrors,
   validateSignUpForm,
   type SignUpFieldErrors,
-  type SignUpFormValues,
 } from "@/lib/auth/validation";
+import { COLORS, FONTS } from "@/lib/theme";
 
-const EMPTY_FORM: SignUpFormValues = {
-  firstName: "",
-  lastName: "",
-  email: "",
-  password: "",
-};
-
-/** Registration form, replaced by a confirmation once the account exists. */
+/** Registration form that hands off to email verification. */
 export default function SignUpScreen() {
-  const { primaryForeground } = useThemeColors();
-  const lastNameInput = useRef<TextInput>(null);
-  const emailInput = useRef<TextInput>(null);
-  const passwordInput = useRef<TextInput>(null);
-
-  const [values, setValues] = useState<SignUpFormValues>(EMPTY_FORM);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState<SignUpFieldErrors>({});
   const [requestError, setRequestError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  /** Updates one field without disturbing the others. */
-  function handleFieldChange(field: keyof SignUpFormValues, value: string) {
-    setValues((previous) => ({ ...previous, [field]: value }));
-  }
-
   /** Validates the form, then creates the account. */
   async function handleSubmit() {
-    if (isSubmitting) {
-      return;
-    }
-
-    const errors = validateSignUpForm(values);
+    const errors = validateSignUpForm({ firstName, lastName, email, password });
     setFieldErrors(errors);
     setRequestError(null);
 
@@ -72,135 +44,94 @@ export default function SignUpScreen() {
       return;
     }
 
-    const email = values.email.trim().toLowerCase();
+    const normalizedEmail = email.trim().toLowerCase();
     setIsSubmitting(true);
 
     try {
       await register({
-        firstName: values.firstName.trim(),
-        lastName: values.lastName.trim(),
-        email,
-        password: values.password,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: normalizedEmail,
+        password,
       });
-      router.replace({ pathname: "/screens/verify-email", params: { email } });
+      router.replace({ pathname: "/screens/verify-email", params: { email: normalizedEmail } });
     } catch (error) {
-      setRequestError(
-        error instanceof ApiError ? error.message : "Something went wrong. Please try again.",
-      );
-    } finally {
+      setRequestError(getErrorMessage(error));
       setIsSubmitting(false);
     }
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={["bottom"]}>
-      <Stack.Screen options={{ title: "Create your account" }} />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        className="flex-1 bg-background"
-      >
-        <ScrollView
-          contentContainerClassName="px-6 pb-10 pt-2"
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <Text className="font-outfit text-base text-muted-foreground">
-            Join Free2Meet to find a time that works for everyone.
-          </Text>
+    <FormScreen
+      subtitle="Join Free2Meet to find a time that works for everyone."
+      title="Create your account"
+    >
+      <View style={styles.row}>
+        <View style={styles.column}>
+          <FormField
+            error={fieldErrors.firstName}
+            label="First name"
+            onChangeText={setFirstName}
+            placeholder="Ada"
+            value={firstName}
+          />
+        </View>
+        <View style={styles.column}>
+          <FormField
+            error={fieldErrors.lastName}
+            label="Last name"
+            onChangeText={setLastName}
+            placeholder="Lovelace"
+            value={lastName}
+          />
+        </View>
+      </View>
+      <FormAlert message={fieldErrors.fullName ?? null} />
 
-          <View className="mt-8 gap-4">
-            <View className="flex-row gap-3">
-              <View className="flex-1">
-                <FormField
-                  autoComplete="given-name"
-                  error={fieldErrors.firstName}
-                  label="First name"
-                  onChangeText={(value) => handleFieldChange("firstName", value)}
-                  onSubmitEditing={() => lastNameInput.current?.focus()}
-                  placeholder="Ada"
-                  returnKeyType="next"
-                  value={values.firstName}
-                />
-              </View>
+      <FormField
+        autoCapitalize="none"
+        error={fieldErrors.email}
+        keyboardType="email-address"
+        label="Email"
+        onChangeText={setEmail}
+        placeholder="you@example.com"
+        value={email}
+      />
+      <FormField
+        autoCapitalize="none"
+        error={fieldErrors.password}
+        label="Password"
+        onChangeText={setPassword}
+        placeholder="Create a password"
+        secureTextEntry
+        value={password}
+      />
+      <Text style={styles.hint}>
+        At least 8 characters, with upper and lower case letters and one special character.
+      </Text>
 
-              <View className="flex-1">
-                <FormField
-                  autoComplete="family-name"
-                  error={fieldErrors.lastName}
-                  label="Last name"
-                  onChangeText={(value) => handleFieldChange("lastName", value)}
-                  onSubmitEditing={() => emailInput.current?.focus()}
-                  placeholder="Lovelace"
-                  ref={lastNameInput}
-                  returnKeyType="next"
-                  value={values.lastName}
-                />
-              </View>
-            </View>
+      <FormAlert message={requestError} />
 
-            {fieldErrors.fullName ? (
-              <Text className="font-outfit text-xs text-destructive">{fieldErrors.fullName}</Text>
-            ) : null}
-
-            <FormField
-              autoCapitalize="none"
-              autoComplete="email"
-              autoCorrect={false}
-              error={fieldErrors.email}
-              keyboardType="email-address"
-              label="Email"
-              onChangeText={(value) => handleFieldChange("email", value)}
-              onSubmitEditing={() => passwordInput.current?.focus()}
-              placeholder="you@example.com"
-              ref={emailInput}
-              returnKeyType="next"
-              value={values.email}
-            />
-
-            <FormField
-              autoCapitalize="none"
-              autoComplete="new-password"
-              autoCorrect={false}
-              error={fieldErrors.password}
-              label="Password"
-              onChangeText={(value) => handleFieldChange("password", value)}
-              onSubmitEditing={handleSubmit}
-              placeholder="Create a password"
-              ref={passwordInput}
-              returnKeyType="go"
-              secureTextEntry
-              value={values.password}
-            />
-
-            <Text className="font-outfit text-xs text-muted-foreground">
-              At least 8 characters, with upper and lower case letters and one special character.
-            </Text>
-          </View>
-
-          {requestError ? <FormAlert className="mt-4" message={requestError} /> : null}
-
-          <Button
-            className="mt-8 h-14 w-full rounded-2xl"
-            disabled={isSubmitting}
-            onPress={handleSubmit}
-            size="lg"
-          >
-            {isSubmitting ? <ActivityIndicator color={primaryForeground} /> : "Sign Up"}
-          </Button>
-
-          <View className="mt-4 flex-row items-center justify-center">
-            <Text className="font-outfit text-sm text-muted-foreground">Already registered?</Text>
-            <Button
-              className="h-11"
-              onPress={() => router.replace("/screens/login")}
-              size="sm"
-              variant="link"
-            >
-              Sign in
-            </Button>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      <Button disabled={isSubmitting} onPress={handleSubmit}>
+        {isSubmitting ? "Signing up…" : "Sign Up"}
+      </Button>
+      <Button onPress={() => router.replace("/screens/login")} variant="link">
+        Already registered? Log in
+      </Button>
+    </FormScreen>
   );
 }
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  column: {
+    flex: 1,
+  },
+  hint: {
+    color: COLORS.mutedForeground,
+    fontFamily: FONTS.regular,
+  },
+});
